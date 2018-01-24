@@ -1,157 +1,121 @@
-ZJS API for Buffer
-==================
+ZJS API for Analog I/O (AIO)
+============================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class: Buffer](#buffer-api)
-  * [new Buffer(array)](#new-bufferarray)
-  * [new Buffer(size)](#new-buffersize)
-  * [new Buffer(string)](#new-bufferstring)
-  * [buf.copy(target[, targetStart, [sourceStart[, sourceEnd]]])](#bufcopytarget-targetstart-sourcestart-sourceend)
-  * [buf.fill(value[, offset[, end[, encoding]]])](#buffillvalue-offset-end-encoding)
-  * [buf.readUInt*(offset)](#bufreaduint-family)
-  * [buf.toString([encoding])](#buftostringencoding)
-  * [buf.write(string[, offset[, length[, encoding]]])](#bufwritestring-offset-length-encoding)
-  * [buf.writeUInt*(value, offset)](#bufwriteuint-family)
+* [Class: AIO](#aio-api)
+  * [aio.open(AIOInit)](#aiopin-openaioinit)
+* [Class: AIOPin](#aiopin-api)
+  * [pin.read()](#pinread)
+  * [pin.readAsync(ReadCallback)](#pinreadasyncreadcallback)
+  * [pin.on(eventType, ReadCallback)](#pinoneventtype-readcallback)
+  * [pin.close()](#pinclose)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-Buffer is a [Node.js API](https://nodejs.org/dist/latest-v8.x/docs/api/buffer.html)
-to read and write binary data accurately from JavaScript. ZJS supports a minimal
-subset of this API that will be expanded as the need arises.
+The AIO API supports analog I/O pins. So far, the support is just for
+analog-to-digital conversion (ADC). This measures an analog voltage input on a
+pin and converts it into a digital representation. The values are dependent on
+the resolution and limits of the particular device. For example, the Arduino 101
+has 12-bit resolution and uses 3.3V on its six analog input pins. So for a
+voltage between 0 - 3.3V it returns a digital value of 0 - 4095.
+
+Other Arduino devices typically have 10-bit resolution and some may use 5V as
+the upper limit instead.
+
+Hardware may have other analog features such as comparators but so far, we do
+not have support for this.
 
 Web IDL
 -------
-This IDL provides an overview of the interface; see below for documentation of
-specific API functions.  Click [here](Notes_on_WebIDL.md) for an
-explanation of zephyr.js' WebIDL conventions.
+
+This IDL provides an overview of the interface; see below for
+documentation of specific API functions.  Click
+[here](Notes_on_WebIDL.md) for an explanation of zephyr.js' WebIDL
+conventions.
 
 ```javascript
-[ Constructor(Uint8Array initial_values),
-  Constructor(unsigned long size),
-  Constructor(ByteString initial_string) ]
-interface Buffer {
-    readonly attribute unsigned long length;
-    unsigned long copy(Buffer target, optional unsigned long targetStart,
-                                      optional unsigned long sourceStart,
-                                      optional unsigned long sourceEnd);
-    octet readUInt8(unsigned long offset);
-    void writeUInt8(octet value, unsigned long offset);
-    unsigned short readUInt16BE(unsigned long offset);
-    void writeUInt16BE(unsigned short value, unsigned long offset);
-    unsigned short readUInt16LE(unsigned long offset);
-    void writeUInt16LE(unsigned short value, unsigned long offset);
-    unsigned long readUInt32BE(unsigned long offset);
-    void writeUInt32BE(unsigned long value, unsigned long offset);
-    unsigned long readUInt32LE(unsigned long offset);
-    void writeUInt32LE(unsigned long value, unsigned long offset);
-    string toString(string encoding);
+// require returns an AIO object
+// var aio = require('aio');
+
+[ReturnFromRequire]
+interface AIO {
+    AIOPin open(AIOInit init);
 };
+
+dictionary AIOInit {
+    (unsigned long or string) pin;
+};
+
+interface AIOPin {
+    unsigned long read();
+    void readAsync(ReadCallback callback);  // TODO: change to return a promise
+    void on(string eventType, ReadCallback callback);
+    void close();
+};
+
+callback ReadCallback = void (unsigned long value);
 ```
 
-Buffer API
+AIO API
+-------
+### AIOPin open(AIOInit)
+* 'AIOInit' *object*  The AIOInit object has a single field called "pin"
+  that represents the name of the pin (either an integer or a string,
+  depending on the board).
+
+The `AIOInit` object lets you set the pin number. You can either use a raw
+number for your device or use the board support module such as
+[Arduino 101](./boards/arduino_101.md) or [K64F](./boards/frdm_k64f.md) to
+specify a named pin.
+
+Use the AIOPin object returned to read values from the pin.
+
+AIOPin API
 ----------
-### new Buffer(array)
-* `array` *integer[]* Array of octets to use as initial data.
+### pin.read()
 
-The `array` argument should be an array of numbers that will be treated as
-UInt8 integers. A new buffer object will be returned with the same size as the
-array and initialized with its contents. If there is not enough available
-memory, an error will be thrown.
+Returns the latest reading from the pin (an unsigned integer). Blocks until it gets the result.
 
-### new Buffer(size)
-* `size` *integer* Length in bytes of the new buffer.
+### pin.readAsync(ReadCallback)
+* 'ReadCallback' *callback* User-provided callback function that takes
+  a single, unsigned integer and has no return value.
 
-The `size` argument specifies the length in bytes of the array that the Buffer
-represents. If a negative length is passed, a 0-length Buffer will be returned.
-If the size is too long and there is not enough available memory, an error will
-be thrown.
+Pass a function for `ReadCallback` that will be called later when the result is
+obtained.
 
-### new Buffer(string)
-* `string` *string* String to use as initial data.
+*WARNING: Making an async call like this allocates some memory while the call
+is pending; if async calls are issued faster than they are fulfilled,
+the system will
+eventually run out of memory - pretty soon on these small devices. So the best
+practice would be to have only a small, fixed number pending at
+any given time.*
 
-The `string` argument will be treated as UTF8 and used to initialize the new
-buffer. If there is not enough available memory, an error will be thrown.
+*NOTE: This function will probably be replaced with a version that instead
+returns a promise.*
 
-### buf.copy(target[, targetStart, [sourceStart[, sourceEnd]]])
-* `target` *Buffer* Buffer to receive the copied data.
-* `targetStart` *integer* Offset to start writing at in the target buffer.
-* `sourceStart` *integer* Offset to start reading from in the source buffer.
-* `sourceEnd` *integer* Offset at which to stop reading from the source (not
-inclusive).
-* Returns: *integer* Number of bytes copied.
+### pin.on(eventType, ReadCallback)
+* 'eventType' *string* Type of event; currently, the only suppored
+  type is "change".
+* 'ReadCallback' *callback* User-provided callback function that takes
+  a single, unsigned integer and has no return value; should
+  be either a function or null. 
 
-Copies data from this `buf` to `target`. Start offsets default to 0 and
-`sourceEnd` defaults to the end of the source buffer. If there is not enough
-room in the target, throws an error.
+When a function is passed for the change event,
+the function will be called any time the analog voltage changes. (At the moment,
+it actually gets called periodically even when it hasn't changed.) When null is
+passed for the change event, the previously registered callback will be
+discarded and no longer called.
 
-### buf.fill(value[, offset[, end[, encoding]]])
-* `value` *string* | *Buffer* | *integer* Value to fill buffer with.
-* `offset` *integer* Offset to start writing at in the buffer.
-* `end` *integer* Offset at which to stop writing (not inclusive).
-* `encoding` *string* Encoding type.
-* Returns: *Buffer* A reference to `buf`.
+### pin.close()
 
-Repeatedly copies bytes from the source number, buffer, or string, until the
-buffer is filled from `offset` to `end` (which default to the beginning and end
-of the buffer. Only default "utf8" encoding is accepted currently. Treats
-numbers as four byte integers.
-
-### buf.readUInt family
-
-#### buf.readUInt8(offset)
-#### buf.readUInt16BE(offset)
-#### buf.readUInt16LE(offset)
-#### buf.readUInt32BE(offset)
-#### buf.readUInt32LE(offset)
-* `offset` *integer* Number of bytes to skip before reading integer.
-* Returns: *integer*
-
-Reads 1, 2, or 4 bytes at `offset` as a big-endian (highest byte first) or
-little-endian (lowest byte first) integer depending on the function version.
-The `offset` should be provided but will be treated as 0 if not given. Returns
-an error if the buffer is not big enough.
-
-### buf.toString([encoding])
-* `encoding` *string* Encoding to use.
-* Returns: *string*
-
-Currently, the supported encodings are 'utf8' (default), 'ascii', and 'hex'.
-If 'ascii' is given, drops the high bit from every character and terminates at
-'\0' byte if found. If 'hex' is given, returns the contents of the buffer
-encoded in hexadecimal digits (two characters per byte). Otherwise, returns an
-error.
-
-### buf.write(string[, offset[, length[, encoding]]])
-* `string` *string* String to write to buf.
-* `offset` *integer* Offset to start writing at in the buffer.
-* `length` *integer* Number of bytes to write.
-* `encoding` *string* Encoding to use.
-* Returns: *integer* Number of bytes written.
-
-Writes bytes from `string` to buffer at `offset`, stopping after `length` bytes.
-The default `offset` is 0 and default `length` is buffer length - `offset`. Only
-'utf8' encoding is supported currently.
-
-### buf.writeUInt family
-
-#### writeUInt8(value, offset)
-#### writeUInt16BE(value, offset)
-#### writeUInt16LE(value, offset)
-#### writeUInt32BE(value, offset)
-#### writeUInt32LE(value, offset)
-* `value` *integer* Number to write.
-* `offset` *integer* Number of bytes to skip before writing value.
-* Returns: *integer* `offset` plus the bytes written.
-
-The `value` will be treated as 1, 2, or 4 byte big-endian (highest byte first)
-or little-endian (lowest byte first) integer depending on the function version.
-The `offset` should be provided but will be treated as 0 if not given. Returns
-the new offset just beyond what was written to the buffer. If the target area
-goes outside the bounds of the Buffer, returns an error.
+Closes the AIOPin. Once it is closed, all registered event handlers will no
+longer be called.
 
 Sample Apps
 -----------
-* [Buffer sample](../samples/Buffer.js)
+* [AIO sample](../samples/AIO.js)
+* [Arduino Read Analog Voltage sample](../samples/arduino/basics/ReadAnalogVoltage.js)
+* [Arduino Analog Read Serial sample](../samples/arduino/basics/AnalogReadSerial.js)
 * [WebBluetooth Demo](../samples/WebBluetoothDemo.js)
