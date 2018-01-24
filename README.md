@@ -32,9 +32,9 @@ specific API functions.
   Constructor(ByteString initial_string) ]
 interface Buffer {
     readonly attribute unsigned long length;
-	unsigned long copy(Buffer target, optional unsigned long targetStart,
+    unsigned long copy(Buffer target, optional unsigned long targetStart,
                                       optional unsigned long sourceStart,
-									  optional unsigned long sourceEnd);
+	optional unsigned long sourceEnd);
     octet readUInt8(unsigned long offset);
     void writeUInt8(octet value, unsigned long offset);
     unsigned short readUInt16BE(unsigned long offset);
