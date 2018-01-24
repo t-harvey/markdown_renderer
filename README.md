@@ -38,7 +38,7 @@ interface Buffer {
                                       optional unsigned long sourceEnd = this.length);
     this fill((string or Buffer or long) value, optional long offset = 0,
                                                 optional long end = this.length,
-												optional string encoding = "utf8");
+                                                optional string encoding = "utf8");
     octet readUInt8(optional unsigned long offset = 0);
     short readUInt16BE(optional unsigned long offset = 0);
     short readUInt16LE(optional unsigned long offset = 0);
