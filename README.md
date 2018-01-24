@@ -27,16 +27,14 @@ This IDL provides an overview of the interface; see below for documentation of
 specific API functions.
 
 ```javascript
-[
-  Constructor(Uint8Array initial_values),
+[ Constructor(Uint8Array initial_values),
   Constructor(unsigned long size),
-  Constructor(ByteString initial_string)
-]
+  Constructor(ByteString initial_string) ]
 interface Buffer {
     readonly attribute unsigned long length;
 	unsigned long copy(Buffer target, optional unsigned long targetStart,
-	optional unsigned long sourceStart
-	optional unsigned long sourceEnd);
+                                      optional unsigned long sourceStart,
+									  optional unsigned long sourceEnd);
     octet readUInt8(unsigned long offset);
     void writeUInt8(octet value, unsigned long offset);
     unsigned short readUInt16BE(unsigned long offset);
