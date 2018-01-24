@@ -7,9 +7,9 @@ ZJS API for Analog I/O (AIO)
   * [aio.open(AIOInit)](#aiopin-openaioinit)
 * [Class: AIOPin](#aiopin-api)
   * [pin.read()](#pinread)
-  * [pin.readAsync(ReadCallback)](#pinreadAsyncReadCallback)
-  * [pin.on(eventType, ReadCallback)](#pinoneventTypeReadCallback)
-  * [pin.close()](#pin.close())
+  * [pin.readAsync(ReadCallback)](#pinreadasyncreadcallback)
+  * [pin.on(eventType, ReadCallback)](#pinoneventtype-readcallback)
+  * [pin.close()](#pinclose)
 * [Sample Apps](#sample-apps)
 
 Introduction
