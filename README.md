@@ -23,7 +23,10 @@ subset of this API that will be expanded as the need arises.
 
 Web IDL
 -------
+This IDL provides an overview of the interface; see below for documentation of
+specific API functions.
 
+```javascript
 [
   Constructor(Uint8Array initial_values),
   Constructor(unsigned long size),
@@ -46,7 +49,7 @@ interface Buffer {
     void writeUInt32LE(unsigned long value, unsigned long offset);
     string toString(string encoding);
 };
-
+```
 
 Buffer API
 ----------
