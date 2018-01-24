@@ -24,7 +24,8 @@ subset of this API that will be expanded as the need arises.
 Web IDL
 -------
 This IDL provides an overview of the interface; see below for documentation of
-specific API functions.
+specific API functions.  Click [here](Notes_on_WebIDL.md) for an
+explanation of zephyr.js' WebIDL conventions.
 
 ```javascript
 [ Constructor(Uint8Array initial_values),
