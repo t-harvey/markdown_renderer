@@ -96,14 +96,12 @@ any given time.*
 returns a promise.*
 
 ### pin.on(eventType, ReadCallback)
-* 'eventType' *string* Type of event; currently, the only suppored
+* 'eventType' *string* Type of event; currently, the only supported
   type is "change".
 * 'ReadCallback' *callback* User-provided callback function that takes
-  a single, unsigned integer and has no return value; should
-  be either a function or null. 
+  a single, unsigned integer and has no return value; can be null. 
 
-When a function is passed for the change event,
-the function will be called any time the analog voltage changes. (At the moment,
+The callback function is called any time the analog voltage changes. (At the moment,
 it actually gets called periodically even when it hasn't changed.) When null is
 passed for the change event, the previously registered callback will be
 discarded and no longer called.
