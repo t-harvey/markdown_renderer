@@ -47,7 +47,7 @@ interface Buffer {
     string toString(string encoding);
     long write(string value, optional long offset = 0,
                              optional long length = this.length-offset,
-							 optional string encoding = "utf8");
+                             optional string encoding = "utf8");
     long writeUInt8(octet value, unsigned long offset);
     long writeUInt16BE(unsigned short value, unsigned long offset);
     long writeUInt16LE(unsigned short value, unsigned long offset);
