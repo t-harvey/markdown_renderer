@@ -65,7 +65,7 @@ AIO API
   that represents the name of the pin (either an integer or a string,
   depending on the board).
 
-The `AIOInit` object lets you set the pin number. You can either use a raw
+When setting the pin number, you can either use a raw
 number for your device or use the board support module such as
 [Arduino 101](./boards/arduino_101.md) or [K64F](./boards/frdm_k64f.md) to
 specify a named pin.
