@@ -4,7 +4,7 @@ ZJS API for Analog I/O (AIO)
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
 * [Class: AIO](#aio-api)
-  * [aio.open(AIOInit)](#openaioinit)
+  * [aio.open(AIOInit)](#aioopenaioinit)
 * [Class: AIOPin](#aiopin-api)
   * [pin.read()](#pinread)
   * [pin.readAsync(ReadCallback)](#pinreadasyncreadcallback)
@@ -60,7 +60,7 @@ callback ReadCallback = void (unsigned long value);
 
 AIO API
 -------
-### open(AIOInit)
+### aio.open(AIOInit)
 * 'AIOInit' *object*  The AIOInit object has a single field called "pin"
   that represents the name of the pin (either an integer or a string,
   depending on the board).
