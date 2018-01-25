@@ -1,163 +1,233 @@
-ZJS API for Buffer
-==================
+ZJS API for Bluetooth Low Energy (BLE)
+======================================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class: Buffer](#buffer-api)
-  * [new Buffer(array)](#new-bufferarray)
-  * [new Buffer(size)](#new-buffersize)
-  * [new Buffer(string)](#new-bufferstring)
-  * [buf.copy(target[, targetStart, [sourceStart[, sourceEnd]]])](#bufcopytarget-targetstart-sourcestart-sourceend)
-  * [buf.fill(value[, offset[, end[, encoding]]])](#buffillvalue-offset-end-encoding)
-  * [buf.readUInt*(offset)](#bufreaduint-family)
-  * [buf.toString([encoding])](#buftostringencoding)
-  * [buf.write(string[, offset[, length[, encoding]]])](#bufwritestring-offset-length-encoding)
-  * [buf.writeUInt*(value, offset)](#bufwriteuint-family)
+* [API Documentation](#api-documentation)
+* [Client Requirements](#client-requirements)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-Buffer is a [Node.js API](https://nodejs.org/dist/latest-v8.x/docs/api/buffer.html)
-to read and write binary data accurately from JavaScript. ZJS supports a minimal
-subset of this API that will be expanded as the need arises.
+The BLE API is based off the [bleno API](https://github.com/sandeepmistry/bleno). Bluetooth Low Energy (aka
+[Bluetooth LE: Broadcast](https://www.bluetooth.com/what-is-bluetooth-technology/how-it-works/le-broadcast)) is a power-friendly version of Bluetooth
+intended for IoT devices. It provides the ability to support low-bandwidth data
+services to nearby devices.
+
+A note about UUIDs. The BLE standard lets you have full 128-bit UUIDs or short
+16-bit UUIDs (4 hex chars). We only support the short ones so far.
+
+Based on the bleno API, these UUIDs are specified as a hexadecimal string, so
+"2901" really means 0x2901. *NOTE: This seems like a bad practice and we should
+perhaps require these numbers to be specified as "0x2901" instead, or else
+treat them like decimals.*
 
 Web IDL
 -------
 This IDL provides an overview of the interface; see below for documentation of
-specific API functions.  Click [here](Notes_on_WebIDL.md) for an
-explanation of zephyr.js' WebIDL conventions.
+specific API functions.
 
 ```javascript
-[ Constructor(Uint8Array initial_values),
-  Constructor(unsigned long size),
-  Constructor(ByteString initial_string) ]
-interface Buffer {
-    readonly attribute unsigned long length;
-    unsigned long copy(Buffer target, optional unsigned long targetStart = 0,
-                                      optional unsigned long sourceStart = 0,
-                                      optional unsigned long sourceEnd = this.length);
-    this fill((string or Buffer or long) value, optional long offset = 0,
-                                                optional long end = this.length,
-                                                optional string encoding = "utf8");
-    octet readUInt8(optional unsigned long offset = 0);
-    short readUInt16BE(optional unsigned long offset = 0);
-    short readUInt16LE(optional unsigned long offset = 0);
-    long readUInt32BE(optional unsigned long offset = 0);
-    long readUInt32LE(optional unsigned long offset = 0);
-    string toString(string encoding);
-    long write(string value, optional long offset = 0,
-                             optional long length = this.length-offset,
-                             optional string encoding = "utf8");
-    long writeUInt8(octet value, unsigned long offset);
-    long writeUInt16BE(unsigned short value, unsigned long offset);
-    long writeUInt16LE(unsigned short value, unsigned long offset);
-    long writeUInt32BE(unsigned long value, unsigned long offset);
-    long writeUInt32LE(unsigned long value, unsigned long offset);
+// require returns a BLE object
+// var ble = require('ble');
+
+[NoInterfaceObject]
+interface BLE: EventEmitter {
+    void disconnect(string address);
+    void startAdvertising(string name, string[] uuids, string url);
+    void stopAdvertising();
+    void setServices(PrimaryService services[]);
+    PrimaryService PrimaryService(PrimaryServiceInit init);
+    Characteristic Characteristic(CharacteristicInit init);
+    Descriptor Descriptor(DescriptorInit init);
+};
+
+dictionary PrimaryServiceInit {
+    string uuid;
+    Characteristic[] characteristics;
+};
+
+dictionary CharacteristicInit {
+    string uuid;
+    string[] properties;                // 'read', 'write', 'notify'
+    Descriptor[] descriptors;
+    ReadCallback onReadRequest;         // optional
+    WriteCallback onWriteRequest;       // optional
+    SubscribeCallback onSubscribe;      // optional
+    UnsubscribeCallback onUnsubscribe;  // optional
+    NotifyCallback onNotify;            // optional
+};
+
+callback ReadCallback = void (unsigned long offset, FulfillReadCallback);
+callback WriteCallback = void (Buffer data, unsigned long offset,
+                               boolean withoutResponse, FulfillWriteCallback);
+callback SubscribeCallback = void (unsigned long maxValueSize,
+                                   FulfillSubscribeCallback);
+callback FulfillReadCallback = void (CharacteristicResult result, Buffer data);
+callback FulfillWriteCallback = void (CharacteristicResult result);
+callback FulfillSubscribeCallback = void (Buffer data);
+
+dictionary DescriptorInit {
+    string uuid;
+    string value;
+};
+
+[NoInterfaceObject]
+interface Characteristic {
+    attribute ReadCallback onReadRequest;
+    attribute WriteCallback onWriteRequest;
+    attribute SubscribeCallback onSubscribe;
+    attribute UnsubscribeCallback onUnsubscribe;
+    attribute NotifyCallback onNotify;
+    unsigned long RESULT_SUCCESS;
+    unsigned long RESULT_INVALID_OFFSET;
+    unsigned long RESULT_INVALID_ATTRIBUTE_LENGTH;
+    unsigned long RESULT_UNLIKELY_ERROR;
 };
 ```
 
-Buffer API
-----------
-### new Buffer(array)
-* `array` *integer[]* Array of octets to use as initial data.
+API Documentation
+-----------------
+BLE is an [EventEmitter](./events.md) with the following events:
 
-A new Buffer object will be returned with the same size as the array
-and initialized with the array's contents. If there is not enough
-available memory, an error will be thrown.
+### Event: 'accept'
 
-### new Buffer(size)
-* `size` *integer* Length in bytes of the new buffer.
+* `string` `clientAddress`
 
-The `size` argument specifies the length in bytes of the array that the Buffer
-represents. If a negative length is passed, a 0-length Buffer will be returned.
-If there is not enough available memory to allocate the Buffer, an error will
-be thrown.
+Emitted when a BLE client has connected. `clientAddress` is a unique BLE address
+for the client in colon-separated format (e.g. 01:23:45:67:89:AB).
 
-### new Buffer(string)
-* `string` *string* String to use as initial data.
+### Event: 'advertisingStart'
 
-The `string` argument will be treated as an array of UTF8 values and
-will be used to initialize the new buffer. If there is not enough
-available memory, an error will be thrown.
+* `int` `status`
 
-### buf.copy(target[, targetStart, [sourceStart[, sourceEnd]]])
-* `target` *Buffer* Buffer to receive the copied data.
-* `targetStart` *integer* Offset to start writing at in the target buffer.
-* `sourceStart` *integer* Offset to start reading from in the source buffer.
-* `sourceEnd` *integer* Offset at which to stop reading from the source (not
-inclusive).
-* Returns: *integer* Number of bytes copied.
+Emitted when BLE services have begun to be advertised. The `status` will be 0
+for success, otherwise for an error.
 
-Copies data from this `buf` to `target`. Start offsets default to 0 and
-`sourceEnd` defaults to the end of the source buffer. If there is not enough
-room in the target, throws an error.
+### Event: 'disconnect'
 
-### buf.fill(value[, offset[, end[, encoding]]])
-* `value` *string* | *Buffer* | *integer* Value to fill buffer with.
-* `offset` *integer* Offset to start writing at in the buffer.
-* `end` *integer* Offset at which to stop writing (not inclusive).
-* `encoding` *string* Encoding type.
-* Returns: *Buffer* A reference to `buf`.
+* `string` `clientAddress`
 
-Repeatedly copies bytes from the source number, buffer, or string, until the
-buffer is filled from `offset` to `end` (which default to the beginning and end
-of the buffer. Only default "utf8" encoding is accepted currently. Treats
-numbers as four byte integers.
+Emitted when a BLE client has disconnected. `clientAddress` will be the same as
+one previously sent with the 'accept' event.
 
-### buf.readUInt family
+### Event: 'stateChange'
 
-#### buf.readUInt8(offset)
-#### buf.readUInt16BE(offset)
-#### buf.readUInt16LE(offset)
-#### buf.readUInt32BE(offset)
-#### buf.readUInt32LE(offset)
-* `offset` *integer* Number of bytes to skip before reading integer.
-* Returns: *integer*
+* `string` `newState`
 
-Reads 1, 2, or 4 bytes at `offset` as a big-endian (highest byte first) or
-little-endian (lowest byte first) integer depending on the function version.
-The `offset` should be provided but will be treated as 0 if not given. Returns
-an error if the buffer is not big enough.
+Emitted with 'poweredOn' when the BLE stack is ready to be used. No other states
+are supported at this time.
 
-### buf.toString([encoding])
-* `encoding` *string* Encoding to use.
-* Returns: *string*
+### BLE.disconnect
 
-Currently, the supported encodings are 'utf8' (default), 'ascii', and 'hex'.
-If 'ascii' is given, drops the high bit from every character and terminates at
-'\0' byte if found. If 'hex' is given, returns the contents of the buffer
-encoded in hexadecimal digits (two characters per byte). Otherwise, returns an
-error.
+`void disconnect(string address);`
 
-### buf.write(string[, offset[, length[, encoding]]])
-* `string` *string* String to write to buf.
-* `offset` *integer* Offset to start writing at in the buffer.
-* `length` *integer* Number of bytes to write.
-* `encoding` *string* Encoding to use.
-* Returns: *integer* Number of bytes written.
+Disconnect the remote client.
 
-Writes bytes from `string` to buffer at `offset`, stopping after `length` bytes.
-The default `offset` is 0 and default `length` is buffer length - `offset`. Only
-'utf8' encoding is supported currently.
+The `address` is the address of the connected client.
 
-### buf.writeUInt family
+### BLE.startAdvertising
 
-#### writeUInt8(value, offset)
-#### writeUInt16BE(value, offset)
-#### writeUInt16LE(value, offset)
-#### writeUInt32BE(value, offset)
-#### writeUInt32LE(value, offset)
-* `value` *integer* Number to write.
-* `offset` *integer* Number of bytes to skip before writing value.
-* Returns: *integer* `offset` plus the bytes written.
+`void startAdvertising(string name, string[] uuids, string url);`
 
-The `value` will be treated as 1, 2, or 4 byte big-endian (highest byte first)
-or little-endian (lowest byte first) integer depending on the function version.
-The `offset` should be provided but will be treated as 0 if not given. Returns
-the new offset just beyond what was written to the buffer. If the target area
-goes outside the bounds of the Buffer, returns an error.
+The `name` is limited to 26 characters and will be advertised as the device
+name to nearby BLE devices.
+
+The `uuids` array may contain at most 7 16-bit UUIDs (four hex digits each).
+These UUIDs identify available services to nearby BLE devices.
+
+The `url` is optional and limited to around 24 characters (slightly more
+if part of the URL is able to be [encoded](https://github.com/google/eddystone/tree/master/eddystone-url). If provided,
+this will be used to create a physical web advertisement that will direct users
+to the given URL. At that URL they might be able to interact with the
+advertising device somehow.
+
+### BLE.stopAdvertising
+
+`void stopAdvertising();`
+
+Currently does nothing.
+
+### BLE.setServices
+
+`void setServices(PrimaryService[]);`
+
+Pass an array of PrimaryService objects to set up the services that are
+implemented by your app.
+
+### BLE.PrimaryService constructor
+
+`PrimaryService(PrimaryServiceInit init);`
+
+The `init` object should contain a `uuid` field with a 16-bit service UUID (4
+hex chars) and a `characteristics` field with an array of Characteristic
+objects.
+
+### BLE.Characteristic constructor
+
+`Characteristic(CharacteristicInit init);`
+
+The `init` object should contain:
+* `uuid` field with a 16-bit characteristic UUID (4 hex chars)
+* `properties` field with an array of strings that may include 'read', 'write',
+  and 'notify', depending on what is supported
+* `descriptors` field with an array of Descriptor objects
+
+It may also contain these optional callback fields:
+* `onReadRequest` function(offset, callback(result, data))
+  * Called when the client is requesting to read data from the characteristic.
+  * See below for common argument definitions
+* `onWriteRequest` function(data, offset, withoutResponse, callback(result))
+  * Called when the client is requesting to write data to the characteristic.
+  * `withoutResponse` is true if the client doesn't want a response
+    * *TODO: verify this*
+* `onSubscribe` function(maxValueSize, callback(data))
+  * Called when a client signs up to receive notify events when the
+      characteristic changes.
+  * `maxValueSize` is the maximum data size the client wants to receive.
+* `onUnsubscribe` function()
+  * *NOTE: Never actually called currently.*
+* `onNotify` function()
+  * *NOTE: Never actually called currently.*
+
+Explanation of common arguments to the above functions:
+* `offset` is a 0-based integer index into the data the characteristic
+    represents.
+* `result` is one of these values defined in the Characteristic object.
+  * RESULT_SUCCESS
+  * RESULT_INVALID_OFFSET
+  * RESULT_INVALID_ATTRIBUTE_LENGTH
+  * RESULT_UNLIKELY_ERROR
+* `data` is a [Buffer](./buffer.md) object.
+
+### BLE.Descriptor constructor
+
+`Descriptor(DescriptorInit init);`
+
+The `init` object should contain:
+* `uuid` field with a 16-bit descriptor UUID (4 hex chars)
+  * Defined descriptors are listed here in [Bluetooth Specifications](https://www.bluetooth.com/specifications/gatt/descriptors)
+* `value` field with a string supplying the defined information
+  * *NOTE: Values can also be Buffer objects, but that's not currently supported.*
+
+Client Requirements
+-------------------
+You can use any device that has BLE support to connect to the Arduino 101 when
+running any of the BLE apps or demos. We've successfully tested the following
+setup:
+
+* Update the Bluetooth firmware, follow instructions [here](https://wiki.zephyrproject.org/view/Arduino_101#Bluetooth_firmware_for_the_Arduino_101)
+* Any Android device running Android 6.0 Marshmallow or higher (We use Nexus 5/5X, iOS devices not tested)
+* Let the x86 core use 256K of flash space with ROM=256 as described [here](https://github.com/intel/zephyr.js#getting-more-space-on-your-arduino-101)
+
+For the WebBluetooth Demo which supports the Physical Web, you'll need:
+* Chromium version 50.0 or higher
+* Make sure Bluetooth is on and Location Services is enabled
+* Go to chrome://flags and enable the #enable-web-bluetooth flag
 
 Sample Apps
 -----------
-* [Buffer sample](../samples/Buffer.js)
+* [BLE with multiple services](../samples/BLE.js)
 * [WebBluetooth Demo](../samples/WebBluetoothDemo.js)
+* [WebBluetooth Demo with Grove LCD](../samples/WebBluetoothGroveLcdDemo.js)
+* [Heartrate Demo with Grove LCD](../samples/HeartRateDemo.js)
