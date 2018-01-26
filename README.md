@@ -165,39 +165,12 @@ The PrimaryService object contains the following fields:
 
 
 ### ble.newPrimaryService(init)
-* 'init' *PrimaryServiceInit* 
-
-The `init` object should contain a `uuid` field with a 16-bit service UUID (4
-hex chars) and a `characteristics` field with an array of Characteristic
-objects.
+* 'init' *PrimaryServiceInit*(#primaryserviceinit)
 
 Returns a new PrimaryService object.
 
 ### ble.newCharacteristic(init)
 * init *CharacteristicInit* 
-
-The `init` object should contain:
-* `uuid` field with a 16-bit characteristic UUID (4 hex chars)
-* `properties` field with an array of strings that may include 'read', 'write',
-  and 'notify', depending on what is supported
-* `descriptors` field with an array of Descriptor objects
-
-It may also contain these optional callback fields:
-* `onReadRequest` function(offset, callback(result, data))
-  * Called when the client is requesting to read data from the characteristic.
-  * See below for common argument definitions
-* `onWriteRequest` function(data, offset, withoutResponse, callback(result))
-  * Called when the client is requesting to write data to the characteristic.
-  * `withoutResponse` is true if the client doesn't want a response
-    * *TODO: verify this*
-* `onSubscribe` function(maxValueSize, callback(data))
-  * Called when a client signs up to receive notify events when the
-      characteristic changes.
-  * `maxValueSize` is the maximum data size the client wants to receive.
-* `onUnsubscribe` function()
-  * *NOTE: Never actually called currently.*
-* `onNotify` function()
-  * *NOTE: Never actually called currently.*
 
 Returns a new Characteristic object.
 
@@ -217,13 +190,46 @@ Explanation of common arguments to the above functions:
 Supporting Objects
 ------------------
 
-###DescriptorInit
+### PrimaryServiceInit
 
 This object has two fields:
-	1. 'uuid' *string* This is a 16-bit descriptor UUID (4 hex chars)
-	  * Defined descriptors are listed here in [Bluetooth Specifications](https://www.bluetooth.com/specifications/gatt/descriptors)
-	2. 'value' *string* This string supplies the defined information.
-      * *NOTE: Values can also be Buffer objects, but that's not currently
+1. 'uuid' *string* This field is a  16-bit service UUID (4
+hex chars).
+2. `characteristics` *array of Characteristic objects*
+
+
+### CharacteristicInit
+
+This object has 3 required fields:
+1. `uuid` *string* This field is a 16-bit characteristic UUID (4 hex chars).
+2. `properties` *array of strings* Possible values: 'read', 'write', and 'notify', depending on what is supported.
+3. `descriptors` *array of Descriptors*(#descriptor)
+
+It may also contain these optional callback fields:
+1. `onReadRequest` function(offset, callback(result, data))
+  * Called when the client is requesting to read data from the characteristic.
+  * See below for common argument definitions
+2. `onWriteRequest` function(data, offset, withoutResponse, callback(result))
+  * Called when the client is requesting to write data to the characteristic.
+  * `withoutResponse` is true if the client doesn't want a response
+    * *TODO: verify this*
+3. `onSubscribe` function(maxValueSize, callback(data))
+  * Called when a client signs up to receive notify events when the
+      characteristic changes.
+  * `maxValueSize` is the maximum data size the client wants to receive.
+4. `onUnsubscribe` function()
+  * *NOTE: Never actually called currently.*
+5. `onNotify` function()
+  * *NOTE: Never actually called currently.*
+
+
+### DescriptorInit
+
+This object has two fields:
+1. 'uuid' *string* This is a 16-bit descriptor UUID (4 hex chars)
+    * Defined descriptors are listed here in [Bluetooth Specifications](https://www.bluetooth.com/specifications/gatt/descriptors)
+2. 'value' *string* This string supplies the defined information.
+    * *NOTE: Values can also be Buffer objects, but that's not currently
     supported.*
 
 Client Requirements
