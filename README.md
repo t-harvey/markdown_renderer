@@ -3,7 +3,7 @@ ZJS API for Bluetooth Low Energy (BLE)
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [BLE-supported Events](#blesupported-events)
+* [BLE-supported Events](#ble\-supported-events)
 * [Class: BLE](#ble-api)
   * [ble.disconnect(address)](#bledisconnectaddress)
   * [ble.startAdvertising(name, uuids, url)](#blestartadvertisingname-uuids-url)
