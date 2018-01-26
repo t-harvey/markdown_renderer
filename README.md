@@ -8,7 +8,8 @@ ZJS API for Bluetooth Low Energy (BLE)
   * [ble.disconnect(address)](#bledisconnectaddress)
   * [ble.startAdvertising(name, uuids, url)](#blestartadvertisingname-uuids-url)
   * [ble.stopAdvertising()](#blestopadvertising)
-  * [ble.setServices(primaryServices)](#blesetservicesprimaryservice-primaryservices)
+  *
+    [ble.setServices(primaryServices)](#blesetservicesprimaryservices)
   * [ble.PrimaryService(init)](#bleprimaryserviceinit)
   * [ble.newCharacteristic(init)](#blenewcharacteristicinit)
   * [ble.newDescriptor(init)](#blenewdescriptorinit)
@@ -153,7 +154,7 @@ Advertises the name of the device.
 
 Currently does nothing.
 
-### ble.setServices(PrimaryService[] primaryServices)
+### ble.setServices(primaryServices)
 * primaryServices *array of PrimaryService objects* The PrimaryService
   objects are used to set up the services that are implemented by your
   app.
