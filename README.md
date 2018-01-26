@@ -13,6 +13,8 @@ ZJS API for Bluetooth Low Energy (BLE)
   * [ble.newPrimaryService(init)](#blenewprimaryserviceinit)
   * [ble.newCharacteristic(init)](#blenewcharacteristicinit)
   * [ble.newDescriptor(init)](#blenewdescriptorinit)
+* [Supporting Objects](#supporting-objects)
+  * [DescriptorInit](#descriptorinit)
 * [Client Requirements](#client-requirements)
 * [Sample Apps](#sample-apps)
 
@@ -211,9 +213,11 @@ Explanation of common arguments to the above functions:
 
 ### ble.newDescriptor(init)
 * 'init' *DescriptorInit*(#descriptorinit-struct)
-	
-DescriptorInit Struct
----------------------
+
+Supporting Objects
+------------------
+
+###DescriptorInit
 
 This object has two fields:
 	1. 'uuid' *string* This is a 16-bit descriptor UUID (4 hex chars)
