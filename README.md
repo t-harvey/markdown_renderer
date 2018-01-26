@@ -203,7 +203,7 @@ hex chars).
 This object has 3 required fields:
 1. `uuid` *string* This field is a 16-bit characteristic UUID (4 hex chars).
 2. `properties` *array of strings* Possible values: 'read', 'write', and 'notify', depending on what is supported.
-3. `descriptors` *array of Descriptors*(#descriptor)
+3. `descriptors` *array of Descriptors*[](#descriptor)
 
 It may also contain these optional callback fields:
 1. `onReadRequest` function(offset, callback(result, data))
