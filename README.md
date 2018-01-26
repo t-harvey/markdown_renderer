@@ -10,7 +10,7 @@ ZJS API for Bluetooth Low Energy (BLE)
   * [ble.stopAdvertising()](#blestopadvertising)
   *
     [ble.setServices(primaryServices)](#blesetservicesprimaryservices)
-  * [ble.PrimaryService(init)](#bleprimaryserviceinit)
+  * [ble.PrimaryService(init)](#blenewprimaryserviceinit)
   * [ble.newCharacteristic(init)](#blenewcharacteristicinit)
   * [ble.newDescriptor(init)](#blenewdescriptorinit)
 * [Client Requirements](#client-requirements)
