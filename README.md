@@ -8,11 +8,11 @@ ZJS API for Bluetooth Low Energy (BLE)
   * [ble.disconnect(address)](#bledisconnectaddress)
   * [ble.startAdvertising(name, uuids, url)](#blestartadvertisingname-uuids-url)
   * [ble.stopAdvertising()](#blestopadvertising)
-  *
-    [ble.setServices(primaryServices)](#blesetservicesprimaryservices)
+  * [ble.setServices(primaryServices)](#blesetservicesprimaryservices)
   * [ble.newPrimaryService(init)](#blenewprimaryserviceinit)
   * [ble.newCharacteristic(init)](#blenewcharacteristicinit)
   * [ble.newDescriptor(init)](#blenewdescriptorinit)
+* [Class: Characteristic](#characteristic-api)
 * [Supporting Objects](#supporting-objects)
   * [DescriptorInit](#descriptorinit)
 * [Client Requirements](#client-requirements)
@@ -71,30 +71,31 @@ dictionary CharacteristicInit {
     NotifyCallback onNotify;            // optional
 };
 
-callback ReadCallback = void (unsigned long offset, FulfillReadCallback);
-callback WriteCallback = void (Buffer data, unsigned long offset,
-                               boolean withoutResponse, FulfillWriteCallback);
-callback SubscribeCallback = void (unsigned long maxValueSize,
-                                   FulfillSubscribeCallback);
-callback FulfillReadCallback = void (CharacteristicResult result, Buffer data);
-callback FulfillWriteCallback = void (CharacteristicResult result);
-callback FulfillSubscribeCallback = void (Buffer data);
-
-dictionary DescriptorInit {
-    string uuid;
-    string value;
-};
-
 interface Characteristic {
     attribute ReadCallback onReadRequest;
     attribute WriteCallback onWriteRequest;
     attribute SubscribeCallback onSubscribe;
     attribute UnsubscribeCallback onUnsubscribe;
     attribute NotifyCallback onNotify;
-    unsigned long RESULT_SUCCESS;
-    unsigned long RESULT_INVALID_OFFSET;
-    unsigned long RESULT_INVALID_ATTRIBUTE_LENGTH;
-    unsigned long RESULT_UNLIKELY_ERROR;
+	attribute CharacteristicResult response;
+};
+
+callback ReadCallback = void (unsigned long offset,
+                              FulfillReadCallback fulfillreadcallback);
+callback WriteCallback = void (Buffer data, unsigned long offset,
+                               boolean withoutResponse,
+							   FulfillWriteCallback fulfillwritecallback);
+callback SubscribeCallback = void (unsigned long maxValueSize,
+                                   FulfillSubscribeCallback fullfillsubscribecallback);
+callback FulfillReadCallback = void (CharacteristicResult result, Buffer data);
+callback FulfillWriteCallback = void (CharacteristicResult result);
+callback FulfillSubscribeCallback = void (Buffer data);
+
+enum CharacteristicResult { "RESULT_SUCCESS", "RESULT_INVALID_OFFSET", "RESULT_INVALID_ATTRIBUTE_LENGTH", "RESULT_UNLIKELY_ERROR" } ;
+
+dictionary DescriptorInit {
+    string uuid;
+    string value;
 };
 ```
 
@@ -174,6 +175,10 @@ Returns a new PrimaryService object.
 
 Returns a new Characteristic object.
 
+Characteristic API
+------------------
+The "Characteristic" object contains the set of callbacks that...[[TODO!!!]]
+
 Explanation of common arguments to the above functions:
 * `offset` is a 0-based integer index into the data the characteristic
     represents.
@@ -193,9 +198,8 @@ Supporting Objects
 ### PrimaryServiceInit
 
 This object has two fields:
-1. 'uuid' *string* This field is a  16-bit service UUID (4
-hex chars).
-2. `characteristics` *array of Characteristic objects*
+1. 'uuid' *string* This field is a  16-bit service UUID (4 hex chars).
+2. `characteristics` *array of [Characteristics](#characteristic)*
 
 
 ### CharacteristicInit
@@ -206,20 +210,20 @@ This object has 3 required fields:
 3. `descriptors` *array of [Descriptors](#descriptor)*
 
 It may also contain these optional callback fields:
-1. `onReadRequest` function(offset, callback(result, data))
+1. `onReadRequest` *ReadCallback*
   * Called when the client is requesting to read data from the characteristic.
   * See below for common argument definitions
-2. `onWriteRequest` function(data, offset, withoutResponse, callback(result))
+2. `onWriteRequest` *WriteCallback*
   * Called when the client is requesting to write data to the characteristic.
   * `withoutResponse` is true if the client doesn't want a response
     * *TODO: verify this*
-3. `onSubscribe` function(maxValueSize, callback(data))
+3. `onSubscribe` *SubscribeCallback*
   * Called when a client signs up to receive notify events when the
       characteristic changes.
   * `maxValueSize` is the maximum data size the client wants to receive.
-4. `onUnsubscribe` function()
+4. `onUnsubscribe` *UnsubscribeCallback*
   * *NOTE: Never actually called currently.*
-5. `onNotify` function()
+5. `onNotify` *NotifyCallback*
   * *NOTE: Never actually called currently.*
 
 
