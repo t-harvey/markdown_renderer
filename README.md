@@ -175,6 +175,13 @@ Returns a new PrimaryService object.
 
 Returns a new Characteristic object.
 
+
+### ble.newDescriptor(init)
+* 'init' *DescriptorInit*(#descriptorinit-struct)
+
+Returns a new DescriptorInit object.
+
+
 Characteristic API
 ------------------
 The "Characteristic" object contains the set of callbacks that...[[TODO!!!]]
@@ -188,9 +195,6 @@ Explanation of common arguments to the above functions:
   * RESULT_INVALID_ATTRIBUTE_LENGTH
   * RESULT_UNLIKELY_ERROR
 * `data` is a [Buffer](./buffer.md) object.
-
-### ble.newDescriptor(init)
-* 'init' *DescriptorInit*(#descriptorinit-struct)
 
 Supporting Objects
 ------------------
