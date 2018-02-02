@@ -38,8 +38,7 @@ treat them like decimals.*
 Web IDL
 -------
 This IDL provides an overview of the interface; see below for documentation of
-specific API functions.  Click [here](Notes_on_WebIDL.md) for an
-explanation of zephyr.js' WebIDL conventions.
+specific API functions.  We also have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 
 ```javascript
@@ -51,7 +50,7 @@ interface BLE: EventEmitter {
     void disconnect(string address);
     void startAdvertising(string name, string[] uuids, string url);
     void stopAdvertising();
-    void setServices(PrimaryService services[]);
+    void setServices(PrimaryService[] services);
     PrimaryService newPrimaryService(PrimaryServiceInit init);
     Characteristic newCharacteristic(CharacteristicInit init);
     Descriptor newDescriptor(DescriptorInit init);
@@ -86,7 +85,7 @@ callback ReadCallback = void (unsigned long offset,
                               FulfillReadCallback fulfillreadcallback);
 callback WriteCallback = void (Buffer data, unsigned long offset,
                                boolean withoutResponse,
-							   FulfillWriteCallback fulfillwritecallback);
+                               FulfillWriteCallback fulfillwritecallback);
 callback SubscribeCallback = void (unsigned long maxValueSize,
                                    FulfillSubscribeCallback fullfillsubscribecallback);
 callback FulfillReadCallback = void (CharacteristicResult result, Buffer data);
@@ -152,8 +151,8 @@ Disconnect the remote client.
   provided, this will be used to create a physical web advertisement
   that will direct users to the given URL. At that URL they might be
   able to interact with the advertising device somehow.
-  
-Advertises the name of the device.
+
+Advertises the name and url of the device.
 
 ### ble.stopAdvertising()
 
@@ -163,25 +162,22 @@ Currently does nothing.
 * primaryServices *array of PrimaryService objects* The PrimaryService
   objects are used to set up the services that are implemented by your
   app.
-  
+
 The PrimaryService object contains the following fields:
 
 
 ### ble.newPrimaryService(init)
 * 'init' *PrimaryServiceInit*(#primaryserviceinit)
-
-Returns a new PrimaryService object.
+* Returns: a new PrimaryService object.
 
 ### ble.newCharacteristic(init)
-* init *CharacteristicInit* 
-
-Returns a new Characteristic object.
+* init *CharacteristicInit*
+* Returns: a new Characteristic object.
 
 
 ### ble.newDescriptor(init)
 * 'init' *DescriptorInit*(#descriptorinit-struct)
-
-Returns a new DescriptorInit object.
+* Returns: a new DescriptorInit object.
 
 
 Characteristic API
