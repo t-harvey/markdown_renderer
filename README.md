@@ -159,7 +159,7 @@ Advertises the name and url of the device.
 Currently does nothing.
 
 ### ble.setServices(primaryServices)
-* `primaryServices` *array of PrimaryService objects* The PrimaryService
+* `primaryServices` *array of [PrimaryService](#primaryservice) objects* The PrimaryService
   objects are used to set up the services that are implemented by your
   app.
 
