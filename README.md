@@ -179,7 +179,7 @@ The PrimaryService object contains the following fields:
 * `init` [*DescriptorInit*](#descriptorinit)
 * Returns: a new DescriptorInit object.
 
-a
+
 Characteristic API
 ------------------
 The "Characteristic" object contains the set of callbacks that...[[TODO!!!]]
