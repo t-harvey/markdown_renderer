@@ -171,12 +171,12 @@ The PrimaryService object contains the following fields:
 * Returns: a new PrimaryService object.
 
 ### ble.newCharacteristic(init)
-* `init` *CharacteristicInit*
+* `init` [*CharacteristicInit*](#characteristicinit)
 * Returns: a new Characteristic object.
 
 
 ### ble.newDescriptor(init)
-* `init` *DescriptorInit*(#descriptorinit-struct)
+* `init` [*DescriptorInit*](#descriptorinit-struct)
 * Returns: a new DescriptorInit object.
 
 
