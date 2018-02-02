@@ -176,7 +176,7 @@ The PrimaryService object contains the following fields:
 
 
 ### ble.newDescriptor(init)
-* `init` [*DescriptorInit*](#descriptorinit-struct)
+* `init` [*DescriptorInit*](#descriptorinit)
 * Returns: a new DescriptorInit object.
 
 
@@ -201,7 +201,7 @@ Supporting Objects
 
 This object has two fields:
 1. `uuid` *string* This field is a  16-bit service UUID (4 hex chars).
-2. `characteristics` *array of [Characteristics](#characteristic)*
+2. `characteristics` *array of [Characteristics](#characteristic-api)*
 
 
 ### CharacteristicInit
