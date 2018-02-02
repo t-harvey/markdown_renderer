@@ -167,7 +167,7 @@ The PrimaryService object contains the following fields:
 
 
 ### ble.newPrimaryService(init)
-* `init` *[PrimaryServiceInit(#primaryserviceinit)]*
+* `init` [*PrimaryServiceInit*](#primaryserviceinit)
 * Returns: a new PrimaryService object.
 
 ### ble.newCharacteristic(init)
