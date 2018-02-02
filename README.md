@@ -85,7 +85,7 @@ callback ReadCallback = void (unsigned long offset,
                               FulfillReadCallback fulfillreadcallback);
 callback WriteCallback = void (Buffer data, unsigned long offset,
                                boolean withoutResponse,
-							   FulfillWriteCallback fulfillwritecallback);
+                               FulfillWriteCallback fulfillwritecallback);
 callback SubscribeCallback = void (unsigned long maxValueSize,
                                    FulfillSubscribeCallback fullfillsubscribecallback);
 callback FulfillReadCallback = void (CharacteristicResult result, Buffer data);
