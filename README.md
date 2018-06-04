@@ -42,7 +42,7 @@ interface GPIOPin {
     attribute ChangeCallback onchange;
 };<p>callback ChangeCallback = void (GPIOEvent);<p>dictionary GPIOEvent {
     number value;
-}</pre>
+};</pre>
 </details>
 
 API Documentation
