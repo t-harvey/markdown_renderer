@@ -24,12 +24,33 @@ specific API functions.  We have a short document explaining [ZJS WebIDL convent
 <pre>
 // require returns a GPIO object
 // var gpio = require('gpio');
-
+<p>
 [NoInterfaceObject]
 interface GPIO {
     GPIOPin open(number or string or GPIOInit init);
 };
-</pre>
+<p>
+dictionary GPIOInit {
+    number or string pin;
+    boolean activeLow = false;
+    string mode = "out";        // in, out
+    string edge = "none";       // none, rising, falling, any
+    string state = "none";      // none, up, down
+};
+<p>
+[NoInterfaceObject]
+interface GPIOPin {
+    number read();
+    void write(number value);
+    void close();
+    attribute ChangeCallback onchange;
+};
+<p>
+callback ChangeCallback = void (GPIOEvent);
+<p>
+dictionary GPIOEvent {
+    number value;
+}</pre>
 </details>
 
 API Documentation
