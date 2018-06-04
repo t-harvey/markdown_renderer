@@ -1,6 +1,6 @@
 ZJS API for Analog I/O (AIO)
 ============================
-
+_
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
 * [Class: AIO](#aio-api)
@@ -39,17 +39,13 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <pre>
 // require returns an AIO object
 // var aio = require('aio');
-
+<p>
 [ReturnFromRequire]
 interface AIO {
     AIOPin open(AIOInit init);
-};
-
-dictionary AIOInit {
+};<p>dictionary AIOInit {
     (unsigned long or string) pin;
-};
-
-interface AIOPin {
+};<p>interface AIOPin {
     unsigned long read();
     void readAsync(ReadCallback callback);  // TODO: change to return a promise
     void on(string eventType, ReadCallback callback);
