@@ -29,28 +29,7 @@ specific API functions.  We have a short document explaining [ZJS WebIDL convent
 interface GPIO {
     GPIOPin open(number or string or GPIOInit init);
 };
-
-dictionary GPIOInit {
-    number or string pin;
-    boolean activeLow = false;
-    string mode = "out";        // in, out
-    string edge = "none";       // none, rising, falling, any
-    string state = "none";      // none, up, down
-};
-
-[NoInterfaceObject]
-interface GPIOPin {
-    number read();
-    void write(number value);
-    void close();
-    attribute ChangeCallback onchange;
-};
-
-callback ChangeCallback = void (GPIOEvent);
-
-dictionary GPIOEvent {
-    number value;
-}</pre>
+</pre>
 </details>
 
 API Documentation
