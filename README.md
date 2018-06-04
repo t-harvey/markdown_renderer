@@ -1,25 +1,18 @@
-ZJS API for Buffer
-==================
+ZJS API for General Purpose I/O (GPIO)
+======================================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class: Buffer](#buffer-api)
-  * [new Buffer(initialValues)](#new-bufferinitialvalues)
-  * [new Buffer(size)](#new-buffersize)
-  * [new Buffer(initialString)](#new-bufferinitialstring)
-  * [buf.copy(target[, targetStart, [sourceStart[, sourceEnd]]])](#bufcopytarget-targetstart-sourcestart-sourceend)
-  * [buf.fill(value[, offset[, end[, encoding]]])](#buffillvalue-offset-end-encoding)
-  * [buf.readUInt*(offset)](#bufreaduint-family)
-  * [buf.toString([encoding])](#buftostringencoding)
-  * [buf.write(string[, offset[, length[, encoding]]])](#bufwritestring-offset-length-encoding)
-  * [buf.writeUInt*(value, offset)](#bufwriteuint-family)
+* [API Documentation](#api-documentation)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-Buffer is a [Node.js API](https://nodejs.org/dist/latest-v8.x/docs/api/buffer.html)
-to read and write binary data accurately from JavaScript. ZJS supports a minimal
-subset of this API that will be expanded as the need arises.
+The GPIO API supports digital I/O pins. Pins can be configured as inputs or
+outputs, with some board-specific limitations.
+
+The GPIO API intends to follow the [iot-js-api specification](https://github.com/intel/iot-js-api/tree/master/board/gpio.md),
+but both that and ZJS are under a lot of change at the moment.
 
 Web IDL
 -------
@@ -29,137 +22,119 @@ specific API functions.  We have a short document explaining [ZJS WebIDL convent
 <details>
 <summary> Click to show/hide WebIDL</summary>
 <pre>
-[ Constructor(sequence < Uint8 > initialValues),
-  Constructor(unsigned long size),
-  Constructor(ByteString initialString) ]
-interface Buffer {
-    readonly attribute unsigned long length;
-    attribute ArrayBuffer buffer;
-    unsigned long copy(Buffer target, optional unsigned long targetStart = 0,
-                                      optional unsigned long sourceStart = 0,
-                                      optional unsigned long sourceEnd);
-    this fill((string or Buffer or long) value, optional long offset = 0,
-                                                optional long end,
-                                                optional string encoding = "utf8");
-    octet readUInt8(optional unsigned long offset = 0);
-    short readUInt16BE(optional unsigned long offset = 0);
-    short readUInt16LE(optional unsigned long offset = 0);
-    long readUInt32BE(optional unsigned long offset = 0);
-    long readUInt32LE(optional unsigned long offset = 0);
-    string toString(string encoding);
-    long write(string value, optional long offset = 0,
-                             optional long length = this.length-offset,
-                             optional string encoding = "utf8");
-    long writeUInt8(octet value, unsigned long offset);
-    long writeUInt16BE(unsigned short value, unsigned long offset);
-    long writeUInt16LE(unsigned short value, unsigned long offset);
-    long writeUInt32BE(unsigned long value, unsigned long offset);
-    long writeUInt32LE(unsigned long value, unsigned long offset);
-};</pre>
+// require returns a GPIO object
+// var gpio = require('gpio');
+
+[NoInterfaceObject]
+interface GPIO {
+    GPIOPin open(number or string or GPIOInit init);
+};
+
+dictionary GPIOInit {
+    number or string pin;
+    boolean activeLow = false;
+    string mode = "out";        // in, out
+    string edge = "none";       // none, rising, falling, any
+    string state = "none";      // none, up, down
+};
+
+[NoInterfaceObject]
+interface GPIOPin {
+    number read();
+    void write(number value);
+    void close();
+    attribute ChangeCallback onchange;
+};
+
+callback ChangeCallback = void (GPIOEvent);
+
+dictionary GPIOEvent {
+    number value;
+}</pre>
 </details>
 
-Buffer API
-----------
-### new Buffer(initialValues)
-* `initialValues` *integer-array* of octets to use as initial data.
+API Documentation
+-----------------
+### GPIO.open
 
-A new Buffer object will be returned with the same size as the array
-and initialized with the array's contents. If there is not enough
-available memory, an error will be thrown.
+`GPIOPin open(number or string or GPIOInit init);`
 
-### new Buffer(size)
-* `size` *integer* Length in bytes of the new buffer.
+If the argument is a number, it is a pin number. If it is a string, it is a
+pin name. Otherwise, it must be a GPIOInit object.
 
-The `size` argument specifies the length in bytes of the array that the Buffer
-represents. If a negative length is passed, a 0-length Buffer will be returned.
-If there is not enough available memory to allocate the Buffer, an error will
-be thrown.
+The `init` object lets you set the pin number or name with the `pin` property.
 
-### new Buffer(initialString)
-* `initialString` *string* String to use as initial data.
+If the pin number or name is valid for the given board, the call will succeed.
+You can use a pin name like "GPIO_0.10" where "GPIO_0" is the name of a Zephyr
+gpio port device for your board and 10 is the pin number. This will work on any
+board as long as you find the right values in Zephyr documentation. But for
+boards with specific ZJS support, you can use friendly names. Currently this
+means Arduino 101 and FRDM-K64F. For the A101, you can use numbers 0-13 or
+strings "IO0" through "IO13", as well as "LED0" through "LED2". For K64F, you
+can use numbers 0-15 or strings "D0" through "D15", as well as "LEDR", "LEDG",
+and "LEDB" for the RGB LED, and "SW2" and "SW3" for onboard switches.
 
-The `string` argument will be treated as an array of UTF8 values and
-will be used to initialize the new buffer. If there is not enough
-available memory, an error will be thrown.
+The other values are optional. The `activeLow` setting determines whether
+high (default) or low means active. When you read or write a boolean value,
+true means 'active' and false means 'inactive'.
 
-### buf.copy(target[, targetStart, [sourceStart[, sourceEnd]]])
-* `target` *Buffer* Buffer to receive the copied data.
-* `targetStart` *integer* Offset to start writing at in the target buffer.
-* `sourceStart` *integer* Offset to start reading from in the source buffer.
-* `sourceEnd` *integer* Offset at which to stop reading from the source (not
-inclusive).
-* Returns: *integer* Number of bytes copied.
+The `mode` value determines whether the pin is an input ('in') or output
+('out', default).
 
-Copies data from this `buf` to `target`. Start offsets default to 0 and
-`sourceEnd` defaults to the end of the source buffer. If there is not enough
-room in the target, throws an error.
+The `edge` value is for input pins and tells whether the `onchange` callback
+will be called on the rising edge of the signal, falling edge, or both.
 
-### buf.fill(value[, offset[, end[, encoding]]])
-* `value` *string* | *Buffer* | *integer* Value to fill buffer with.
-* `offset` *integer* Offset to start writing at in the buffer.
-* `end` *integer* Offset at which to stop writing (not inclusive).
-* `encoding` *string* Encoding type.
-* Returns: *Buffer* A reference to `buf`.
+The `state` value is to enable an internal pullup or pulldown resistor. This
+would be used for inputs to provide a default (high or low) when the input is
+floating (not being intentionally driven to a particular value).
 
-Repeatedly copies bytes from the source number, buffer, or string, until the
-buffer is filled from `offset` to `end` (which default to the beginning and end
-of the buffer. Only default "utf8" encoding is accepted currently. Treats
-numbers as four byte integers.
+*NOTE: When we last checked, Zephyr did not use this state setting, at least for
+Arduino 101. Perhaps there is no hardware support, but in any case it didn't
+work. You can always provide an external resistor for this purpose instead.*
 
-### buf.readUInt family
+The function returns a GPIOPin object that can be used to read or write the pin.
 
-#### buf.readUInt8(offset)
-#### buf.readUInt16BE(offset)
-#### buf.readUInt16LE(offset)
-#### buf.readUInt32BE(offset)
-#### buf.readUInt32LE(offset)
-* `offset` *integer* Number of bytes to skip before reading integer.
-* Returns: *integer*
+### GPIOPin.read
 
-Reads 1, 2, or 4 bytes at `offset` as a big-endian (highest byte first) or
-little-endian (lowest byte first) integer depending on the function version.
-The `offset` should be provided but will be treated as 0 if not given. Returns
-an error if the buffer is not big enough.
+`number read();`
 
-### buf.toString([encoding])
-* `encoding` *string* Encoding to use.
-* Returns: *string*
+Returns the current reading from the pin. This is a synchronous function because
+it should be nearly instantaneous on the devices we've tested with so far. The
+value will be 1 if the pin is active (high by default, low for a pin configured
+active low), 0 if inactive.
 
-Currently, the supported encodings are 'utf8' (default), 'ascii', and 'hex'.
-If 'ascii' is given, drops the high bit from every character and terminates at
-'\0' byte if found. If 'hex' is given, returns the contents of the buffer
-encoded in hexadecimal digits (two characters per byte). Otherwise, returns an
-error.
+### GPIOPin.write
 
-### buf.write(string[, offset[, length[, encoding]]])
-* `string` *string* String to write to buf.
-* `offset` *integer* Offset to start writing at in the buffer.
-* `length` *integer* Number of bytes to write.
-* `encoding` *string* Encoding to use.
-* Returns: *integer* Number of bytes written.
+`void write(number value);`
 
-Writes bytes from `string` to buffer at `offset`, stopping after `length` bytes.
-The default `offset` is 0 and default `length` is buffer length - `offset`. Only
-'utf8' encoding is supported currently.
+Pass 1 for `value` to make an output pin active (high by default, low for a pin
+configured active low), 0 to make it inactive.
 
-### buf.writeUInt family
+### GPIOPin.close
 
-#### writeUInt8(value, offset)
-#### writeUInt16BE(value, offset)
-#### writeUInt16LE(value, offset)
-#### writeUInt32BE(value, offset)
-#### writeUInt32LE(value, offset)
-* `value` *integer* Number to write.
-* `offset` *integer* Number of bytes to skip before writing value.
-* Returns: *integer* `offset` plus the bytes written.
+`void close();`
 
-The `value` will be treated as 1, 2, or 4 byte big-endian (highest byte first)
-or little-endian (lowest byte first) integer depending on the function version.
-The `offset` should be provided but will be treated as 0 if not given. Returns
-the new offset just beyond what was written to the buffer. If the target area
-goes outside the bounds of the Buffer, returns an error.
+Free up resources associated with the pin. The onchange function for this pin
+will no longer be called, and the object should not be used for reading and
+writing anymore.
+
+### GPIOPin.onchange
+
+`attribute ChangeCallback onchange;`
+
+Set this attribute to a function that will receive events whenever the pin
+changes according to the edge condition specified at pin initialization. The
+event object contains a `value` field with the current pin state.
 
 Sample Apps
 -----------
-* [Buffer sample](../samples/Buffer.js)
-* [WebBluetooth Demo](../samples/WebBluetoothDemo.js)
+* GPIO input only
+  * [Arduino DigitalReadSerial sample](../samples/arduino/basics/DigitalReadSerial.js)
+* GPIO output only
+  * [Arduino Blink sample](../samples/arduino/basics/Blink.js)
+  * [RGB LED sample](../samples/RGB.js)
+* GPIO input/output
+  * [AutoButton sample](../samples/AutoButton.js)
+  * [Arduino Button sample](../samples/arduino/digital/Button.js)
+  * [ButtonLEDs sample](../samples/ButtonLEDs.js)
+  * [TwoButtons sample](../samples/TwoButtons.js)
