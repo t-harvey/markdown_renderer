@@ -1,7 +1,7 @@
 ZJS API for Analog I/O (AIO)
 ============================
 
-* [Introduction](#introduction)
+* [Int roduction](#introduction)
 * [Web IDL](#web-idl)
 * [Class: AIO](#aio-api)
   * [aio.open(AIOInit)](#aioopenaioinit)
