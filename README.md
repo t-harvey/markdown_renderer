@@ -79,7 +79,7 @@ interface FS {
                      long length, long position);
     void truncateSync(string path, long length);
     void mkdirSync(string path);
-    sequence < string > readdirSync(string path);
+    sequence< string > readdirSync(string path);
     Stat statSync(string path);
     void writeFileSync(string file, (string or Buffer) data);
 };
