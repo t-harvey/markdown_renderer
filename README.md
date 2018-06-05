@@ -55,7 +55,7 @@ GPIO API
 --------
 ### GPIO.open(init)
 
-* 'init' *long or string or GPIOInit* If the argument is a number, it is a pin number. If it is a
+* `init` *long or string or GPIOInit* If the argument is a number, it is a pin number. If it is a
 string, it is a pin name. Otherwise, it must be a GPIOInit object.
 * Returns: a GPIOPin object that can be used to read or write the pin.
 
