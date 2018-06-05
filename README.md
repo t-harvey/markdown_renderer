@@ -4,7 +4,7 @@ Zephyr.js API for UART
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
 * [Class UART](#uart-api)
-  * [UART.init(options)](#uartinitoptions)
+  * [uart.init(options)](#uartinitoptions)
 * [UARTConnection API](#uartconnection-api)
   * [Event: 'read'](#event-read)
   * [uartConnection.write(data)](#uartconnectionwritedata)
@@ -30,37 +30,31 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <summary>Click to show WebIDL</summary>
 <pre>// require returns a UART object
 // var uart = require('uart');
-
 interface UART {
     UARTConnection init(UARTOptions options);
-};
-
-dictionary UARTOptions {
+};<p>dictionary UARTOptions {
     string port;
-    // number baud = 115200;
-    // number dataBits = 8;
-    // number stopBits = 1;
+    // long baud = 115200;
+    // long dataBits = 8;
+    // long stopBits = 1;
     // UARTParity parity = "none";
     // boolean flowControl = false;
-};
-
+};<p>[ExternalInterface=(buffer,Buffer)]
 interface UARTConnection: EventEmitter {
     // void close();
     void write(Buffer data);
-    void setReadRange(number min, number max);
-};
-
-enum UARTParity { "none", "event", "odd" }
+    void setReadRange(long min, long max);
+};<p>enum UARTParity { "none", "event", "odd" }
 </pre>
 </details>
 
 UART API
 --------
-### UART.init(options)
+### uart.init(options)
 * `options` *UARTOptions* The `UARTOptions` object lets you choose the
   UART device/port you would like to initialize. The Arduino 101, for
   example, should be "tty0".
-* Returns: UARTConnection interface.
+* Returns: UARTConnection interface, described below.
 
 UARTConnection API
 ------------------
@@ -79,8 +73,8 @@ Emitted when data is received on the UART RX line. The `data` parameter is a
 Write data out to the UART TX line.
 
 ### uartConnection.setReadRange(min, max);`
-* `min` *long* The minimum number of bytes for triggeringthe `onread` event.
-* `max` *long* The maximum number of bytes for triggeringthe `onread` event.
+* `min` *long* The minimum number of bytes for triggering the `onread` event.
+* `max` *long* The maximum number of bytes for triggering the `onread` event.
 
 Whenever at least the `min` number of bytes is available, a `Buffer` object
 containing at most `max` number of bytes is sent with the `onread` event.
