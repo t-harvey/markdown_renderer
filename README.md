@@ -32,35 +32,32 @@ specific API functions.  We have a short document explaining [ZJS WebIDL convent
 // var gpio = require('gpio');<p>
 [ReturnFromRequire]
 interface GPIO {
-    GPIOPin open( (number or string or GPIOInit) init);
+    GPIOPin open( (long or string or GPIOInit) init);
 };<p>dictionary GPIOInit {
-    number or string pin;
+    (long or string) pin;
     boolean activeLow = false;
     GPIOMode  mode =  "out";
     GPIOEdge  edge =  "none";
     GPIOState state = "none";
 };<p>interface GPIOPin {
-    number read();
-    void write(number value);
+    long read();
+    void write(long value);
     void close();
     attribute ChangeCallback onchange;
 };<p>callback ChangeCallback = void (GPIOEvent event);<p>dictionary GPIOEvent {
-    number value;
+    long value;
 };<p>enum GPIOMode  { "out", "in" };
 enum GPIOEdge  { "none", "rising", "falling", "any" };
 enum GPIOState { "none", "up", "down" };</pre>
 </details>
 
 GPIO API
------------------
-### GPIO.open((number or string or GPIOInit) init)
+--------
+### GPIO.open(init)
 
-* init
-If the argument is a number, it is a pin number. If it is a string, it is a
-pin name. Otherwise, it must be a GPIOInit object.
+* 'init' *long or string or GPIOInit* If the argument is a number, it is a pin number. If it is a
+string, it is a pin name. Otherwise, it must be a GPIOInit object.
 * Returns: a GPIOPin object that can be used to read or write the pin.
-
-The `init` object lets you set the pin number or name with the `pin` property.
 
 If the pin number or name is valid for the given board, the call will succeed.
 You can use a pin name like "GPIO_0.10" where "GPIO_0" is the name of a Zephyr
@@ -93,17 +90,15 @@ work. You can always provide an external resistor for this purpose instead.*
 GPIOPin API
 -----------
 ### pin.read()
-
-`number read();`
 * Returns: the current reading from the pin.
 
-This is a synchronous function because it should be nearly
+This is a synchronous function, because it is nearly
 instantaneous on the devices we've tested with so far. The value will
 be 1 if the pin is active (high by default, low for a pin configured
 active low), 0 if inactive.
 
-### pin.write(number value)
-* 'value' *number*  Pass 1 for `value` to make an output pin active
+### pin.write(value)
+* 'value' *long*  Pass 1 for `value` to make an output pin active
 (high by default, low for a pin configured active low), 0 to make it inactive.
 
 ### pin.close()
