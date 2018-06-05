@@ -49,6 +49,7 @@ WebSocket API
 
 ### ws.Server(options)
 * `options` *Object*
+* Returns: a WebSocketServer object.
 
 Create a Web Socket server object. Options object may contain:
 
