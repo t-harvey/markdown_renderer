@@ -7,7 +7,7 @@ ZJS API for General Purpose I/O (GPIO)
   * [GPIO.open(init)](#gpioopeninit)
 * [Class GPIOPin](#gpiopin-api)
   * [pin.read()](#pinread)
-  * [pin.write()](#pinwritevalue
+  * [pin.write()](#pinwritevalue)
   * [pin.close()](#pinclose)
   * [pin.onchange](#pinonchange)
 * [Sample Apps](#sample-apps)
