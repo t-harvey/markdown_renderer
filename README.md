@@ -68,19 +68,22 @@ strings "IO0" through "IO13", as well as "LED0" through "LED2". For K64F, you
 can use numbers 0-15 or strings "D0" through "D15", as well as "LEDR", "LEDG",
 and "LEDB" for the RGB LED, and "SW2" and "SW3" for onboard switches.
 
-The other values are optional. The `activeLow` setting determines whether
-high (default) or low means active. When you read or write a boolean value,
-true means 'active' and false means 'inactive'.
+The GPIOInit object can take a string or number as the pin argument,
+and all of the rest of the fields are optional. The `activeLow`
+setting determines whether high (default) or low means active. When
+you read or write a boolean value, true means 'active' and false means
+'inactive'.
 
 The `mode` value determines whether the pin is an input ('in') or output
-('out', default).
+('out').
 
 The `edge` value is for input pins and tells whether the `onchange` callback
 will be called on the rising edge of the signal, falling edge, or both.
 
-The `state` value is to enable an internal pullup or pulldown resistor. This
-would be used for inputs to provide a default (high or low) when the input is
-floating (not being intentionally driven to a particular value).
+The `state` value is useful when the architecture has an internal
+pullup or pulldown resistor. This would be used for inputs to provide
+a default (high or low) when the input is floating (not being
+intentionally driven to a particular value).
 
 *NOTE: When we last checked, Zephyr did not use this state setting, at least for
 Arduino 101. Perhaps there is no hardware support, but in any case, it didn't
