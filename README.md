@@ -1,131 +1,190 @@
-ZJS API for General Purpose I/O (GPIO)
-======================================
+ZJS API for File System
+==================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class GPIO](#gpio-api)
-  * [GPIO.open(init)](#gpioopeninit)
-* [Class GPIOPin](#gpiopin-api)
-  * [pin.read()](#pinread)
-  * [pin.write()](#pinwritevalue)
-  * [pin.close()](#pinclose)
-  * [pin.onchange](#pinonchange)
-* [Sample Apps](#sample-apps)
+* [API Documentation](#api-documentation)
+* [Class FS](#fsapi)
+  * [fs.openSync(path, mode)](#fsopensyncpath-mode)
+  * [fs.closeSync(fd)](#fsclosesyncfd)
+  * [fs.unlinkSync(path)](#fsunlinksyncpath)
+  * [fs.rmdirSync(path)](#fsrmdirsyncpath)
+  * [fs.writeSync(fd, data, offset, length, position)](#fswritesyncfd-data-offset-length-position)
+  * [fs.readSync(fd, data, offset, length, position)](#fsreadsyncfd-data-offset-length-position)
+  * [fs.truncateSync(path, length)](#fstruncatesyncpath-length)
+  * [fs.mkdirSync(path)](#fsmkdirsyncpath)
+  * [fs.readdirSync(path)](#fsreaddirsyncpath)
+  * [fs.statSync(path)](#fsstatsyncpath)
+* [Class Stat](#statapi)
+  * [stat.isFile()](#statisfile)
+  * [stat.isDirectory()](#statisdirectory)
 
 Introduction
 ------------
-The GPIO API supports digital I/O pins. Pins can be configured as inputs or
-outputs, with some board-specific limitations.
 
-The GPIO API intends to follow the [iot-js-api specification](https://github.com/intel/iot-js-api/tree/master/board/gpio.md),
-but both that and ZJS are under a lot of change at the moment.
+ZJS provides File System APIs that match Node.js' FS module. We
+describe them here to document any minor differences. It should be
+noted that by default, the FS module only contains the synchronous
+Node.js APIs. The asynchronous APIs can be compiled in by enabling the
+pre-processor value `ZJS_FS_ASYNC_APIS`. The default is to leave them
+out, because all of Zephyr's File System APIs are synchronous, so
+making the JavaScript APIs asynchronous was only adding ROM space.
+
+On the Arduino 101, the flash file system uses SPI, and the pins are shared with
+IO10-13. For this reason, you will not be able to use these GPIO pins at the
+same time as the file system.
+
+Available file modes:
+
+`'r'` - Open file for only reading. An error will be thrown if the file does
+not exist.
+
+`'r+'` - Open a file for reading and writing. An error will be thrown if the
+file does not exist.
+
+`'w'` - Open a file for writing. The file will be overwritten if it already
+exists.
+
+`'w+'` - Open a file for writing and reading. The file will be overwritten if
+it already exists.
+
+`'a'` - Opens a file for appending. The write pointer will always seek
+to the end of the file during a write.
+
+`'a+'` - Opens a file for appending and reading. The write
+pointer will seek to the end for writes, but reads will be done from the
+start of the file (the read pointer is saved across different read calls).
 
 Web IDL
 -------
-This IDL provides an overview of the interface; see below for documentation of
-specific API functions.  We have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+This IDL provides an overview of the interface; see below for
+documentation of specific API functions.  We have a short document
+explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 <details>
-<summary> Click to show/hide WebIDL</summary>
+<summary>Click to show WebIDL</summary>
 <pre>
-// require returns a GPIO object
-// var gpio = require('gpio');<p>
-[ReturnFromRequire]
-interface GPIO {
-    GPIOPin open( (long or string or GPIOInit) init);
-};<p>dictionary GPIOInit {
-    (long or string) pin;
-    boolean activeLow = false;
-    GPIOMode  mode =  "out";
-    GPIOEdge  edge =  "none";
-    GPIOState state = "none";
-};<p>interface GPIOPin {
-    long read();
-    void write(long value);
-    void close();
-    attribute ChangeCallback onchange;
-};<p>callback ChangeCallback = void (GPIOEvent event);<p>dictionary GPIOEvent {
-    long value;
-};<p>enum GPIOMode  { "out", "in" };
-enum GPIOEdge  { "none", "rising", "falling", "any" };
-enum GPIOState { "none", "up", "down" };</pre>
-</details>
+// require returns a FS object
+// var fs = require('fs');
 
-GPIO API
+[ExternalInterface=(buffer,Buffer)]
+interface FS {
+    FileDescriptor openSync(string path, FileMode mode);
+    void closeSync(FileDescriptor fd);
+    void unlinkSync(string path);
+    void rmdirSync(string path);
+    long writeSync(FileDescriptor fd, (string or Buffer) data, long offset,
+                     long length, optional long position);
+    long readSync(FileDescriptor fd, Buffer data, long offset,
+                     long length, long position);
+    void truncateSync(string path, long length);
+    void mkdirSync(string path);
+    sequence<string> readdirSync(string path);
+    Stat statSync(string path);
+    void writeFileSync(string file, (string or Buffer) data);
+};
+
+// file descriptors are inherently platform specific, so we leave this
+// as a placeholder
+definition FileDescriptor {
+};
+
+interface Stat {
+    boolean isFile();
+    boolean isDirectory();
+};
+
+enum FileMode { "r", "w", "a", "r+", "w+", "a+" };
+</pre>
+<details>
+
+FS API
+------
+
+### fs.openSync(path, mode)
+* 'path' *string* The name and path of the file to open.
+* 'mode' *FileMode* The mode in which to open the file.
+* Returns: an object representing the file descriptor.
+
+Opens a file.
+
+### fs.closeSync(fd)
+* 'fd' *FileDescriptor* The file descriptor for the file that will be closed.
+
+Closes a file.
+
+### fs.unlinkSync(path)
+* 'path' *string* The name and path of the file to remove.
+
+Unlink (remove) a file from the file system.
+
+### fs.rmdirSync(path)
+* 'path' *string* The name and path of the directory to be removed.
+
+Remove a directory from the file system.
+
+### fs.writeSync(fd, data, offset, length, position)
+* 'fd' *FileDescriptor* The file descriptor returned from `openSync()`.
+* 'data' *string or Buffer* The data to write to 'fd'.
+* 'offset' *long* The position in 'data' from which to start writing.
+* 'length' *long* The number of bytes to write to 'fd' from 'data'.
+* 'position' *long* The offset from the beginning of the file where
+  'data' should be written. The parameter is optional; the default value is 0.
+* Returns: the number of bytes actually written (this may be different from 'length').
+
+Write bytes to an opened file.
+
+### fs.readSync(fd, data, offset, length, position)
+* 'fd' *FileDescriptor* The file descriptor returned from 'openSync()'.
+* 'data' *Buffer* The buffer into which the data will be read.
+* 'offset' *long* The offset in 'data' at which to start writing.
+* 'length' *long* The number of bytes to read.
+* 'position' *long* The position in the file from which to start reading.
+* Returns: the number of bytes actually read. This may be different from
+'length' if there was a read error or if the file had no more data left to read.
+
+Read bytes from a file.
+
+### fs.truncateSync(path, length)
+* 'path' *string* The name and path of the file.
+* 'length' *long* The new length of the file.
+
+Truncate a file. If the length passed in is shorter than the existing file
+length, then the trailing file data will be lost.
+
+### fs.mkdirSync(path)
+* 'path' *string* The name and path of the directory.
+
+Create a directory. There is no effect if the directory already exists.
+
+### fs.readdirSync(path)
+* 'path' *string* The name and path of the directory to read.
+* Returns: an array of filenames and directories found in 'path'.
+
+Read the contents of a directory.
+
+### fs.statSync(path)
+* 'path' *string* The name and path of the file or directory.
+* Returns: a 'Stat' object for the file or directory or undefined if the
+file or directory does not exist.
+
+Get stats about a file or directory.
+
+### writeFileSync(file, data)
+* 'file' *string* The name of the file to which to write.
+* 'data' *string or Buffer* The data to write into the file.
+
+Open and write data to a file. This will replace the file if it already exists.
+
+Stat API
 --------
-### GPIO.open(init)
-* `init` *long or string or GPIOInit* If the argument is a number, it is a pin number. If it is a
-string, it is a pin name. Otherwise, it must be a GPIOInit object.
-* Returns: a GPIOPin object that can be used to read or write the pin.
 
-If the pin number or name is valid for the given board, the call will succeed.
-You can use a pin name like "GPIO_0.10" where "GPIO_0" is the name of a Zephyr
-gpio port device for your board and 10 is the pin number. This will work on any
-board as long as you find the right values in Zephyr documentation. But for
-boards with specific ZJS support, you can use friendly names. Currently, this
-means Arduino 101 and FRDM-K64F. For the A101, you can use numbers 0-13 or
-strings "IO0" through "IO13", as well as "LED0" through "LED2". For K64F, you
-can use numbers 0-15 or strings "D0" through "D15", as well as "LEDR", "LEDG",
-and "LEDB" for the RGB LED, and "SW2" and "SW3" for onboard switches.
+### stat.isFile()
+* Returns: true if the file descriptor is a file.
 
-The GPIOInit object can take a string or number as the pin argument,
-and all of the rest of the fields are optional. The `activeLow`
-setting determines whether high (default) or low means active. When
-you read or write a boolean value, true means 'active' and false means
-'inactive'.
-
-The `mode` value determines whether the pin is an input ('in') or output
-('out').
-
-The `edge` value is for input pins and tells whether the `onchange` callback
-will be called on the rising edge of the signal, falling edge, or both.
-
-The `state` value is useful when the architecture has an internal
-pullup or pulldown resistor. This would be used for inputs to provide
-a default (high or low) when the input is floating (not being
-intentionally driven to a particular value).
-
-*NOTE: When we last checked, Zephyr did not use this state setting, at least for
-Arduino 101. Perhaps there is no hardware support, but in any case, it didn't
-work. You can always provide an external resistor for this purpose instead.*
-
-GPIOPin API
------------
-### pin.read()
-* Returns: the current reading from the pin.
-
-This is a synchronous function, because it is nearly
-instantaneous on the devices we've tested with so far. The value will
-be 1 if the pin is active (high by default, low for a pin configured
-active low), 0 if inactive.
-
-### pin.write(value)
-* `value` *long*  Pass 1 for `value` to make an output pin active
-(high by default, low for a pin configured active low), 0 to make it inactive.
-
-### pin.close()
-
-Free up resources associated with the pin. The onchange function for this pin
-will no longer be called, and the object should not be used for reading and
-writing anymore.
-
-### pin.onchange
-
-* `onchange` *ChangeCallback*
-
-Set this attribute to a function that will receive events whenever the pin
-changes according to the edge condition specified at pin initialization. The
-event object contains a `value` field with the current pin state.
+###stat.isDirectory()
+* Returns: true if the file descriptor is a directory.
 
 Sample Apps
 -----------
-* GPIO input only
-  * [Arduino DigitalReadSerial sample](../samples/arduino/basics/DigitalReadSerial.js)
-* GPIO output only
-  * [Arduino Blink sample](../samples/arduino/basics/Blink.js)
-  * [RGB LED sample](../samples/RGB.js)
-* GPIO input/output
-  * [AutoButton sample](../samples/AutoButton.js)
-  * [Arduino Button sample](../samples/arduino/digital/Button.js)
-  * [ButtonLEDs sample](../samples/ButtonLEDs.js)
-  * [TwoButtons sample](../samples/TwoButtons.js)
+* [FS test](../tests/test-fs.js)
