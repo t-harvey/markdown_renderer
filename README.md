@@ -66,7 +66,7 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <pre>
 // require returns a FS object
 // var fs = require('fs');
-
+<p>
 [ExternalInterface=(buffer,Buffer)]
 interface FS {
     FileDescriptor openSync(string path, FileMode mode);
@@ -82,19 +82,13 @@ interface FS {
     sequence\<string\> readdirSync(string path);
     Stat statSync(string path);
     void writeFileSync(string file, (string or Buffer) data);
-};
-
-// file descriptors are inherently platform specific, so we leave this
+};<p>// file descriptors are inherently platform specific, so we leave this
 // as a placeholder
 definition FileDescriptor {
-};
-
-interface Stat {
+};<p>interface Stat {
     boolean isFile();
     boolean isDirectory();
-};
-
-enum FileMode { "r", "w", "a", "r+", "w+", "a+" };
+};<p>enum FileMode { "r", "w", "a", "r+", "w+", "a+" };
 </pre>
 </details>
 
