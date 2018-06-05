@@ -4,10 +4,10 @@ ZJS API for General Purpose I/O (GPIO)
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
 * [Class GPIO](#gpio-api)
-  * [GPIO.open(init)](#gpioopennumberorstringorgpioinit-init)
+  * [GPIO.open(init)](#gpioopennumber-or-string-or-gpioinit-init)
 * [Class GPIOPin](#gpiopin-api)
   * [pin.read()](#pinread)
-  * [pin.write()](#pinwrite)
+  * [pin.write()](#pinwritenumber-value)
   * [pin.close()](#pinclose)
   * [pin.onchange](#pinonchange)
 * [Sample Apps](#sample-apps)
@@ -29,31 +29,22 @@ specific API functions.  We have a short document explaining [ZJS WebIDL convent
 <summary> Click to show/hide WebIDL</summary>
 <pre>
 // require returns a GPIO object
-// var gpio = require('gpio');
-
+// var gpio = require('gpio');<p>
 [ReturnFromRequire]
 interface GPIO {
     GPIOPin open( (number or string or GPIOInit) init);
-};
-
-dictionary GPIOInit {
+};<p>dictionary GPIOInit {
     number or string pin;
     boolean activeLow = false;
     string mode = "out";        // in, out
     string edge = "none";       // none, rising, falling, any
     string state = "none";      // none, up, down
-};
-
-interface GPIOPin {
+};<p>interface GPIOPin {
     number read();
     void write(number value);
     void close();
     attribute ChangeCallback onchange;
-};
-
-callback ChangeCallback = void (GPIOEvent event);
-
-dictionary GPIOEvent {
+};<p>callback ChangeCallback = void (GPIOEvent event);<p>dictionary GPIOEvent {
     number value;
 };</pre>
 </details>
