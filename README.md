@@ -3,7 +3,6 @@ ZJS API for I2C
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [API Documentation](#api-documentation)
 * [I2C API](#i2c-api)
   * [i2c.open(init)](#i2copeninit)
 * [I2CBus API](#i2cbus-api)
@@ -27,26 +26,19 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <details>
 <summary>Click to show WebIDL</summary>
 <pre>// require returns a I2C object
-// var i2c = require('i2c');
-
-[ReturnFromRequire]
+// var i2c = require('i2c');<p><p>[ReturnFromRequire]
 interface I2C {
     I2CBus open(I2CInit init);
-};
-
-dictionary I2CInit {
+};<p>dictionary I2CInit {
     octet bus;
     I2CBusSpeed speed;
-};
-
-[ExternalInterface=(buffer,Buffer)]
+};<p>[ExternalInterface=(buffer,Buffer)]
 interface I2CBus {
     // has all the properties of I2CInit as read-only attributes
     void write(octet device, Buffer data);
     void read(octet device, unsigned long size, octet registerAddress);
     void burstRead(octet device, unsigned long size, octet registerAddress);
-};
-</pre>
+};</pre>
 </details>
 
 I2C API
