@@ -4,10 +4,10 @@ ZJS API for General Purpose I/O (GPIO)
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
 * [Class GPIO](#gpio-api)
-  * [GPIO.open(init)](#gpioopennumber-or-string-or-gpioinit-init)
+  * [GPIO.open(init)](#gpioopeninit)
 * [Class GPIOPin](#gpiopin-api)
   * [pin.read()](#pinread)
-  * [pin.write()](#pinwritenumber-value)
+  * [pin.write()](#pinwritevalue
   * [pin.close()](#pinclose)
   * [pin.onchange](#pinonchange)
 * [Sample Apps](#sample-apps)
@@ -54,7 +54,6 @@ enum GPIOState { "none", "up", "down" };</pre>
 GPIO API
 --------
 ### GPIO.open(init)
-
 * `init` *long or string or GPIOInit* If the argument is a number, it is a pin number. If it is a
 string, it is a pin name. Otherwise, it must be a GPIOInit object.
 * Returns: a GPIOPin object that can be used to read or write the pin.
@@ -98,7 +97,7 @@ be 1 if the pin is active (high by default, low for a pin configured
 active low), 0 if inactive.
 
 ### pin.write(value)
-* 'value' *long*  Pass 1 for `value` to make an output pin active
+* `value` *long*  Pass 1 for `value` to make an output pin active
 (high by default, low for a pin configured active low), 0 to make it inactive.
 
 ### pin.close()
@@ -109,7 +108,7 @@ writing anymore.
 
 ### pin.onchange
 
-* 'onchange' *ChangeCallback*
+* `onchange` *ChangeCallback*
 
 Set this attribute to a function that will receive events whenever the pin
 changes according to the edge condition specified at pin initialization. The
