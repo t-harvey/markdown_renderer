@@ -3,8 +3,7 @@ ZJS API for File System
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [API Documentation](#api-documentation)
-* [Class FS](#fsapi)
+* [Class FS](#fs-api)
   * [fs.openSync(path, mode)](#fsopensyncpath-mode)
   * [fs.closeSync(fd)](#fsclosesyncfd)
   * [fs.unlinkSync(path)](#fsunlinksyncpath)
@@ -15,7 +14,8 @@ ZJS API for File System
   * [fs.mkdirSync(path)](#fsmkdirsyncpath)
   * [fs.readdirSync(path)](#fsreaddirsyncpath)
   * [fs.statSync(path)](#fsstatsyncpath)
-* [Class Stat](#statapi)
+  * [writeFileSync(file, data)](#writefilesyncfile-data)
+* [Class Stat](#stat-api)
   * [stat.isFile()](#statisfile)
   * [stat.isDirectory()](#statisdirectory)
 
