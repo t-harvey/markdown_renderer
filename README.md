@@ -48,24 +48,18 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <details>
 <summary>Click to show WebIDL</summary>
 <pre>// require returns a SPI object
-// var spi = require('spi');
-
-[NoInterfaceObject]
+// var spi = require('spi');<p><p>[ReturnFromRequire]
 interface SPI {
     SPIBus open(SPIOptions init);
-};
-
-dictionary SPIOptions {
+};<p>dictionary SPIOptions {
     octet bus;
     long speed;  // bus clock frequency in Hz
-    bool msbFirst;
+    boolean msbFirst;
     long polarity;
     long phase;
     unsigned long frameGap;
     string topology;
-};
-
-[NoInterfaceObject]
+};<p>[ExternalInterface=(buffer,Buffer)]
 interface SPIBus {
     transceive(octet target, Buffer data, string direction);
     close();
