@@ -48,7 +48,7 @@ interface GPIO {
     number value;
 };<p>
 enum GPIOMode  { "out", "in" };
-enum GPIOEdge  { "none", "rising", "falling", "any" };<p>
+enum GPIOEdge  { "none", "rising", "falling", "any" };
 enum GPIOState { "none", "up", "down" };</pre>
 </details>
 
