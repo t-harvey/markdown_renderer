@@ -1,59 +1,24 @@
-ZJS API for File System
-==================
+Zephyr.js API for UART
+======================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class FS](#fs-api)
-  * [fs.openSync(path, mode)](#fsopensyncpath-mode)
-  * [fs.closeSync(fd)](#fsclosesyncfd)
-  * [fs.unlinkSync(path)](#fsunlinksyncpath)
-  * [fs.rmdirSync(path)](#fsrmdirsyncpath)
-  * [fs.writeSync(fd, data, offset, length, position)](#fswritesyncfd-data-offset-length-position)
-  * [fs.readSync(fd, data, offset, length, position)](#fsreadsyncfd-data-offset-length-position)
-  * [fs.truncateSync(path, length)](#fstruncatesyncpath-length)
-  * [fs.mkdirSync(path)](#fsmkdirsyncpath)
-  * [fs.readdirSync(path)](#fsreaddirsyncpath)
-  * [fs.statSync(path)](#fsstatsyncpath)
-  * [writeFileSync(file, data)](#writefilesyncfile-data)
-* [Class Stat](#stat-api)
-  * [stat.isFile()](#statisfile)
-  * [stat.isDirectory()](#statisdirectory)
+* [Class UART](#uart-api)
+  * [UART.init(options)](#uartinitoptions)
+* [UARTConnection API](#uartconnection-api)
+  * [Event: 'read'](#event-read)
+  * [uartConnection.write(data)](#uartconnectionwritedata)
+  * [uartConnection.setReadRange(min, max)](#uartconnectionsetreadrangemin-max)
 
 Introduction
 ------------
+The UART module supports both read and write capabilities. Writes are
+done through the 'write' function, and reads are done via a callback function property that
+can be set. Read and write data should be a JavaScript string.
 
-ZJS provides File System APIs that match Node.js' FS module. We
-describe them here to document any minor differences. It should be
-noted that by default, the FS module only contains the synchronous
-Node.js APIs. The asynchronous APIs can be compiled in by enabling the
-pre-processor value `ZJS_FS_ASYNC_APIS`. The default is to leave them
-out, because all of Zephyr's File System APIs are synchronous, so
-making the JavaScript APIs asynchronous was only adding ROM space.
-
-On the Arduino 101, the flash file system uses SPI, and the pins are shared with
-IO10-13. For this reason, you will not be able to use these GPIO pins at the
-same time as the file system.
-
-Available file modes:
-
-`'r'` - Open file for only reading. An error will be thrown if the file does
-not exist.
-
-`'r+'` - Open a file for reading and writing. An error will be thrown if the
-file does not exist.
-
-`'w'` - Open a file for writing. The file will be overwritten if it already
-exists.
-
-`'w+'` - Open a file for writing and reading. The file will be overwritten if
-it already exists.
-
-`'a'` - Opens a file for appending. The write pointer will always seek
-to the end of the file during a write.
-
-`'a+'` - Opens a file for appending and reading. The write
-pointer will seek to the end for writes, but reads will be done from the
-start of the file (the read pointer is saved across different read calls).
+The module can be used on both QEMU and the Arduino 101. When using QEMU, you
+can just type directly into the terminal console. For the Arduino 101, UART is
+read/written from the serial console just as print does.
 
 Web IDL
 -------
@@ -63,121 +28,63 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 <details>
 <summary>Click to show WebIDL</summary>
-<pre>
-// require returns a FS object
-// var fs = require('fs');
-<p>
-[ExternalInterface=(buffer,Buffer)]
-interface FS {
-    FileDescriptor openSync(string path, FileMode mode);
-    void closeSync(FileDescriptor fd);
-    void unlinkSync(string path);
-    void rmdirSync(string path);
-    long writeSync(FileDescriptor fd, (string or Buffer) data, long offset,
-                   long length, optional long position);
-    long readSync(FileDescriptor fd, Buffer data, long offset,
-                  long length, long position);
-    void truncateSync(string path, long length);
-    void mkdirSync(string path);
-    sequence < string > readdirSync(string path);
-    Stat statSync(string path);
-    void writeFileSync(string file, (string or Buffer) data);
-};<p>// file descriptors are inherently platform specific, so we leave this
-// as a placeholder
-definition FileDescriptor {
-};<p>interface Stat {
-    boolean isFile();
-    boolean isDirectory();
-};<p>enum FileMode { "r", "w", "a", "r+", "w+", "a+" };</pre>
+<pre>// require returns a UART object
+// var uart = require('uart');
+
+interface UART {
+    UARTConnection init(UARTOptions options);
+};
+
+dictionary UARTOptions {
+    string port;
+    // number baud = 115200;
+    // number dataBits = 8;
+    // number stopBits = 1;
+    // UARTParity parity = "none";
+    // boolean flowControl = false;
+};
+
+interface UARTConnection: EventEmitter {
+    // void close();
+    void write(Buffer data);
+    void setReadRange(number min, number max);
+};
+
+enum UARTParity { "none", "event", "odd" }
+</pre>
 </details>
 
-FS API
-------
-
-### fs.openSync(path, mode)
-* `path` *string* The name and path of the file to open.
-* `mode` *FileMode* The mode in which to open the file.
-* Returns: an object representing the file descriptor.
-
-Opens a file.
-
-### fs.closeSync(fd)
-* `fd` *FileDescriptor* The file descriptor for the file that will be closed.
-
-Closes a file.
-
-### fs.unlinkSync(path)
-* `path` *string* The name and path of the file to remove.
-
-Unlink (remove) a file from the file system.
-
-### fs.rmdirSync(path)
-* `path` *string* The name and path of the directory to be removed.
-
-Remove a directory from the file system.
-
-### fs.writeSync(fd, data, offset, length, position)
-* `fd` *FileDescriptor* The file descriptor returned from `openSync()`.
-* `data` *string or Buffer* The data to write to 'fd'.
-* `offset` *long* The position in 'data' from which to start writing.
-* `length` *long* The number of bytes to write to 'fd' from 'data'.
-* `position` *long* The offset from the beginning of the file where
-  'data' should be written. The parameter is optional; the default value is 0.
-* Returns: the number of bytes actually written (this may be different from 'length').
-
-Write bytes to an opened file.
-
-### fs.readSync(fd, data, offset, length, position)
-* `fd` *FileDescriptor* The file descriptor returned from 'openSync()'.
-* `data` *Buffer* The buffer into which the data will be read.
-* `offset` *long* The offset in 'data' at which to start writing.
-* `length` *long* The number of bytes to read.
-* `position` *long* The position in the file from which to start reading.
-* Returns: the number of bytes actually read. This may be different from
-'length' if there was a read error or if the file had no more data left to read.
-
-Read bytes from a file.
-
-### fs.truncateSync(path, length)
-* `path` *string* The name and path of the file.
-* `length` *long* The new length of the file.
-
-Truncate a file. If the length passed in is shorter than the existing file
-length, then the trailing file data will be lost.
-
-### fs.mkdirSync(path)
-* `path` *string* The name and path of the directory.
-
-Create a directory. There is no effect if the directory already exists.
-
-### fs.readdirSync(path)
-* `path` *string* The name and path of the directory to read.
-* Returns: an array of filenames and directories found in 'path'.
-
-Read the contents of a directory.
-
-### fs.statSync(path)
-* `path` *string* The name and path of the file or directory.
-* Returns: a 'Stat' object for the file or directory or undefined if the
-file or directory does not exist.
-
-Get stats about a file or directory.
-
-### writeFileSync(file, data)
-* `file` *string* The name of the file to which to write.
-* `data` *string or Buffer* The data to write into the file.
-
-Open and write data to a file. This will replace the file if it already exists.
-
-Stat API
+UART API
 --------
+### UART.init(options)
+* `options` *UARTOptions* The `UARTOptions` object lets you choose the
+  UART device/port you would like to initialize. The Arduino 101, for
+  example, should be "tty0".
+* Returns: UARTConnection interface.
 
-### stat.isFile()
-* Returns: true if the file descriptor is a file.
+UARTConnection API
+------------------
 
-### stat.isDirectory()
-* Returns: true if the file descriptor is a directory.
+A UARTConnection is an [EventEmitter](./events.md) with the following events:
+
+### Event: 'read'
+* `Buffer` `data`
+
+Emitted when data is received on the UART RX line. The `data` parameter is a
+`Buffer` with the received data.
+
+### uartConnection.write(data)
+* `data` *Buffer* The data to be written.
+
+Write data out to the UART TX line.
+
+### uartConnection.setReadRange(min, max);`
+* `min` *long* The minimum number of bytes for triggeringthe `onread` event.
+* `max` *long* The maximum number of bytes for triggeringthe `onread` event.
+
+Whenever at least the `min` number of bytes is available, a `Buffer` object
+containing at most `max` number of bytes is sent with the `onread` event.
 
 Sample Apps
 -----------
-* [FS test](../tests/test-fs.js)
+* [UART sample](../samples/UART.js)
