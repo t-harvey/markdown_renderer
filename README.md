@@ -1,28 +1,43 @@
-ZJS API for Web Sockets
-=======================
+ZJS API for SPI
+===============
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [WebSocket API](#websocket-api)
-  * [ws.Server(options)](#wsserveroptions)
-* [WebSocketServer API](#websocketserver-api)
-  * [Event: 'connection'](#event-connection)
-* [WebSocket API](#websocket-api)
-  * [Event: 'close'](#event-close)
-  * [Event: 'error'](#event-error)
-  * [Event: 'message'](#event-message)
-  * [Event: 'ping'](#event-ping)
-  * [Event: 'pong'](#event-pong)
-* [WebSocketConnection API](#websocketconnection-api)
-  * [webSocketConnection.send(data, mask)](#websocketconnectionsenddata-mask)
-  * [webSocketConnection.ping(data, mask)](#websocketconnectionpingdata-mask)
-  * [webSocketConnection.pong(data, mask)](#websocketconnectionpongdata-mask)
-* [Sample Apps](#sample-apps)
+* [SPI API](#spi-api)
+  * [spi.open(options)](#spiopenoptions)
+* [SPIBus API](#spibus-api)
+  * [spiBus.transceive(target, data, direction)](#spibustransceivetarget-data-direction)
+  * [spiBus.close()](#spibusclose)
 
 Introduction
 ------------
-The Web Socket API is modeled after Node.js' 'ws' module. This module only
-supports the Web Socket server portion of that API.
+The SPI API supports the Serial Peripheral Interface, a synchronous
+serial protocol that allows multiple slave chips to communicate with a
+master chip.  A single SPI bus uses the following pins: SCLK for
+clock, MOSI (Master Out, Slave In) for write, MISO (Master In, Slave
+Out) for read, and one or more SS (Slave Select) for selecting the
+slave device.
+
+For each clock signal, one bit is written from the master to the
+selected slave, and one bit is read by the master from the selected
+slave, so there is one transceive operation, instead of a separate
+read and write.
+
+When a slave device's chip select is 0 (low), it communicates with the
+master; otherwise it ignores the master. The master can select
+multiple slaves in a write-only configuration; in this case, no slave
+is writing data, each only reads.
+
+Since the SS pins may be connected to slave chip select through a
+demultiplexer and thereby work as an address bus, slave devices are
+identified by an index in this API, rather than by SS pins. Also,
+since multiple SPI buses may be present on a board, these are
+identified by an index in this API. Implementations SHOULD encapsulate
+the mapping from SPI bus number and device number to the physical SPI
+pins.
+
+Note that on the Arduino 101, using SPI will cause one of the onboard LEDs to
+become unavailable.
 
 Web IDL
 -------
@@ -32,115 +47,52 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 <details>
 <summary>Click to show WebIDL</summary>
-<pre>// require returns a WebSocket object
-// var ws = require('ws');<p><p>[ReturnFromRequire]
-interface WebSocket {
-    WebSocketServer Server(Object options);
-};<p>interface WebSocketServer: EventEmitter;<p>[ExternalInterface=(buffer,Buffer)]
-interface WebSocketConnection: EventEmitter {
-    void send(Buffer data, boolean mask);
-    void ping(Buffer data, boolean mask);
-    void pong(Buffer data, boolean mask);
-};</pre>
+<pre>// require returns a SPI object
+// var spi = require('spi');<p><p>[ReturnFromRequire]
+interface SPI {
+    SPIBus open(SPIOptions init);
+};<p>dictionary SPIOptions {
+    octet bus;
+    long speed;  // bus clock frequency in Hz
+    boolean msbFirst;
+    long polarity;
+    long phase;
+    unsigned long frameGap;
+    string topology;
+};<p>[ExternalInterface=(buffer,Buffer)]
+interface SPIBus {
+    void transceive(octet target, Buffer data, string direction);
+    close();
+};
+</pre>
 </details>
 
-WebSocket API
--------------
+SPI API
+-------
+### spi.open(options)
+* `options` *SPIOptions* The `options` object lets you pass optional values to use instead of the defaults.
+* Returns: a SPIBus object.
 
-### ws.Server(options)
-* `options` *Object*
-* Returns: a WebSocketServer object.
+Note these `options` values can't be changed once the SPI object is
+created.  If you need to change the settings afterwards, you'll need
+to use the 'close' command and create a new SPI object with the
+settings you desire.
 
-Create a Web Socket server object. Options object may contain:
+SPIBus API
+----------
+### spiBus.transceive(target, data, direction)
+* `target` *octet* The number identifying the slave.
+* `data` *Buffer* The data to be written to, and returned from, the slave.
+* `direction` *string*
 
-WebSocketServer API
--------------------
+Writes data buffer using SPI to the slave identified by the target argument, and
+reads from the slave device into a readBuffer that is returned.  The read and
+write buffers are the same size.
 
-WebSocketServer is [EventEmitter](./events.md) with the following events:
+### spiBus.close()
 
-### Event: 'connection'
-
-* `WebSocketConnection` `conn`
-
-Emitted when a client has connected to the server. The argument to any
-registered listener will be a `WebSocketConnection` object which can be used to
-communicate with the client.
-```
-{
-    port : Port to bind to
-    backlog : Max number of concurrent connections
-    clientTracking : enable client tracking
-    maxPayload : set the max payload bytes per message
-    acceptHandler : handler to call to accept/deny connections
-}
-```
-The `acceptHandler` property sets a function handler to be called when there is
-a new connection. The argument will be an array of sub-protocols (Strings) that
-the client is requesting to use. To accept the connection, return one of these
-strings from the handler.
-
-Returns a `WebSocketServer` object.
-
-WebSocket API
--------------
-
-WebSocketServer is an [EventEmitter](./events.md) with the following events:
-
-### Event: 'close'
-
-Emitted when the web socket has closed.
-
-### Event: 'error'
-
-* `Error` `err`
-
-Emitted when the web socket has an error. They type of error can be found in
-the `err` object argument.
-
-### Event: 'message'
-
-* `Buffer` `data`
-
-Emitted when the web socket has received data. The data will be contained in
-the `data` Buffer argument.
-
-### Event: 'ping'
-
-* `Buffer` `data`
-
-Emitted when the socket has received a ping. The ping's payload is contained in
-the `data` argument.
-
-### Event: 'pong'
-
-* `Buffer` `data`
-
-Emitted when the socket has received a pong. The pong's payload is contained in
-the `data` argument.
-
-
-WebSocketConnection API
------------------------
-
-### webSocketConnection.send(data, mask)
-* `data` *Buffer* The data payload to send.
-* `mask` *boolean* Describes whether the data payload should be masked.
-
-Send data to the other end of the web socket connection.
-
-### webSocketConnection.ping(data, mask)
-* `data` *Buffer* Contains the data payload to send.
-* `mask` *boolean* Describes whether the data payload should be masked.
-
-Send a ping to the other end of the web socket connection.
-
-### webSocketConnection.pong(data, mask)
-* `data` *Buffer* The data payload to send.
-* `mask` *boolean* Describes whether the data payload should be masked.
-
-Send a pong to the other end of the web socket connection.
+Closes the SPI connection.
 
 Sample Apps
 -----------
-* [Web Socket Server sample](../samples/websockets/WebSocketServer.js)
-* [Node Web Socket Client sample](../samples/websockets/NodeWebSocketClient.js)
+* [SPI sample](../samples/SPI.js)
