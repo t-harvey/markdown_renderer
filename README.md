@@ -7,7 +7,7 @@ ZJS API for Web Sockets
   * [ws.Server(options)](#wsserveroptions)
 * [WebSocketServer API](#websocketserver-api)
   * [Event: 'connection'](#event-connection)
-* [WebSocket API](#websocket-API)
+* [WebSocket API](#websocket-api)
   * [Event: 'close'](#event-close)
   * [Event: 'error'](#event-error)
   * [Event: 'message'](#event-message)
