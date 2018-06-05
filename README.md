@@ -47,7 +47,7 @@ interface GPIO {
 };<p>callback ChangeCallback = void (GPIOEvent event);<p>dictionary GPIOEvent {
     number value;
 };<p>
-enum GPIOMode  { "out", "in" };<p>
+enum GPIOMode  { "out", "in" };
 enum GPIOEdge  { "none", "rising", "falling", "any" };<p>
 enum GPIOState { "none", "up", "down" };</pre>
 </details>
