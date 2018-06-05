@@ -96,83 +96,83 @@ interface Stat {
 
 enum FileMode { "r", "w", "a", "r+", "w+", "a+" };
 </pre>
-<details>
+</details>
 
 FS API
 ------
 
 ### fs.openSync(path, mode)
-* 'path' *string* The name and path of the file to open.
-* 'mode' *FileMode* The mode in which to open the file.
+* `path` *string* The name and path of the file to open.
+* `mode` *FileMode* The mode in which to open the file.
 * Returns: an object representing the file descriptor.
 
 Opens a file.
 
 ### fs.closeSync(fd)
-* 'fd' *FileDescriptor* The file descriptor for the file that will be closed.
+* `fd` *FileDescriptor* The file descriptor for the file that will be closed.
 
 Closes a file.
 
 ### fs.unlinkSync(path)
-* 'path' *string* The name and path of the file to remove.
+* `path` *string* The name and path of the file to remove.
 
 Unlink (remove) a file from the file system.
 
 ### fs.rmdirSync(path)
-* 'path' *string* The name and path of the directory to be removed.
+* `path` *string* The name and path of the directory to be removed.
 
 Remove a directory from the file system.
 
 ### fs.writeSync(fd, data, offset, length, position)
-* 'fd' *FileDescriptor* The file descriptor returned from `openSync()`.
-* 'data' *string or Buffer* The data to write to 'fd'.
-* 'offset' *long* The position in 'data' from which to start writing.
-* 'length' *long* The number of bytes to write to 'fd' from 'data'.
-* 'position' *long* The offset from the beginning of the file where
+* `fd` *FileDescriptor* The file descriptor returned from `openSync()`.
+* `data` *string or Buffer* The data to write to 'fd'.
+* `offset` *long* The position in 'data' from which to start writing.
+* `length` *long* The number of bytes to write to 'fd' from 'data'.
+* `position` *long* The offset from the beginning of the file where
   'data' should be written. The parameter is optional; the default value is 0.
 * Returns: the number of bytes actually written (this may be different from 'length').
 
 Write bytes to an opened file.
 
 ### fs.readSync(fd, data, offset, length, position)
-* 'fd' *FileDescriptor* The file descriptor returned from 'openSync()'.
-* 'data' *Buffer* The buffer into which the data will be read.
-* 'offset' *long* The offset in 'data' at which to start writing.
-* 'length' *long* The number of bytes to read.
-* 'position' *long* The position in the file from which to start reading.
+* `fd` *FileDescriptor* The file descriptor returned from 'openSync()'.
+* `data` *Buffer* The buffer into which the data will be read.
+* `offset` *long* The offset in 'data' at which to start writing.
+* `length` *long* The number of bytes to read.
+* `position` *long* The position in the file from which to start reading.
 * Returns: the number of bytes actually read. This may be different from
 'length' if there was a read error or if the file had no more data left to read.
 
 Read bytes from a file.
 
 ### fs.truncateSync(path, length)
-* 'path' *string* The name and path of the file.
-* 'length' *long* The new length of the file.
+* `path` *string* The name and path of the file.
+* `length` *long* The new length of the file.
 
 Truncate a file. If the length passed in is shorter than the existing file
 length, then the trailing file data will be lost.
 
 ### fs.mkdirSync(path)
-* 'path' *string* The name and path of the directory.
+* `path` *string* The name and path of the directory.
 
 Create a directory. There is no effect if the directory already exists.
 
 ### fs.readdirSync(path)
-* 'path' *string* The name and path of the directory to read.
+* `path` *string* The name and path of the directory to read.
 * Returns: an array of filenames and directories found in 'path'.
 
 Read the contents of a directory.
 
 ### fs.statSync(path)
-* 'path' *string* The name and path of the file or directory.
+* `path` *string* The name and path of the file or directory.
 * Returns: a 'Stat' object for the file or directory or undefined if the
 file or directory does not exist.
 
 Get stats about a file or directory.
 
 ### writeFileSync(file, data)
-* 'file' *string* The name of the file to which to write.
-* 'data' *string or Buffer* The data to write into the file.
+* `file` *string* The name of the file to which to write.
+* `data` *string or Buffer* The data to write into the file.
 
 Open and write data to a file. This will replace the file if it already exists.
 
