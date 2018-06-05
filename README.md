@@ -88,8 +88,7 @@ definition FileDescriptor {
 };<p>interface Stat {
     boolean isFile();
     boolean isDirectory();
-};<p>enum FileMode { "r", "w", "a", "r+", "w+", "a+" };
-</pre>
+};<p>enum FileMode { "r", "w", "a", "r+", "w+", "a+" };</pre>
 </details>
 
 FS API
