@@ -182,7 +182,7 @@ Stat API
 ### stat.isFile()
 * Returns: true if the file descriptor is a file.
 
-###stat.isDirectory()
+### stat.isDirectory()
 * Returns: true if the file descriptor is a directory.
 
 Sample Apps
