@@ -36,9 +36,9 @@ interface GPIO {
 };<p>dictionary GPIOInit {
     number or string pin;
     boolean activeLow = false;
-    string mode = "out";        // in, out
-    string edge = "none";       // none, rising, falling, any
-    string state = "none";      // none, up, down
+    GPIOMode  mode =  "out";
+    GPIOEdge  edge =  "none";
+    GPIOState state = "none";
 };<p>interface GPIOPin {
     number read();
     void write(number value);
@@ -46,7 +46,10 @@ interface GPIO {
     attribute ChangeCallback onchange;
 };<p>callback ChangeCallback = void (GPIOEvent event);<p>dictionary GPIOEvent {
     number value;
-};</pre>
+};<p>
+enum GPIOMode  { "out", "in" };<p>
+enum GPIOEdge  { "none", "rising", "falling", "any" };<p>
+enum GPIOState { "none", "up", "down" };</pre>
 </details>
 
 GPIO API
