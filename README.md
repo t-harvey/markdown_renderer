@@ -74,9 +74,9 @@ interface FS {
     void unlinkSync(string path);
     void rmdirSync(string path);
     long writeSync(FileDescriptor fd, (string or Buffer) data, long offset,
-                     long length, optional long position);
+                   long length, optional long position);
     long readSync(FileDescriptor fd, Buffer data, long offset,
-                     long length, long position);
+                  long length, long position);
     void truncateSync(string path, long length);
     void mkdirSync(string path);
     sequence\<string\> readdirSync(string path);
