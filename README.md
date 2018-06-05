@@ -61,7 +61,7 @@ interface SPI {
     string topology;
 };<p>[ExternalInterface=(buffer,Buffer)]
 interface SPIBus {
-    transceive(octet target, Buffer data, string direction);
+    void transceive(octet target, Buffer data, string direction);
     close();
 };
 </pre>
@@ -71,6 +71,7 @@ SPI API
 -------
 ### spi.open(options)
 * `options` *SPIOptions* The `options` object lets you pass optional values to use instead of the defaults.
+* Returns: a SPIBus object.
 
 Note these `options` values can't be changed once the SPI object is
 created.  If you need to change the settings afterwards, you'll need
@@ -81,7 +82,7 @@ SPIBus API
 ----------
 ### spiBus.transceive(target, data, direction)
 * `target` *octet* The number identifying the slave.
-* `data` *Buffer* The data to be written to the slave.
+* `data` *Buffer* The data to be written to, and returned from, the slave.
 * `direction` *string*
 
 Writes data buffer using SPI to the slave identified by the target argument, and
