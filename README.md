@@ -71,7 +71,7 @@ SPI API
 -------
 ### spi.open(options)
 * `options` *SPIOptions* The `options` object lets you pass optional values to use instead of the defaults.
-* Returns: a SPIBus object.
+* Returns: an SPIBus object.
 
 Note these `options` values can't be changed once the SPI object is
 created.  If you need to change the settings afterwards, you'll need
