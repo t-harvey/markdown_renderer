@@ -1,98 +1,131 @@
-ZJS API for SPI
-===============
+ZJS API for General Purpose I/O (GPIO)
+======================================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [SPI API](#spi-api)
-  * [spi.open(options)](#spiopenoptions)
-* [SPIBus API](#spibus-api)
-  * [spiBus.transceive(target, data, direction)](#spibustransceivetarget-data-direction)
-  * [spiBus.close()](#spibusclose)
+* [Class GPIO](#gpio-api)
+  * [GPIO.open(init)](#gpioopeninit)
+* [Class GPIOPin](#gpiopin-api)
+  * [pin.read()](#pinread)
+  * [pin.write()](#pinwritevalue)
+  * [pin.close()](#pinclose)
+  * [pin.onchange](#pinonchange)
+* [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The SPI API supports the Serial Peripheral Interface, a synchronous
-serial protocol that allows multiple slave chips to communicate with a
-master chip.  A single SPI bus uses the following pins: SCLK for
-clock, MOSI (Master Out, Slave In) for write, MISO (Master In, Slave
-Out) for read, and one or more SS (Slave Select) for selecting the
-slave device.
+The GPIO API supports digital I/O pins. Pins can be configured as inputs or
+outputs, with some board-specific limitations.
 
-For each clock signal, one bit is written from the master to the
-selected slave, and one bit is read by the master from the selected
-slave, so there is one transceive operation, instead of a separate
-read and write.
-
-When a slave device's chip select is 0 (low), it communicates with the
-master; otherwise it ignores the master. The master can select
-multiple slaves in a write-only configuration; in this case, no slave
-is writing data, each only reads.
-
-Since the SS pins may be connected to slave chip select through a
-demultiplexer and thereby work as an address bus, slave devices are
-identified by an index in this API, rather than by SS pins. Also,
-since multiple SPI buses may be present on a board, these are
-identified by an index in this API. Implementations SHOULD encapsulate
-the mapping from SPI bus number and device number to the physical SPI
-pins.
-
-Note that on the Arduino 101, using SPI will cause one of the onboard LEDs to
-become unavailable.
+The GPIO API intends to follow the [iot-js-api specification](https://github.com/intel/iot-js-api/tree/master/board/gpio.md),
+but both that and ZJS are under a lot of change at the moment.
 
 Web IDL
 -------
-This IDL provides an overview of the interface; see below for
-documentation of specific API functions.  We have a short document
-explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+This IDL provides an overview of the interface; see below for documentation of
+specific API functions.  We have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 <details>
-<summary>Click to show WebIDL</summary>
-<pre>// require returns a SPI object
-// var spi = require('spi');<p><p>[ReturnFromRequire]
-interface SPI {
-    SPIBus open(SPIOptions init);
-};<p>dictionary SPIOptions {
-    octet bus;
-    long speed;  // bus clock frequency in Hz
-    boolean msbFirst;
-    long polarity;
-    long phase;
-    unsigned long frameGap;
-    string topology;
-};<p>[ExternalInterface=(buffer,Buffer)]
-interface SPIBus {
-    void transceive(octet target, Buffer data, string direction);
-    close();
-};
-</pre>
+<summary> Click to show/hide WebIDL</summary>
+<pre>
+// require returns a GPIO object
+// var gpio = require('gpio');<p>
+[ReturnFromRequire]
+interface GPIO {
+    GPIOPin open( (long or string or GPIOInit) init);
+};<p>dictionary GPIOInit {
+    (long or string) pin;
+    boolean activeLow = false;
+    GPIOMode  mode =  "out";
+    GPIOEdge  edge =  "none";
+    GPIOState state = "none";
+};<p>interface GPIOPin {
+    long read();
+    void write(long value);
+    void close();
+    attribute ChangeCallback onchange;
+};<p>callback ChangeCallback = void (GPIOEvent event);<p>dictionary GPIOEvent {
+    long value;
+};<p>enum GPIOMode  { "out", "in" };
+enum GPIOEdge  { "none", "rising", "falling", "any" };
+enum GPIOState { "none", "up", "down" };</pre>
 </details>
 
-SPI API
--------
-### spi.open(options)
-* `options` *SPIOptions* The `options` object lets you pass optional values to use instead of the defaults.
-* Returns: an SPIBus object.
+GPIO API
+--------
+### gpio.open(init)
+* `init` *long or string or GPIOInit* If the argument is a number, it is a pin number. If it is a
+string, it is a pin name. Otherwise, it must be a GPIOInit object.
+* Returns: a GPIOPin object that can be used to read or write the pin.
 
-Note these `options` values can't be changed once the SPI object is
-created.  If you need to change the settings afterwards, you'll need
-to use the 'close' command and create a new SPI object with the
-settings you desire.
+If the pin number or name is valid for the given board, the call will succeed.
+You can use a pin name like "GPIO_0.10" where "GPIO_0" is the name of a Zephyr
+gpio port device for your board and 10 is the pin number. This will work on any
+board as long as you find the right values in Zephyr documentation. But for
+boards with specific ZJS support, you can use friendly names. Currently, this
+means Arduino 101 and FRDM-K64F. For the A101, you can use numbers 0-13 or
+strings "IO0" through "IO13", as well as "LED0" through "LED2". For K64F, you
+can use numbers 0-15 or strings "D0" through "D15", as well as "LEDR", "LEDG",
+and "LEDB" for the RGB LED, and "SW2" and "SW3" for onboard switches.
 
-SPIBus API
-----------
-### spiBus.transceive(target, data, direction)
-* `target` *octet* The number identifying the slave.
-* `data` *Buffer* The data to be written to, and returned from, the slave.
-* `direction` *string*
+The GPIOInit object can take a string or number as the pin argument,
+and all of the rest of the fields are optional. The `activeLow`
+setting determines whether high (default) or low means active. When
+you read or write a boolean value, true means 'active' and false means
+'inactive'.
 
-Writes data buffer using SPI to the slave identified by the target argument, and
-reads from the slave device into a readBuffer that is returned.  The read and
-write buffers are the same size.
+The `mode` value determines whether the pin is an input ('in') or output
+('out').
 
-### spiBus.close()
+The `edge` value is for input pins and tells whether the `onchange` callback
+will be called on the rising edge of the signal, falling edge, or both.
 
-Closes the SPI connection.
+The `state` value is useful when the architecture has an internal
+pullup or pulldown resistor. This would be used for inputs to provide
+a default (high or low) when the input is floating (not being
+intentionally driven to a particular value).
+
+*NOTE: When we last checked, Zephyr did not use this state setting, at least for
+Arduino 101. Perhaps there is no hardware support, but in any case, it didn't
+work. You can always provide an external resistor for this purpose instead.*
+
+GPIOPin API
+-----------
+### pin.read()
+* Returns: the current reading from the pin.
+
+This is a synchronous function, because it is nearly
+instantaneous on the devices we've tested with so far. The value will
+be 1 if the pin is active (high by default, low for a pin configured
+active low), 0 if inactive.
+
+### pin.write(value)
+* `value` *long*  Pass 1 for `value` to make an output pin active
+(high by default, low for a pin configured active low), 0 to make it inactive.
+
+### pin.close()
+
+Free up resources associated with the pin. The onchange function for this pin
+will no longer be called, and the object should not be used for reading and
+writing anymore.
+
+### pin.onchange
+
+* `onchange` *ChangeCallback*
+
+Set this attribute to a function that will receive events whenever the pin
+changes according to the edge condition specified at pin initialization. The
+event object contains a `value` field with the current pin state.
 
 Sample Apps
 -----------
-* [SPI sample](../samples/SPI.js)
+* GPIO input only
+  * [Arduino DigitalReadSerial sample](../samples/arduino/basics/DigitalReadSerial.js)
+* GPIO output only
+  * [Arduino Blink sample](../samples/arduino/basics/Blink.js)
+  * [RGB LED sample](../samples/RGB.js)
+* GPIO input/output
+  * [AutoButton sample](../samples/AutoButton.js)
+  * [Arduino Button sample](../samples/arduino/digital/Button.js)
+  * [ButtonLEDs sample](../samples/ButtonLEDs.js)
+  * [TwoButtons sample](../samples/TwoButtons.js)
