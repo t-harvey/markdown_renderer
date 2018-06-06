@@ -4,7 +4,7 @@ ZJS API for MathStubs
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
 * [Mathstubs API](#mathstubs-api)
-  * [random()](#random)
+  * [random()](#mathstubsrandom)
 * [Sample Apps](#sample-apps)
 
 Introduction
