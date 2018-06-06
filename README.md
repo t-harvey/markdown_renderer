@@ -3,7 +3,6 @@ ZJS API for Grove LCD
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [API Documentation](#api-documentation)
 * [GroveLCD API](#grovelcd-api)
   * [grove_lcd.init()](#grove_lcdinit)
 * [GroveLCDDevice API](#grovelcddevice-api)
@@ -34,9 +33,7 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <details>
 <summary>Click to show WebIDL</summary>
 <pre>// require returns a GroveLCD object
-// var grove_lcd = require('grove_lcd');
-
-[ReturnFromRequire]
+// var grove_lcd = require('grove_lcd');<p><p>[ReturnFromRequire]
 interface GroveLCD {
     GroveLCDDevice init();
     attribute unsigned long GLCD_FS_8BIT_MODE;
@@ -44,7 +41,6 @@ interface GroveLCD {
     attribute unsigned long GLCD_FS_ROWS_1;
     attribute unsigned long GLCD_FS_DOT_SIZE_BIG;
     attribute unsigned long GLCD_FS_DOT_SIZE_LITTLE;
-
     attribute unsigned long GLCD_DS_DISPLAY_ON;
     attribute unsigned long GLCD_DS_DISPLAY_OFF;
     attribute unsigned long GLCD_DS_CURSOR_ON;
@@ -61,9 +57,7 @@ interface GroveLCD {
     attribute unsigned long GROVE_RGB_RED;
     attribute unsigned long GROVE_RGB_GREEN;
     attribute unsigned long GROVE_RGB_BLUE;
-};
-
-interface GroveLCDDevice {
+};<p>interface GroveLCDDevice {
     void print(string text);
     void clear();
     void setCursorPos(unsigned long col, unsigned long row);
@@ -73,8 +67,7 @@ interface GroveLCDDevice {
     attribute unsigned long getFunction();
     void setDisplayState(unsigned long config);
     attribute unsigned long getDisplayState();
-};
-</pre>
+};</pre>
 </details>
 
 GroveLCD API
