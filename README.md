@@ -5,7 +5,7 @@ ZJS API for Grove LCD
 * [Web IDL](#web-idl)
 * [API Documentation](#api-documentation)
 * [GroveLCD API](#grovelcd-api)
-  * [grove_lcd.init()](#grovelcdinit)
+  * [grove_lcd.init()](#grove_lcdinit)
 * [GroveLCDDevice API](#grovelcddevice-api)
   * [groveLCDDevice.print(string text)](#grovelcddeviceprinttext)
   * [groveLCDDevice.clear()](#grovelcddeviceclear)
