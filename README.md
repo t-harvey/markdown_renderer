@@ -25,10 +25,9 @@ specific API functions.  We have a short document explaining [ZJS WebIDL convent
 <details>
 <summary> Click to show/hide WebIDL</summary>
 <pre>// require returns a MathStubs object
-// var mathStubs = require('mathstubs');
-[ReturnFromRequire]
+// var mathStubs = require('mathstubs');<p><p>[ReturnFromRequire]
 interface MathStubs {
-double MathStubs.random();
+    double MathStubs.random();
 };
 </pre>
 </details>
