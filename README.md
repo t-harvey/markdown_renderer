@@ -74,7 +74,8 @@ interface GroveLCDDevice {
     void setDisplayState(unsigned long config);
     attribute unsigned long getDisplayState();
 };
-```
+</pre>
+</details>
 
 GroveLCD API
 ------------
