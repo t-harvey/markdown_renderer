@@ -3,7 +3,7 @@ ZJS API for Benchmarking
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Performance API](#performanceapi)
+* [Performance API](#performance-api)
   * [performance.now()](#performancenow)
 * [Sample Apps](#sample-apps)
 
