@@ -1,66 +1,73 @@
-ZJS API for Benchmarking
-========================
+ZJS API for Timers
+==================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Performance API](#performance-api)
-  * [performance.now()](#performancenow)
+* [Class: Timers](#timers-api)
+  * [timers.setInterval(func, delay, extra_args)](#timerssetintervalfunc-delay-extra_args)
+  * [timers.setTimeout(func, delay, extra_args)](#timerssettimeoutfunc-delay-extra_args)
+  * [timers.clearInterval(intervalID)](#timersclearintervalintervalid)
+  * [timers.clearTimeout(timeoutID)](#timerscleartimeouttimeoutid)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-
-The "Performance" module implements a subset of the "High Resolution Time"
-specification from W3C, intended primarily for benchmarking
-purposes. The key point of this module is that it is very light-weight
-by implementing just one function (unlike, for example, the Date object).
+ZJS provides the familiar setTimeout and setInterval interfaces. They are always
+available.
 
 Web IDL
 -------
+This IDL provides an overview of the interface; see below for
+documentation of specific API functions.  We have a short document
+explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
-This IDL provides an overview of the interface; see below for documentation of
-specific API functions.  We also have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <details>
-<summary> Click to show/hide WebIDL</summary>
+<summary>Click to show WebIDL</summary>
 <pre>
-// require returns a Performance object
-// var ble = require('performance');
+// require returns a Timers object
+// var timers = require('timers');
 <p>
 [ReturnFromRequire]
-interface Performance {
-    double now();
-};</pre>
+interface Timers {
+    intervalID setInterval(TimerCallback func, unsigned long delay, any... extra_args);
+    timeoutID setTimeout(TimerCallback func, unsigned long delay, any... extra_args);
+    void clearInterval(long intervalID);
+    void clearTimeout(long timeoutID);
+};<p>
+callback TimerCallback = void (any... callback_args);</pre>
 </details>
 
+Timers API
+----------
+### timers.setInterval(func, delay, extra_args)
+* `func` *TimerCallback* A callback function that will take the arguments passed in the variadic `extra_args` parameter.
+* `delay` *unsigned long* The `delay` argument is in milliseconds. Currently, the delay resolution is about 10 milliseconds, and if you choose a value less than that it will probably fail.
+* `extra_args` *any* The user can pass an arbitrary number of additional arguments that will then be passed to `func`.
+* Returns: an `intervalID` object that can be passed to `clearInterval` to stop the timer.
 
-Performance API
----------------
-### performance.now()
-* Returns: the current time in milliseconds, as a floating-point number.
+Every `delay` milliseconds, your callback function will be called.
 
-The "time" returned from this function is the offset since an
-arbitrary point in time. It is thus not useful as an absolute value,
-but subtracting values from two calls will give a time duration
-between these two calls.
+### timers.setTimeout(func, delay, extra_args)
+* `func` *TimerCallback* A callback function that will take the arguments passed in the variadic `extra_args` parameter.
+* `delay` *unsigned long* The `delay` argument is in milliseconds. Currently, the delay resolution is about 10 milliseconds.
+* `extra_args` *any* The user can pass an arbitrary number of additional arguments that will then be passed to `func`.
+* Returns: a `timeoutID` that can be passed to `clearTimeout` to stop the timer.
 
-As the value returned is a floating point value, it may have higher resolution
-than a millisecond. However, the actual resolution depends on a platform
-and its configuration. For example, the default Zephyr configuration for
-many boards provides resolution of only ones or tens of milliseconds.
+After `delay` milliseconds, your callback function will be called *one time*.
 
-The intended use of this function is for benchmarking and other testing
-and development needs.
+### timers.clearInterval(intervalID)
+* `intervalID` *long* This value was returned from a call to `setInterval`.
 
-Examples
---------
+That interval timer will be cleared and its callback function
+no longer called.
 
-    var performance = require("performance");
+### timers.clearTimeout(timeoutID)
+* `timeoutID` *long* This value was returned from a call to `setTimeout`.
 
-    t = performance.now()
-    do_long_operation();
-    console.log("Long operation took:", performance.now() - t, "ms");
-
+The `timeoutID` timer will be cleared and its callback function will not be
+called.
 
 Sample Apps
 -----------
-* [Performance module unit test](../tests/test-performance.js)
+* [Timers sample](../samples/Timers.js)
+* [Spaceship2 sample](../samples/arduino/starterkit/Spaceship2.js)
