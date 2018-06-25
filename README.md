@@ -1,73 +1,49 @@
-ZJS API for Timers
-==================
+Zephyr.js API for WebUSB
+========================
 
 * [Introduction](#introduction)
-* [Web IDL](#web-idl)
-* [Class: Timers](#timers-api)
-  * [timers.setInterval(func, delay, args_for_func)](#timerssetintervalfunc-delay-args_for_func)
-  * [timers.setTimeout(func, delay, args_for_func)](#timerssettimeoutfunc-delay-args_for_func)
-  * [timers.clearInterval(intervalID)](#timersclearintervalintervalid)
-  * [timers.clearTimeout(timeoutID)](#timerscleartimeouttimeoutid)
+* [Class: WebUSB](#class-webusb)
+* [API Documentation](#api-documentation)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-ZJS provides the familiar setTimeout and setInterval interfaces. They are always
-available.
+The WebUSB module supports advertising the device as a WebUSB device when the
+USB port is connected to a PC. Currently, this only works on Arduino 101 as it
+is the only board with a USB driver in the Zephyr tree.
 
-Web IDL
--------
-This IDL provides an overview of the interface; see below for
-documentation of specific API functions.  We have a short document
-explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+The API allows you to set the URL that will be suggested to the browser for
+connecting to your device.
 
-<details>
-<summary>Click to show WebIDL</summary>
-<pre>
-// require returns a Timers object
-// var timers = require('timers');
-<p>
-[ReturnFromRequire]
-interface Timers {
-    intervalID setInterval(TimerCallback func, unsigned long delay, any... args_for_func);
-    timeoutID setTimeout(TimerCallback func, unsigned long delay, any... args_for_func);
-    void clearInterval(long intervalID);
-    void clearTimeout(long timeoutID);
-};<p>
-callback TimerCallback = void (any... callback_args);</pre>
-</details>
+When you connect your device to a Linux PC or Mac with Chrome >= 60 running, it
+will give a notification that the device would like you to visit the URL you've
+set. (Windows currently prevents this from working, I believe.)
 
-Timers API
-----------
-### timers.setInterval(func, delay, args_for_func)
-* `func` *TimerCallback* A callback function that will take the arguments passed in the variadic `args_for_func` parameter.
-* `delay` *unsigned long* The `delay` argument is in milliseconds. Currently, the delay resolution is about 10 milliseconds, and if you choose a value less than that it will probably fail.
-* `args_for_func` *any* The user can pass an arbitrary number of additional arguments that will then be passed to `func`.
-* Returns: an `intervalID` object that can be passed to `clearInterval` to stop the timer.
+API Documentation
+-----------------
+### Event: 'read'
 
-Every `delay` milliseconds, your callback function will be called.
+* `Buffer` `data`
 
-### timers.setTimeout(func, delay, args_for_func)
-* `func` *TimerCallback* A callback function that will take the arguments passed in the variadic `args_for_func` parameter.
-* `delay` *unsigned long* The `delay` argument is in milliseconds. Currently, the delay resolution is about 10 milliseconds.
-* `args_for_func` *any* The user can pass an arbitrary number of additional arguments that will then be passed to `func`.
-* Returns: a `timeoutID` that can be passed to `clearTimeout` to stop the timer.
+Emitted when data is received on the WebUSB RX line. The `data` parameter is a
+`Buffer` with the received data.
 
-After `delay` milliseconds, your callback function will be called *one time*.
+### WebUSB.setURL
 
-### timers.clearInterval(intervalID)
-* `intervalID` *long* This value was returned from a call to `setInterval`.
+`void setURL(string url);`
 
-That interval timer will be cleared and its callback function
-no longer called.
+The `url` string should begin with "https://" in order for Chrome to accept it
+and display a notification. Other URLs are valid in terms of the protocol but
+will have no user-visible effect in Chrome.
 
-### timers.clearTimeout(timeoutID)
-* `timeoutID` *long* This value was returned from a call to `setTimeout`.
+### WebUSB.write
 
-The `timeoutID` timer will be cleared and its callback function will not be
-called.
+`void write(Buffer buffer);`
+
+Writes the data in `buffer` to the WebUSB TX line. By default at most 511 bytes
+can be pending at one time, so that is the maximum write size, assuming all
+previous data had already been flushed out. An error will be thrown on overflow.
 
 Sample Apps
 -----------
-* [Timers sample](../samples/Timers.js)
-* [Spaceship2 sample](../samples/arduino/starterkit/Spaceship2.js)
+* [WebUSB sample](../samples/WebUSB.js)
