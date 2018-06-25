@@ -1,116 +1,268 @@
-ZJS API for W3C Generic Sensors
-==============================
+ZJS API for OCF
+===============
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class: Sensor](#sensor-api)
-  * [onreading](#onreading)
-  * [onactivate](#onactivate)
-  * [onerror](#onerror)
-  * [sensor.start()](#sensorstart)
-  * [sensor.stop()](#sensorstop)
-* [Sample Apps](#sample-apps)
+* [OCF Object](#the-ocf-object)
+* [OCF API Documentation](#ocf-api-documentation)
+* [OCF Server](#ocf-server)
+* [Server API Documentation](#server-api-documentation)
+* [Server Samples](#server-samples)
+* [OCF Client](#ocf-client)
+* [Client API Documentation](#client-api-documentation)
+* [Client Samples](#client-samples)
 
 Introduction
 ------------
-ZJS Generic Sensor API implements the W3C Sensor API, and it's intended to
-provide a consistent API that allows apps to communicate with sensors like
-an accelerometer or gyroscope. Since the W3C Sensor API is still a draft spec,
-our implementation only provides a subset of the API -- and this API could be
-slightly different even though we try to follow the latest spec as closely as
-possible.
-
-Note: The currently supported hardware is Arduino 101 that has a
-built-in BMI160 chip with accelerometer, gyroscope, and temperature
-sensors.  The supported ambient light sensor is the Grove light sensor
-that comes with the Grove starter kit.  The light sensor can be
-connected using an analog pin.
+ZJS provides OCF Server API's which allow communication using the OCF networking
+protocol.
 
 Web IDL
 -------
+This IDL provides an overview of the interfaces for OCF common, OCF Server and
+OCF Client; see below for documentation of specific API functions.
 
-This IDL provides an overview of the interface; see below for
-documentation of specific API functions.  We have a short document
-explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+The OCF Object
+--------------
+The OCF object is the top level object containing either OCF Server,
+OCF Client, or both, as well as device and platform information.
 
-<details>
-<summary>Click to show WebIDL</summary>
-<pre>
-interface Sensor {
-    readonly attribute boolean activated;   // whether the sensor is activated or not
-    readonly attribute boolean hasReading;  // whether the sensor has readings available
-    readonly attribute double timestamp;    // timestamp of the latest reading in milliseconds
-    attribute double frequency;             // sampling frequency in hertz
-    void start();                           // starts the sensor
-    void stop();                            // stops the sensor
-    attribute ChangeCallback onreading;     // callback handler for change events
-    attribute ActivateCallback onactivate;  // callback handler for activate events
-    attribute ErrorCallback onerror;        // callback handler for error events
-};<p>dictionary SensorOptions {
-    double frequency;  // desired frequency, default is 20 if unset
-};<p>interface SensorErrorEvent {
-    attribute Error error;
-};<p>callback ChangeCallback = void();
-callback ActivateCallback = void();
-callback ErrorCallback = void(SensorErrorEvent error);<p>[Constructor(optional AccelerometerOptions accelerometerOptions)]
-interface Accelerometer : Sensor {
-    readonly attribute double x;
-    readonly attribute double y;
-    readonly attribute double z;
-};<p>dictionary AccelerometerOptions : SensorOptions  {
-    string controller;       // controller name, default to "bmi160"
-};<p>[Constructor(optional SensorOptions sensorOptions)]
-interface GyroscopeSensor : Sensor {
-    readonly attribute double x;
-    readonly attribute double y;
-    readonly attribute double z;
-};<p>
-dictionary GyroscopeOptions : SensorOptions  {
-    string controller;  // controller name, default to "bmi160"
-};<p>
-[Constructor(optional SensorOptions sensorOptions)]
-interface AmbientLightSensor : Sensor {
-    readonly attribute unsigned long pin;
-    readonly attribute double illuminance;
-};<p>dictionary AmbientLightSensorOptions : SensorOptions  {
-    string controller;  // controller name, default to "ADC_0"
-    unsigned long pin;  // analog pin where the light is connected
-};<p>[Constructor(optional SensorOptions sensorOptions)]
-interface TemperatureSensor : Sensor {
-    readonly attribute double celsius;
-};<p>dictionary TemperatureSensorOptions : SensorOptions  {
-    string controller;  // controller name, default to "bmi160"
-};</pre></details>
+```javascript
+// require returns an OCFObject
+// var ocf = require('ocf');
 
-Sensor API
+interface OCFObject {
+    Server server;         // OCF server object
+    Client client;         // OCF client object
+    Platform platform;     // OCF platform info
+    Device device          // OCF device info
+};
+
+dictionary Platform {
+    string id;
+    string osVersion;
+    string model;
+    string manufacturerName;
+    string manufacturerURL;
+    string manufacturerDate;
+    string platformVersion;
+    string firmwareVersion;
+    string supportURL;
+}
+
+dictionary Device {
+    string uuid;
+    string name;
+    string dataModels;
+    string coreSpecVersion;
+}
+
+```
+The OCF device and platform objects can be set up after requiring 'ocf'. An
+example of this can be found in [OCF Server sample](../samples/OcfServer.js).
+The properties are registered to the system (and available during discovery)
+once either `OCFServer.registerResource()` or `OCFClient.findResources()`
+is called.
+
+OCF API Documentation
+---------------------
+
+### OCFObject.start
+`void start(void)`
+
+Start the OCF stack (iotivity-constrained). This should be called after all
+resources have been registered. Any calls to `registerResource` after `start`
+will have no effect.
+
+OCF Server
 ----------
+```javascript
+interface Server: EventEmitter {
+    Promise<OCFResource> register(ResourceInit init);
+};
 
-### onreading
-`Sensor.onreading`
+dictionary ResourceInit {
+    string resourcePath;      // OCF resource path
+    string[] resourceTypes;   // List of resource types
+    string[] interfaces;      // List of interfaces for resource types
+    boolean discoverable;     // Is resource discoverable
+    boolean observable;       // Is resource observable
+    boolean secure;           // Is resource security enabled
+    boolean slow;             // Is resource a slow reader
+    object properties;        // Dictionary of resource properties
+};
 
-The onreading attribute is an EventHandler, which is called whenever a new reading is available.
+interface Resource {
+    string resourcePath;      // Path for this resource
+    object properties;        // Application specific resource properties
+};
 
-### onactivate
-`Sensor.onactivate`
+interface Request {
+    OCFResource target;       // Target/destination resource
+    OCFResource source;       // Source/origin resource
+    object data;              // resource representation
+    Promise<void> respond(object data);
+};
+```
 
-The onactivate attribute is an EventHandler which is called when the sensor is activated after calling start().
+Server API Documentation
+------------------------
+Server is an [EventEmitter](./events.md) with the following events:
 
-### onerror
-`Sensor.onerror`
+### Event: 'retrieve'
 
-The onactivate attribute is an EventHandler which is called whenever an exception cannot be handled synchronously.
+* `Request` `request`
+* `boolean` `observe`
 
-### sensor.start()
+Emitted when a remote client retrieves this server's resource(s).
 
-Starts the sensor instance, the sensor will get callback on onreading whenever there's a new reading available.
+### Event: 'update'
 
-### sensor.stop()
+* `Request` `request`
 
-Stop the sensor instance, the sensor will stop reporting new readings.
+Emitted when a remote client updates this server's resource(s).
 
-Sample Apps
------------
-* [Accelerometer sample](../samples/BMI160Accelerometer.js)
-* [Gyroscope sample](../samples/BMI160Gyroscope.js)
-* [Ambient Light sample](../samples/AmbientLight.js)
-* [Temperature sample](../samples/BMI160Temperature.js)
+### Server.register
+`Promise<OCFResource> register(ResourceInit init);`
+
+Register a new resource with the server.
+
+The `init` contains the resource initalization information.
+
+Returns a promise which resolves to an `OCFResource`.
+
+### Request.respond
+`Promise<void> respond(object data);`
+
+Respond to an OCF `retrieve` or `update` event.
+
+The `data` parameter should contain object property data for the resource. In
+the case of an `onretrieve` event, `data` will be sent back to the client as
+the retrieved property data.
+
+Returns a promise which resolves successfully if there was no network error
+sending out the data.
+
+Server Samples
+--------------
+* [OCF Server sample](../samples/OcfServer.js)
+* [OCF Sensor Server](../samples/OcfSensorServer.js)
+
+OCF Client
+----------
+```javascript
+interface Client: EventEmitter {
+    Promise<Resource> findResources(ClientOptions options, optional FoundListener listener);
+    Promise<Resource> retrieve(string deviceId, object options);
+    Promise<Resource> update(Resource resource);
+    Promise<Platform> getPlatformInfo(string deviceId);
+    Promise<Device> getDeviceInfo(string deviceId);
+};
+
+dictionary ClientOptions {
+    string deviceId;
+    string resourceType;
+    string resourcePath;
+}
+
+interface Resource {
+    string resourcePath;      // Path for this resource
+    object properties;        // Application specific resource properties
+};
+
+callback FoundListener = void (ClientResource);
+```
+
+Client API Documentation
+------------------------
+Client is an [EventEmitter](./events.md) with the following events:
+
+### Event: 'devicefound'
+
+* `Device` `device`
+
+Emitted when a device is found during `getDeviceInfo()`.
+
+### Event: 'platformfound'
+
+* `Platform` `platform`
+
+Emitted when a platform is found during `getPlatformInfo()`.
+
+### Event: 'resourcefound'
+
+* `Resource` `resource`
+
+Emitted when a resource is found during `findResources()`.
+
+### Event: 'update'
+
+* `Resource` `update`
+
+Emitted when a resource is updated.
+
+### Client.findResources
+`Promise<ClientResource> findResources(ClientOptions options, optional FoundListener listener);`
+
+Find remote resources matching `options` filter.
+
+The `options` parameter should contain a filter of resource options. Only
+resources matching these options will be found.
+
+The `listener` parameter is an optional event listener callback. This
+callback will be called if a resource is found (`onfound` event).
+
+Returns a promise which resolves with a `ClientResource` object if a resource
+was found.
+
+### Client.retrieve
+`Promise<Resource> retrieve(string deviceId, object options);`
+
+Retrieve (GET) a remote resource.
+
+The `deviceId` parameter is the device ID of the resource you are retrieving.
+This ID must match a resource which has been found with `findResources()`.
+
+The `options` object properties contain flag information for this GET request
+e.g. `observable=true`.
+
+Returns a promise which resolves to a `ClientResource` containing the resource
+properties.
+
+### Client.update
+`Promise<Resource> update(Resource resource);`
+
+Update remote resource properties.
+
+The `resource` parameter should contain a `deviceId` for the resource to
+update. The `properties` parameter will be sent to the resource and updated.
+
+Returns a promise which resolves to a resource `Resource` containing the
+updated properties.
+
+### Client.getPlatformInfo
+`Promise<Platform> getPlatformInfo(string deviceId);`
+
+Get `Platform` information for a resource.
+
+The `deviceId` parameter should be the ID for a resource found with
+`findResources()`.
+
+Returns a promise which resolves to a `Platform` containing the platform
+information for the resource.
+
+### Client.getDeviceInfo
+`Promise<Device> getDeviceInfo(string deviceId);`
+
+Get `Device` information for a resource.
+
+The `deviceId` parameter should be the ID for a resource found with
+`findResources()`.
+
+Returns a promise which resolves to a `Device` containing the device
+information for the resource.
+
+Client Samples
+--------------
+* [OCF Client sample](../samples/OcfClient.js)
+* [OCF Sensor Client](../samples/OcfSensorClient.js)
