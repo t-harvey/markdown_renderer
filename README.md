@@ -51,18 +51,15 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 [ReturnFromRequire]
 interface PWM {
     PWMPin open((number or string or PWMInit) init);
-};
-<p>
+};<p>
 dictionary PWMInit {
     (number or string) pin;
     boolean reversePolarity = false;
-};
-<p>
+};<p>
 interface PWMPin {
     void setCycles(unsigned long period, unsigned long pulseWidth);
     void setMilliseconds(double period, double pulseWidth);
-};
-</pre>
+};</pre>
 </details>
 
 PWM API
