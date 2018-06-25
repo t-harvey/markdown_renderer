@@ -47,7 +47,7 @@ interface Sensor {
     attribute ActivateCallback onactivate;  // callback handler for activate events
     attribute ErrorCallback onerror;        // callback handler for error events
 };<p>dictionary SensorOptions {
-    double frequency;  // desire frequency, default is 20 if unset
+    double frequency;  // desired frequency, default is 20 if unset
 };<p>interface SensorErrorEvent {
     attribute Error error;
 };<p>callback ChangeCallback = void();
