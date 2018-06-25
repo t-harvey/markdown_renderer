@@ -1,49 +1,138 @@
-Zephyr.js API for WebUSB
-========================
+ZJS API for W3C Generic Sensors
+==============================
 
 * [Introduction](#introduction)
-* [Class: WebUSB](#class-webusb)
+* [Web IDL](#web-idl)
 * [API Documentation](#api-documentation)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The WebUSB module supports advertising the device as a WebUSB device when the
-USB port is connected to a PC. Currently, this only works on Arduino 101 as it
-is the only board with a USB driver in the Zephyr tree.
+ZJS Generic Sensor API implements the W3C Sensor API, and it's intended to
+provide a consistent API that allows apps to communicate with sensors like
+accelerometer and gyroscope. Since the W3C Sensor API is still a draft spec,
+our implementation only provide a subset of the API and the API could be
+slightly different, but we try to follow the latest spec as closely as
+possible.
 
-The API allows you to set the URL that will be suggested to the browser for
-connecting to your device.
+Note: The currently supported hardware is Arduino 101 with its built-in
+BMI160 chip with accelerometer, gyroscope, and temperature.  The supported
+ambient light sensor is the Grove light sensor that comes with the
+Grove starter kit, that can be connected using an analog pin.
 
-When you connect your device to a Linux PC or Mac with Chrome >= 60 running, it
-will give a notification that the device would like you to visit the URL you've
-set. (Windows currently prevents this from working, I believe.)
+Web IDL
+-------
+This IDL provides an overview of the interface; see below for documentation of
+specific API functions.
+
+####Sensor Interface
+```javascript
+interface Sensor {
+    readonly attribute boolean activated;   // whether the sensor is activated or not
+    readonly attribute boolean hasReading;  // whether the sensor has readings available
+    readonly attribute double timestamp;    // timestamp of the latest reading in milliseconds
+    attribute double frequency;             // sampling frequency in hertz
+    void start();                           // starts the sensor
+    void stop();                            // stops the sensor
+    attribute ChangeCallback onreading;     // callback handler for change events
+    attribute ActivateCallback onactivate;  // callback handler for activate events
+    attribute ErrorCallback onerror;        // callback handler for error events
+};
+
+dictionary SensorOptions {
+    double frequency;  // desire frequency, default is 20 if unset
+};
+
+interface SensorErrorEvent {
+    attribute Error error;
+};
+
+callback ChangeCallback = void();
+callback ActivateCallback = void();
+callback ErrorCallback = void(SensorErrorEvent error);
+```
+####Accelerometer Interface
+```javascript
+[Constructor(optional AccelerometerOptions accelerometerOptions)]
+interface Accelerometer : Sensor {
+    readonly attribute double x;
+    readonly attribute double y;
+    readonly attribute double z;
+};
+
+dictionary AccelerometerOptions : SensorOptions  {
+    string controller;       // controller name, default to "bmi160"
+};
+```
+####GyroscopeSensor Interface
+```javascript
+[Constructor(optional SensorOptions sensorOptions)]
+interface GyroscopeSensor : Sensor {
+    readonly attribute double x;
+    readonly attribute double y;
+    readonly attribute double z;
+};
+
+dictionary GyroscopeOptions : SensorOptions  {
+    string controller;  // controller name, default to "bmi160"
+};
+```
+####AmbientLightSensor Interface
+```javascript
+[Constructor(optional SensorOptions sensorOptions)]
+interface AmbientLightSensor : Sensor {
+    readonly attribute unsigned long pin;
+    readonly attribute double illuminance;
+};
+
+dictionary AmbientLightSensorOptions : SensorOptions  {
+    string controller;  // controller name, default to "ADC_0"
+    unsigned long pin;  // analog pin where the light is connected
+};
+```
+####TemperatureSensor Interface
+```javascript
+[Constructor(optional SensorOptions sensorOptions)]
+interface TemperatureSensor : Sensor {
+    readonly attribute double celsius;
+};
+
+dictionary TemperatureSensorOptions : SensorOptions  {
+    string controller;  // controller name, default to "bmi160"
+};
+```
 
 API Documentation
 -----------------
-### Event: 'read'
 
-* `Buffer` `data`
+### onreading
+`Sensor.onreading`
 
-Emitted when data is received on the WebUSB RX line. The `data` parameter is a
-`Buffer` with the received data.
+The onreading attribute is an EventHandler, which is called whenever a new reading is available.
 
-### WebUSB.setURL
+### onactivate
+`Sensor.onactivate`
 
-`void setURL(string url);`
+The onactivate attribute is an EventHandler which is called when the sensor is activated after calling start().
 
-The `url` string should begin with "https://" in order for Chrome to accept it
-and display a notification. Other URLs are valid in terms of the protocol but
-will have no user-visible effect in Chrome.
+### onerror
+`Sensor.onerror`
 
-### WebUSB.write
+The onactivate attribute is an EventHandler which is called whenever an exception cannot be handled synchronously.
 
-`void write(Buffer buffer);`
+### start
+`void Sensor.start()`
 
-Writes the data in `buffer` to the WebUSB TX line. By default at most 511 bytes
-can be pending at one time, so that is the maximum write size, assuming all
-previous data had already been flushed out. An error will be thrown on overflow.
+Starts the sensor instance, the sensor will get callback on onreading whenever there's a new reading available.
+
+### stop
+`void Sensor.stop()`
+
+Stop the sensor instance, the sensor will stop reporting new readings.
 
 Sample Apps
 -----------
-* [WebUSB sample](../samples/WebUSB.js)
+* [Accelerometer sample](../samples/BMI160Accelerometer.js)
+* [Gyroscope sample](../samples/BMI160Gyroscope.js)
+* [Ambient Light sample](../samples/AmbientLight.js)
+* [Temperature sample](../samples/BMI160Temperature.js)
