@@ -15,30 +15,27 @@ ZJS API for OCF
 Introduction
 ------------
 ZJS provides OCF Server API's which allow communication using the OCF networking
-protocol.
+protocol.  We split this documentation into three sections, one for
+the main data structure, which can contain the OCF server, the OCF
+client, or an instance of each.
 
 Web IDL
 -------
-This IDL provides an overview of the interfaces for OCF common, OCF Server and
-OCF Client; see below for documentation of specific API functions.
+This IDL provides an overview of the interface; see below for
+documentation of specific API functions.  We have a short document
+explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
-The OCF Object
---------------
-The OCF object is the top level object containing either OCF Server,
-OCF Client, or both, as well as device and platform information.
-
-```javascript
+<details>
+<summary>Click to show WebIDL</summary>
+<pre>
 // require returns an OCFObject
 // var ocf = require('ocf');
-
-interface OCFObject {
+<p>interface OCFObject {
     Server server;         // OCF server object
     Client client;         // OCF client object
     Platform platform;     // OCF platform info
     Device device          // OCF device info
-};
-
-dictionary Platform {
+};<p>dictionary Platform {
     string id;
     string osVersion;
     string model;
@@ -48,15 +45,57 @@ dictionary Platform {
     string platformVersion;
     string firmwareVersion;
     string supportURL;
-}
-
-dictionary Device {
+}<p>dictionary Device {
     string uuid;
     string name;
     string dataModels;
     string coreSpecVersion;
-}
+}<p>///////////////////////////////////////////
+// OCF Server
+///////////////////////////////////////////<p>interface Server: EventEmitter {
+    Promise<OCFResource> register(ResourceInit init);
+};<p>dictionary ResourceInit {
+    string resourcePath;      // OCF resource path
+    string[] resourceTypes;   // List of resource types
+    string[] interfaces;      // List of interfaces for resource types
+    boolean discoverable;     // Is resource discoverable
+    boolean observable;       // Is resource observable
+    boolean secure;           // Is resource security enabled
+    boolean slow;             // Is resource a slow reader
+    object properties;        // Dictionary of resource properties
+};<p>interface Resource {
+    string resourcePath;      // Path for this resource
+    object properties;        // Application specific resource properties
+};<p>interface Request {
+    OCFResource target;       // Target/destination resource
+    OCFResource source;       // Source/origin resource
+    object data;              // resource representation
+    Promise<void> respond(object data);
+};<p>///////////////////////////////////////////
+// OCF Client
+///////////////////////////////////////////<p>interface Client: EventEmitter {
+    Promise<Resource> findResources(ClientOptions options, optional FoundListener listener);
+    Promise<Resource> retrieve(string deviceId, object options);
+    Promise<Resource> update(Resource resource);
+    Promise<Platform> getPlatformInfo(string deviceId);
+    Promise<Device> getDeviceInfo(string deviceId);
+};<p>dictionary ClientOptions {
+    string deviceId;
+    string resourceType;
+    string resourcePath;
+}<p>interface Resource {
+    string resourcePath;      // Path for this resource
+    object properties;        // Application specific resource properties
+};<p>callback FoundListener = void (ClientResource);</pre></details>
 
+
+
+The OCF Object
+--------------
+The OCF object is the top level object containing either OCF Server,
+OCF Client, or both, as well as device and platform information.
+
+```javascript
 ```
 The OCF device and platform objects can be set up after requiring 'ocf'. An
 example of this can be found in [OCF Server sample](../samples/OcfServer.js).
@@ -77,32 +116,6 @@ will have no effect.
 OCF Server
 ----------
 ```javascript
-interface Server: EventEmitter {
-    Promise<OCFResource> register(ResourceInit init);
-};
-
-dictionary ResourceInit {
-    string resourcePath;      // OCF resource path
-    string[] resourceTypes;   // List of resource types
-    string[] interfaces;      // List of interfaces for resource types
-    boolean discoverable;     // Is resource discoverable
-    boolean observable;       // Is resource observable
-    boolean secure;           // Is resource security enabled
-    boolean slow;             // Is resource a slow reader
-    object properties;        // Dictionary of resource properties
-};
-
-interface Resource {
-    string resourcePath;      // Path for this resource
-    object properties;        // Application specific resource properties
-};
-
-interface Request {
-    OCFResource target;       // Target/destination resource
-    OCFResource source;       // Source/origin resource
-    object data;              // resource representation
-    Promise<void> respond(object data);
-};
 ```
 
 Server API Documentation
@@ -151,26 +164,6 @@ Server Samples
 OCF Client
 ----------
 ```javascript
-interface Client: EventEmitter {
-    Promise<Resource> findResources(ClientOptions options, optional FoundListener listener);
-    Promise<Resource> retrieve(string deviceId, object options);
-    Promise<Resource> update(Resource resource);
-    Promise<Platform> getPlatformInfo(string deviceId);
-    Promise<Device> getDeviceInfo(string deviceId);
-};
-
-dictionary ClientOptions {
-    string deviceId;
-    string resourceType;
-    string resourcePath;
-}
-
-interface Resource {
-    string resourcePath;      // Path for this resource
-    object properties;        // Application specific resource properties
-};
-
-callback FoundListener = void (ClientResource);
 ```
 
 Client API Documentation
