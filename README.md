@@ -77,7 +77,7 @@ interface PME {
     attribute unsigned short L1_DISTANCE;    // L1 distance mode
     attribute unsigned short LSUP_DISTANCE;  // LSUP distance mode
     attribute unsigned long NO_MATCH;        // indicate a pattern could not
-<p>                                             // be classified
+                                             // be classified
     attribute unsigned short MIN_CONTEXT;    // minimum context value
     attribute unsigned short MAX_CONTEXT;    // maximum context value
     attribute unsigned long MAX_VECTOR_SIZE; // Maximum pattern size (in bytes)
