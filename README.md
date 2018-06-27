@@ -71,13 +71,13 @@ interface PME {
     void setDistanceMode(unsigned short mode);
     sequence < Json > saveNeurons();
     restoreNeurons(sequence < Json > objects);
-
+<p>
     attribute unsigned short RBF_MODE;       // RBF classification mode
     attribute unsigned short KNN_MODE;       // KNN classification mode
     attribute unsigned short L1_DISTANCE;    // L1 distance mode
     attribute unsigned short LSUP_DISTANCE;  // LSUP distance mode
     attribute unsigned long NO_MATCH;        // indicate a pattern could not
-                                             // be classified
+<p>                                             // be classified
     attribute unsigned short MIN_CONTEXT;    // minimum context value
     attribute unsigned short MAX_CONTEXT;    // maximum context value
     attribute unsigned long MAX_VECTOR_SIZE; // Maximum pattern size (in bytes)
