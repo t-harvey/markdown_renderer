@@ -1,35 +1,25 @@
-ZJS API for OCF
-===============
+ZJS API for Console
+==================
 
 * [Introduction](#introduction)
-* [Web IDL](#web-idl)
-* [Class: OCF](#ocf-api)
-  * [ocf.start()](#ocfstart)
-* [OCFServer-supported Events](#ocfserver-supported-events)
-* [Class: OCFServer](#ocfserver-api)
-  * [server.register(init)](#serverregisterinit)
-* [Class: Request](#request-api)
-  * [request.respond(data)](#requestresponddata)
-* [OCFClient-supported Events](#ocfclient-supported-events)
-* [Class: OCFClient](#ocfclient-api)
-  * [client.findResources(options, listener)](#clientfindresourcesoptions-listener)
-  * [client.retrieve(deviceId, options)](#clientretrievedeviceid-options)
-  * [client.update(resource)](#clientupdateresource)
-  * [client.getPlatformInfo(deviceId)](#clientgetplatforminfodeviceid)
-  * [client.getDeviceInfo(deviceId)](#clientgetdeviceinfodeviceid)
-* [OCFServer Samples](#ocfserver-samples)
-* [OCFClient Samples](#ocfclient-samples)
+* [API Documentation](#api-documentation)
+
+* [Class: Console](#console-api)
+  * [console.assert(value, message)](#consoleassertvalue-message)
+  * [console.error(data)](#consoleerrordata)
+  * [console.warn(data)](#consolewarndata)
+  * [console.log(data)](#consolelogdata)
+  * [console.info(data)](#consoleinfodata)
+  * [console.time(label)](#consoletimelabel)
+  * [console.timeEnd(label)](#consoletimeendlabel)
+* [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-ZJS provides OCF Server API's which allow communication using the OCF networking
-protocol.
+ZJS provides console API's which match Node.js' Console module. We describe them here as there could
+potentially be minor differences.
 
-The OCF object is the top level object containing either OCF Server,
-OCF Client, or both, as well as device and platform information.
-
-The OCF device and platform objects can be set up after requiring 'ocf'. An
-example of this can be found in [OCF Server sample](../samples/OcfServer.js).
+Note that the console API's do not support format specifiers (e.g. %d, %f etc.).
 
 Web IDL
 -------
@@ -40,192 +30,58 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <details>
 <summary>Click to show WebIDL</summary>
 <pre>
-// require returns an OCFObject
-// var ocf = require('ocf');
-<p>[ReturnFromRequire]
-interface OCFObject {
-    attribute OCFServer server;         // OCF server object
-    attribute OCFClient client;         // OCF client object
-    attribute Platform platform;     // OCF platform info
-    attribute Device device          // OCF device info
-    void start();
-};<p>dictionary Platform {
-    string id;
-    string osVersion;
-    string model;
-    string manufacturerName;
-    string manufacturerURL;
-    string manufacturerDate;
-    string platformVersion;
-    string firmwareVersion;
-    string supportURL;
-}<p>dictionary Device {
-    string uuid;
-    string name;
-    string dataModels;
-    string coreSpecVersion;
-}<p>///////////////////////////////////////////
-// OCF Server
-///////////////////////////////////////////<p>interface OCFServer: EventEmitter {
-    Promise<OCFResource> register(ResourceInit init);
-};<p>dictionary ResourceInit {
-    string resourcePath;      // OCF resource path
-    string[] resourceTypes;   // List of resource types
-    string[] interfaces;      // List of interfaces for resource types
-    boolean discoverable;     // Is resource discoverable
-    boolean observable;       // Is resource observable
-    boolean secure;           // Is resource security enabled
-    boolean slow;             // Is resource a slow reader
-    object properties;        // Dictionary of resource properties
-};<p>dictionary Resource {
-    string resourcePath;      // Path for this resource
-    object properties;        // Application specific resource properties
-};<p>interface Request {
-    OCFResource target;       // Target/destination resource
-    OCFResource source;       // Source/origin resource
-    object data;              // resource representation
-    Promise<void> respond(object data);
-};<p>///////////////////////////////////////////
-// OCF Client
-///////////////////////////////////////////<p>interface OCFClient: EventEmitter {
-    Promise<Resource> findResources(ClientOptions options, optional FoundListener listener);
-    Promise<Resource> retrieve(string deviceId, object options);
-    Promise<Resource> update(Resource resource);
-    Promise<Platform> getPlatformInfo(string deviceId);
-    Promise<Device> getDeviceInfo(string deviceId);
-};<p>dictionary ClientOptions {
-    string deviceId;
-    string resourceType;
-    string resourcePath;
-}<p>callback FoundListener = void (ClientResource);
+// require returns a Console object
+// var console = require('console');<p><p>[ReturnFromRequire]
+interface Console {
+    void assert(boolean value, optional string message);
+    void error(optional string data);
+    void log(optional string data);
+    void info(optional string data);
+    void time(string label);
+    void timeEnd(string label);
+};
 </pre>
 </details>
 
-OCF API
--------
-The properties are registered to the system (and available during discovery)
-once either `OCFServer.registerResource()` or `OCFClient.findResources()`
-is called.
-
-### ocf.start()
-
-Start the OCF stack (iotivity-constrained). This should be called after all
-resources have been registered. Any calls to `registerResource` after `start`
-will have no effect.
-
-OCFServer-supported Events
---------------------------
-An OCFServer is an [EventEmitter](./events.md) with the following events:
-
-### Event: 'retrieve'
-
-* `Request` `request`
-* `boolean` `observe`
-
-Emitted when a remote client retrieves this server's resource(s).
-
-### Event: 'update'
-
-* `Request` `request`
-
-Emitted when a remote client updates this server's resource(s).
-
-OCFServer API
---------------
-### server.register(init)
-* `init` *ResourceInit* Contains the resource initialization information.
-* Returns: a promise which resolves to an `OCFResource`.
-
-Register a new resource with the server.
-
-Request API
+Console API
 -----------
-### request.respond(data)
-* `data` *object* Should contain object property data for the resource. In
-the case of an `onretrieve` event, `data` will be sent back to the client as
-the retrieved property data.
-* Returns: a promise which resolves successfully if there was no network error
-from sending out the data.
 
-Respond to an OCF `retrieve` or `update` event.
+### console.assert(value, message)
+* `value` *boolean*
+*  `message` *string* Optional message to print.
 
-OCFClient-supported Events
---------------------------
-An OCFClient is an [EventEmitter](./events.md) with the following events:
+Assert/throw an error if `value` is false.
 
-### Event: 'devicefound'
+### console.error(data)
+* `data` *string* Optional message to print.
 
-* `Device` `device`
+Prints `data` to `stderr` with newline. (On Zephyr this will just print to stdout).
 
-Emitted when a device is found during `getDeviceInfo()`.
+### console.warn(data)
+* `data` *string* Optional message to print.
 
-### Event: 'platformfound'
+Alias for `console.error()`
 
-* `Platform` `platform`
+### console.log(data)
+* `data` *string* Optional message to print.
 
-Emitted when a platform is found during `getPlatformInfo()`.
+Prints `data` to `stdout` with newline.
 
-### Event: 'resourcefound'
+### console.info(data)
+* `data` *string* Optional message to print.
 
-* `Resource` `resource`
+Alias for `console.log()`.
 
-Emitted when a resource is found during `findResources()`.
+### console.time(label)
+* `label` *string* This string is used to reference the timer when calling `console.timeEnd()`.
 
-### Event: 'update'
+Starts a timer used to compute the duration of an operation.
 
-* `Resource` `update`
+### console.timeEnd(label)
+* `label` *string* The label identifying the timer started with `console.time()`.
 
-Emitted when a resource is updated.
+Stops a timer previously started with `console.time()` and prints the resulting time difference to `stdout`.
 
-OCFClient API
--------------
-### client.findResources(options, listener)
-* `options` *ClientOptions* Should contain a filter of resource options. Only
-resources matching these options will be found.
-* `listener` *FoundListener* An optional event-listener callback. This
-callback will be called if a resource is found (`onfound` event).
-* Returns: a promise which resolves to a `ClientResource` containing the resource properties.
-
-Find remote resources matching `options` filter.
-
-Returns a promise which resolves with a `ClientResource` object if a resource
-was found.
-
-### client.retrieve(deviceId, options)
-* `deviceId` *string* The device ID of the resource you are retrieving.
-This ID must match a resource which has been found with `findResources()`.
-* `options` *object * Contains flag information for this GET request (e.g., `observable=true`).
-
-Retrieve (GET) a remote resource.
-
-### client.update(resource)
-* `resource` *Resource* Should contain a `deviceId` for the resource to
-update. The `properties` parameter will be sent to the resource and updated.
-* Returns: a promise which resolves to a resource `Resource` containing the
-updated properties.
-
-Update remote resource properties.
-
-### client.getPlatformInfo(deviceId)
-* `deviceId` *string* The `deviceId` parameter should be the ID for a resource found with `findResources()`.
-* Returns: a promise which resolves to a `Platform` containing the platform
-information for the resource.
-
-Get `Platform` information for a resource.
-
-### client.getDeviceInfo(deviceId)
-* `deviceId` *string* The ID for a resource found with `findResources()`.
-* Returns: a promise which resolves to a `Device` containing the device
-information for the resource.
-
-Get `Device` information for a resource.
-
-OCFServer Samples
---------------
-* [OCF Server sample](../samples/OcfServer.js)
-* [OCF Sensor Server](../samples/OcfSensorServer.js)
-
-OCFClient Samples
---------------
-* [OCF Client sample](../samples/OcfClient.js)
-* [OCF Sensor Client](../samples/OcfSensorClient.js)
+Sample Apps
+-----------
+* [Console sample](../samples/tests/Console.js)
