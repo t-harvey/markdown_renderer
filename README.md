@@ -1,46 +1,24 @@
-ZJS API for Pattern Matching Engine (PME)
-=========================================
+ZJS API for Events
+==================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class: PME](#pme-api)
-  * [pme.begin()](#pmebegin)
-  * [pme.forget()](#pmeforget)
-  * [pme.configure(context, classificationMode, distanceMode, minInfluence, maxInfluence)](#pmeconfigurecontext-classificationmode-distancemode-mininfluence-maxinfluence)
-  * [pme.learn(pattern, category)](#pmelearnpattern-category)
-  * [pme.classify(pattern)](#pmeclassifypattern)
-  * [pme.readNeuron(id)](#pmereadneuronid)
-  * [pme.writeVector(pattern)](#pmewritevectorpattern)
-  * [pme.getCommittedCount()](#pmegetcommittedcount)
-  * [pme.getGlobalContext()](#pmegetglobalcontext)
-  * [pme.getClassifierMode()](#pmegetclassifiermode)
-  * [pme.setClassifierMode(mode)](#pmesetclassifiermodemode)
-  * [pme.getDistanceMode()](#pmegetdistancemode)
-  * [pme.setDistanceMode(mode)](#pmesetdistancemodemode)
-  * [pme.saveNeurons()](#pmesaveneurons)
-  * [pme.restoreNeurons(objects)](#pmerestoreneuronsobjects)
+* [Class: EventEmitter](#eventemitter-api)
+  * [EventEmitter.on(event, listener)](#evertemitteronevent-listener)
+  * [EventEmitter.addListener(event, listener)](#eventemitteraddlistenerevent-listener)
+  * [EventEmitter.emit(event, args...)](#eventemitteremitevent-args...)
+  * [EventEmitter.removeListener(event, listener)](#eventemitterremovelistenerevent-listener)
+  * [EventEmitter.removeAllListeners(event)](#eventemitterremovealllistenersevent)
+  * [EventEmitter.eventNames()](#eventemittereventnames)
+  * [EventEmitter.getMaxListeners()](#eventemittergetmaxlisteners)
+  * [EventEmitter.listeners(event)](#eventemitterlistenersevent)
+  * [EventEmitter.setMaxListeners(max)](#eventemittersetmaxlistenersmax)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The Pattern Matching Engine API is the JavaScript version of the parallel data-recognition engine with the following features:
-
- - 128 parallel Processing Elements (PE) each with
-     - 128 byte input vector
-     - 128 byte model memory
-     - 8-Bit Arithmetic Units
- - Two distance-evaluation norms with 16-bit resolution:
-    - L1 norm (Manhattan Distance)
-    - Lsup (Supremum) norm (Chebyshev Distance)
- - Support for up to 32,768 Categories
- - Classification states:
-   - ID  - Identified
-   - UNC - Uncertain
-   - UNK - Unknown
- - Two Classification Functions:
-   - k-nearest neighbors (KNN)
-   - Radial Basis Function (RBF)
- - Support for up to 127 Contexts
+ZJS provides event APIs which match `Node.js` `Event`s. We describe
+them here as there could be minor differences.
 
 Web IDL
 -------
@@ -49,149 +27,81 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 <details>
 <summary> Click to show/hide WebIDL</summary>
 <pre>
-// require returns a PME object
-// var pme = require('pme');<p><p>[ReturnFromRequire]
-interface PME {
-    void begin();
-    void forget();
-    void configure(unsigned short context,
-                   unsigned short classificationMode,
-                   unsigned short distanceMode,
-                   unsigned short minInfluence,
-                   unsigned short maxInfluence);
-    void learn(sequence < number > pattern, unsigned long category);
-    unsigned long classify(sequence < number > pattern);
-    Neuron readNeuron(unsigned long id);
-    void writeVector(sequence < number > pattern);
-    unsigned short getCommittedCount();
-    unsigned short getGlobalContext();
-    unsigned short getClassifierMode();
-    void setClassifierMode(unsigned short mode);
-    unsigned short getDistanceMode();
-    void setDistanceMode(unsigned short mode);
-    sequence < Json > saveNeurons();
-    restoreNeurons(sequence < Json > objects);
-<p>
-    attribute unsigned short RBF_MODE;       // RBF classification mode
-    attribute unsigned short KNN_MODE;       // KNN classification mode
-    attribute unsigned short L1_DISTANCE;    // L1 distance mode
-    attribute unsigned short LSUP_DISTANCE;  // LSUP distance mode
-    attribute unsigned long NO_MATCH;        // indicate a pattern could not
-                                             // be classified
-    attribute unsigned short MIN_CONTEXT;    // minimum context value
-    attribute unsigned short MAX_CONTEXT;    // maximum context value
-    attribute unsigned long MAX_VECTOR_SIZE; // Maximum pattern size (in bytes)
-    attribute unsigned long FIRST_NEURON_ID; // ID of first neuron in network
-    attribute unsigned long LAST_NEURON_ID;  // ID of last neuron in network
-    attribute unsigned long MAX_NEURONS;     // Number of neurons in the network
-};<p>dictionary Neuron {
-    unsigned short category;
-    unsigned short context;
-    unsigned short AIF;
-    unsigned short minIF;
+callback ListenerCallback = void (any... params);<p>interface EventEmitter {
+    this on(string event, ListenerCallback listener);
+    this addListener(string event, ListenerCallback listener);
+    boolean emit(string event, optional arg1, ...);
+    this removeListener(string event, ListenerCallback listener);
+    this removeAllListeners(string event);
+    string[] eventNames(void);
+    number getMaxListeners(void);
+    ListenerCallback[] listeners(string event);
+    this setMaxListeners(number max);
 };
 </pre>
 </details>
 
-PME API
--------
-### pme.begin()
+EventEmitter API
+----------------
+### EventEmitter.on(event, listener)
+* `event` *string* The name of the event which you are adding a listener to.
+* `listener` *ListenerCallback* The function that you wish to be called when this event is emitted/triggered.
+* Returns: `this` so calls can be chained.
 
-Initialize the PME so it is ready for operation.
+Add an event listener function.
 
-### pme.forget()
+### EventEmitter.addListener(event, listener)
+* `event` *string* The name of the event which you are adding a listener to.
+* `listener` *ListenerCallback* The function that you wish to be called when this event is emitted/triggered.
+* Returns: `this` so calls can be chained.
 
-Clear any data committed to the network, making the network ready to learn again.
+Same as `EventEmitter.on()`.
 
-### pme.configure(context, classificationMode, distanceMode, minInfluence, maxInfluence)
-* `context` *unsigned short* This value has a range between 1-127. A context value of 0 enables all neurons, with no regard to their context.
-* `classificationMode` *unsigned short* The classifying function to use. Valid values are: PME.RBF_MODE (default) or PME.KNN_MODE.
-* `distanceMode` *unsigned short* The distance function to use. Valid values are: PME.LSUP_DISTANCE or PME.L1_DISTANCE.
-* `minInfluence` *unsigned short*  The minimum influence value used on the neuron.
-* `maxInfluence` *unsigned short* The maximum influence value used on the neuron.
+### EventEmitter.emit(event, args...)
+* `event` *string* The name of the event that you want to emit.
+* `arg1` *optional* All other arguments will be given to any registered listener functions.
+* Returns: true if there were any listener functions called.
 
-Configure the engine with parameters used for training data.
+Triggers an event. Any listener functions which have been added to the
+event emitter under the event name will be called.
 
-### pme.learn(pattern, category)
-* `pattern` *array of bytes* An array of bytes up to 128 bytes in length.
-* `category` *unsigned long* Indicates to the PME to which category this training vector belongs; that is, if a future input has a sufficiently similar pattern, it will be classified as the same category as the passed-in pattern.
 
-Takes a pattern and commits it to the network as training data for a given category.
+### EventEmitter.removeListener(event, listener)
+* `event` *string* The name of the event you are removing the listener from.
+* `listener` *ListenerCallback* The function you want to remove as a listener.
+* Returns: `this` so calls can be chained.
 
-### pme.classify(pattern)
-* `pattern` *array of bytes* An array of bytes up to 128 bytes in length.
-* Returns: `PME.NO_MATCH` if the input data did not match any of the trained categories. Otherwise, the trained category assigned by the network will be returned.
+Removes a listener function from an event.
 
-Takes a pattern and uses the committed neurons in the network to classify the pattern.
+### EventEmitter.removeAllListeners(event)
+* `event` *string* The name of the event from which to remove all listeners.
+* Returns: `this` so calls can be chained.
 
-### pme.readNeuron(id)
-* `id` *unsigned long* A value between 1-128 representing a specific neuron.
-* Returns: the `Neuron` object in which to write the neuron data.
+Removes all listeners from an event
 
-Read a specific neuron by its ID.
 
-### pme.writeVector(pattern)
-* `pattern` *array of bytes* An array of bytes up to 128 bytes in length.
+### EventEmitter.eventNames()
+* Returns: an array of strings that correspond to any events. Will return undefined if there are no event's or event listeners for this event emitter.
 
-(Should only be used in KNN_MODE.) Takes a pattern and uses the committed neurons in the network to classify the pattern.
+Get a list of event names from an event emitter object.
 
-### pme.getCommittedCount()
-*Returns: the number of comitted neurons in the network (a value between 0-128).
+### EventEmitter.getMaxListeners()
+* Returns: the maximum number of listeners allowed.
 
-Gets the number of committed neurons in the network.
+Get the maximum number of listeners allowed for this event emitter object.
 
-### pme.getGlobalContext()
-* Returns: the contents of the Global Context Register (a value between 0-127).
+### EventEmitter.listeners(event)
+* `event` *string* The name of the event from which to retrieve the listerners.
+* Returns: an array of functions which correspond to the `ListenerCallbacks` for the event specified.
 
-Reads the Global Context Register.
+Get a list of listeners for an event.
 
-### pme.getClassifierMode()
-* Returns: the classifying function being used. Possible values are: PME.RBF_MODE or PME.KNN_MODE.
+### EventEmitter.setMaxListeners(max)
+* `max` *number*  The number of listeners the event emitter can have.
+* Returns: `this`, so calls can be chained.
 
-Gets the classifying function being used by the network.
-
-### pme.setClassifierMode(mode)
-* `mode` *unsigned short* The classifying function to use. Valid values are: PME.RBF_MODE (default) or PME.KNN_MODE.
-
-Sets the classifying function to be used by the network.
-
-### pme.getDistanceMode()
-* Returns: the distance function being used. Possible values are: PME.LSUP_DISTANCE or PME.L1_DISTANCE.
-
-Gets the distance function being used by the network.
-
-### pme.setDistanceMode(mode)
-* `mode` *unsigned short* The distance function to use. Valid values are: PME.LSUP_DISTANCE or PME.L1_DISTANCE.
-
-Sets the distance function to be used by the network.
-
-### pme.saveNeurons()
-* Returns: an array of JSON objects.
-
-Export committed neuron data into an array of JSON objects in the following format, maximum number of objects to save is 128:
-
-`{
-     "category": 100,
-     "context": 1,
-     "AIF": 40,
-     "minIF": 2,
-     "vector": [10,10,10,10] // up to 128 bytes
- }`
-
-### pme.restoreNeurons(objects)
-* `objects` *array of JSON objects*
-
-Restore neurons in an array of JSON objects in the following format, maximum number of objects to restore is 128:
-
-`{
-     "category": 100,
-     "context": 1,
-     "AIF": 40,
-     "minIF": 2,
-     "vector": [10,10,10,10] // up to 128 bytes
- }`
+Set the max number of listeners for an event emitter object
 
 Sample Apps
 -----------
-* [PME sample](../samples/PME.js)
-* [PME Save and Restore sample](../samples/PMESaveRestore.js)
+* [Events sample](../samples/tests/Events.js)
