@@ -18,9 +18,9 @@ ZJS API for GFX
 
 Introduction
 ------------
-The GFX module provides a generic way to create pixel buffers, which can then
+The GFX module provides a generic way to create pixel buffers that can
 be displayed on a display of some kind.  A JavaScript method for initializing
-the screen, and drawing a data buffer are required to use it.
+the screen and drawing a data buffer are required to use it.
 See module/ST7735.js and samples/SPI_Screen.js for an example.
 
 Web IDL
@@ -37,19 +37,19 @@ interface GFX {
                     DrawingCallback draw, optional this);
 };<p>interface GFXContext {
     fillRect(long x coord, long y coord, long width, long height,
-             char array color);
-    drawPixel(long x coord, long y coord, char array color);
+             sequence < byte > color);
+    drawPixel(long x coord, long y coord, sequence < byte > color);
     drawLine(long x0 coord, long y0 coord, long x1 coord,
-             long y1 coord, char array color, optional long size);
-    drawVLine(long x coord, long y coord, long height, char array color,
+             long y1 coord, sequence < byte > color, optional long size);
+    drawVLine(long x coord, long y coord, long height, sequence < byte > color,
               optional long size);
-    drawHLine(long x coord, long y coord, long width, char array color,
+    drawHLine(long x coord, long y coord, long width, sequence < byte > color,
               optional long size);
     drawRect(long x coord, long y coord, long width, long height,
-             char array color, optional long size);
-    drawChar(long x coord, long y coord, character char, char array color,
+             sequence < byte > color, optional long size);
+    drawChar(long x coord, long y coord, character char, sequence < byte > color,
              optional long size);
-    drawString(long x coord, long y coord, string str, char array color,
+    drawString(long x coord, long y coord, string str, sequence < byte > color,
                optional long size);
 };
 callback InitCallback = void (any... params);
@@ -76,14 +76,14 @@ GFXContext API
 * `y_coord` *long*
 * `width` *long*
 * `height` *long*
-* `color` *char array*
+* `color` *byte array*
 
 Draws a solid rectangle of the given color at the coordinates provided.
 
 ### gfxcontext.drawPixel(x_coord, y_coord, color)
 * `x_coord` *long*
 * `y_coord` *long*
-* `color` *char array*
+* `color` *byte array*
 
 Draws a pixel of the given color at the coordinates provided.
 
@@ -92,7 +92,7 @@ Draws a pixel of the given color at the coordinates provided.
 * `y0_coord` *long*
 * `x1_coord` *long*
 * `y1_coord` *long*
-* `color` *char array*
+* `color` *byte array*
 * `size` *long* Optional.
 
 
@@ -103,7 +103,7 @@ size number controls how thick the line is.
 * `x_coord` *long*
 * `y_coord` *long*
 * `height` *long*
-* `color` *char array*
+* `color` *byte array*
 * `size` *long* Optional.
 
 
@@ -114,7 +114,7 @@ optional size number controls how thick the line is.
 * `x_coord` *long*
 * `y_coord` *long*
 * `width` *long*
-* `color` *char array*
+* `color` *byte array*
 * `size` *long* Optional.
 
 
@@ -126,7 +126,7 @@ optional size number controls how thick the line is.
 * `y_coord` *long*
 * `width` *long*
 * `height` *long*
-* `color` *char array*
+* `color` *byte array*
 * `size` *long* Optional.
 
 
@@ -137,7 +137,7 @@ optional size number controls how thick the line is.
 * `x_coord` *long*
 * `y_coord` *long*
 * `char` *character*
-* `color` *char array*
+* `color` *byte array*
 * `size` *long* Optional.
 
 
@@ -148,7 +148,7 @@ large the character is.
 * `x_coord` *long*
 * `y_coord` *long*
 * `str` *string*
-* `color` *char array*
+* `color` *byte array*
 * `size` *long* Optional.
 
 
