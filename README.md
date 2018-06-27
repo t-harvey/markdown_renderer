@@ -3,7 +3,7 @@ ZJS API for OCF
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class: OCF](#ocfapi)
+* [Class: OCF](#ocf-api)
   * [ocf.start()](#ocfstart)
 * [OCFServer-supported Events](#ocfserver-supported-events)
 * [Class: OCFServer](#ocfserver-api)
