@@ -15,10 +15,10 @@ ZJS API for Console
 
 Introduction
 ------------
-ZJS provides console API's which match Node.js' Console module. We describe them here as there could
-potentially be minor differences.
+ZJS provides console APIs which match Node.js' Console module. We
+describe them here as there could be minor differences.
 
-Note that the console API's do not support format specifiers (e.g. %d, %f etc.).
+Note that the console APIs do not support format specifiers (e.g., %d, %f etc.).
 
 Web IDL
 -------
@@ -38,8 +38,7 @@ interface Console {
     void info(optional string data);
     void time(string label);
     void timeEnd(string label);
-};
-</pre>
+};</pre>
 </details>
 
 Console API
