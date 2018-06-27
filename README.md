@@ -30,7 +30,7 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 callback ListenerCallback = void (any... params);<p>interface EventEmitter {
     this on(string event, ListenerCallback listener);
     this addListener(string event, ListenerCallback listener);
-    boolean emit(string event, optional arg1, ...);
+    boolean emit(string event, optional arg1, any... params);
     this removeListener(string event, ListenerCallback listener);
     this removeAllListeners(string event);
     sequence < string > eventNames(void);
