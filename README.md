@@ -2,8 +2,7 @@ ZJS API for Console
 ==================
 
 * [Introduction](#introduction)
-* [API Documentation](#api-documentation)
-
+* [Web IDL](#webidl)
 * [Class: Console](#console-api)
   * [console.assert(value, message)](#consoleassertvalue-message)
   * [console.error(data)](#consoleerrordata)
