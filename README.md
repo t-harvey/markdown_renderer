@@ -33,9 +33,9 @@ callback ListenerCallback = void (any... params);<p>interface EventEmitter {
     boolean emit(string event, optional arg1, ...);
     this removeListener(string event, ListenerCallback listener);
     this removeAllListeners(string event);
-    string[] eventNames(void);
+    sequence < string > eventNames(void);
     number getMaxListeners(void);
-    ListenerCallback[] listeners(string event);
+    sequence < ListenerCallback > listeners(string event);
     this setMaxListeners(number max);
 };
 </pre>
