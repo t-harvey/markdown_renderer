@@ -1,22 +1,50 @@
-ZJS API for UDP datagram sockets
-================================
+ZJS API for Net
+===============
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Dgram API](#dgram-api)
-  * [dgram.createSocket(type)](#dgramcreatesockettype)
-* [DgramSocket API](#dgramsocket-api)
-  * [DgramSocket.on(event, callback)](#dgramsocketonevent-callback)
-  * [DgramSocket.bind(port, ip_addr)](#dgramsocketbindport-ip_addr)
-  * [DgramSocket.send(buf, offset, len, port, ip_addr, cb)](#dgramsocketsendbuf-offset-len-port-ip_addr-cb)
-  * [DgramSocket.close](#dgramsocketclose)
+
+
+
+
+
+* [Class: Net](#net-api)
+  * [net.createServer(callback onconnection)](#netcreateservercallback-onconnection)
+  * [net.Socket()](#netsocket)
+  * [net.isIP(string input)](#netisipstring-input)
+  * [Net.isIPv4(string input)](#netisipv4string-input)
+  * [Net.isIPv6(string input)](#netisipv6string-input)
+* [Class: Socket](#socket-api)
+  * [Event: 'close'](#event-close)
+  * [Event: 'connect'](#event-connect)
+  * [Event: 'data'](#event-data)
+  * [Event: 'error'](#event-error)
+  * [Event: 'timeout'](#event-timeout)
+  * [Socket.connect(options, onconnect)](#socketconnectoptions-onconnect)
+  * [Socket.pause()](#socketpause()
+  * [Socket.resume()](#socketresume)
+  * [Socket.setTimeout(time, ontimeout)](#socketsetTimeouttime-ontimeout)
+  * [Socket.write(buf, writeDone)](#socketwritebuf-writedone)
+* [Class: Server](#server-api)
+  * [Event: 'close'](#event-close)
+  * [Event: 'connection'](#event-connection)
+  * [Event: 'error'](#event-error)
+  * [Event: 'listening'](#event-listening)
+  * [Server.address](#serveraddress)
+  * [Server.close()](#serverclose)
+  * [Server.getConnections(ListenerCallback onconnection)](#servergetconnectionslistenercallback-onconnection)
+  * [Server.listen(options, onlistening)](#serverlistenoptions-onlistening)
+
+
+
+
+
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The `dgram` API is based on a subset of the
-[corresponding module](https://nodejs.org/api/dgram.html) in Node.js.
-It allows you to send and receive UDP datagrams.
+ZJS provides net (TCP) APIs that closely mimic the Node.js 'net'
+module, which allows you to create a TCP/IP server or client.
 
 Web IDL
 -------
@@ -25,94 +53,208 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 <details>
 <summary> Click to show/hide WebIDL</summary>
 <pre>
-// require returns a socket factory object
-// var dgram = require('dgram');
-<p><p>
-[ReturnFromRequire]
-interface Dgram {
-    DgramSocket createSocket(string udp4_or_udp6);
+// require returns a Net object
+// var net = require('net');<p><p>[ReturnFromRequire]
+interface Net {
+    Server createServer(optional callback onconnection);
+    Socket Socket();
+    long isIP(string input);
+    Boolean isIPv4(string input);
+    Boolean isIPv6(string input);
 };
-<p>
-[ExternalInterface=(buffer,Buffer)]
-interface DgramSocket {
-    void on(string event, RecvCallback cb);
-    void bind(long port, string ip_addr);
-    void send(Buffer buf, unsigned long offset, unsigned long len, long port,
-              string ip_addr, optional SendCallback cb);
+<p>[ExternalInterface=(eventemitter,EventEmitter),ExternalInterface=(buffer,Buffer),ExternalCallback=(eventemitter,ListenerCallback)]
+interface Socket: EventEmitter {
+    // Socket methods
+    void connect(object options, optional ListenerCallback onconnect);
+    void pause();
+    void resume();
+    void setTimeout(long timeout, ListenerCallback ontimeout);
+    void write(Buffer buf, optional ListenerCallback writeDone);
+    // Socket properties
+    attribute long bufferSize;    // Size of read buffer
+    attribute long bytesRead;     // Total bytes read for the socket
+    attribute long bytesWritten;  // Total bytes written for the socket
+    attribute string localAddress;  // Sockets local IP
+    attribute long localPort;     // Sockets local port
+    attribute string remoteAddress; // Remote IP address
+    attribute string remoteFamily;  // Remote IP family
+    attribute long remotePort;    // Remote port
+};<p>
+[ExternalInterface=(eventemitter, EventEmitter),ExternalCallback=(eventemitter,ListenerCallback)]
+interface Server: EventEmitter {
+    // Server methods
+    AddressInfo address();
     void close();
+    void getConnections(ListenerCallback onconnection);
+    void listen(object options, optional ListenerCallback onlistening);
+    // Server properties
+    attribute boolean listening;      // true if the server is listening
+    attribute long maxConnections;  // maximum number of connections
 };
 <p>
-callback RecvCallback = void (Buffer msg, RemoteInfo rinfo);
-callback SendCallback = void (Error err);  // or undefined if no error
+dictionary AddressOptions {
+    long port;          // Port the client should connect to (required)
+    string host;          // Host the client should connect to
+    string localAddress;  // Local address to bind to
+    long localPort;     // local port to bind to
+    long family;        // Version of IP stack, deafults to 4
+}
 <p>
-callback EventCallback = void (any... args);  // callback args depend on event
-<p>
-dictionary RemoteInfo {
-    string ip_addr;
-    string family;
-    long port;
-};
+dictionary AddressInfo {
+    long port;    // Server port
+    string family;  // IPv4 or IPv6
+    string address; // IP address for the server
+}
 </pre>
 </details>
 
-Dgram API
----------
-### dgram.createSocket(type)
-* `type` *string* Must be `'udp4'` or `'udp6'`.
-* Returns: DgramSocket object.
+Net API
+-------
 
-Create a datagram socket of the given type.
+### net.createServer(callback onconnection)
+* `onconnection` *callback* The (optional) callback function registered as the the event listener for the `connection` event.
+* Returns: a `Server` object.
 
-DgramSocket API
----------------
-### DgramSocket.on(event, callback)
-* `event` *string*
-* `callback` *RecvCallback*
+Create a TCP server that can accept client connections.
 
-Registers a callback. The `event` may be one of the following:
+### net.Socket()
+* Returns: a new Socket object that can be used to connect to a remote TCP server.
 
-* `'message'` - a datagram received. `callback` receives a Buffer
-  containing incoming datagram data and RemoteInfo dictionary with
-  information about the source address.
-* `'error'` - error occurred. `callback` receives an Error object.
-  (In the current version, this callback is never called, but this
-  will change in future versions.)
+Socket constructor.
 
-### DgramSocket.bind(port, ip_addr)
-* `port` *long*
-* `ip_addr` *string* `ip_addr` A string representing an IP address of
-a *local* network interface, or a "wildcard" address of `'0.0.0.0'` (IPv4)
-or `'::'` (IPv6), in which case a socket will be bound to all local
-interfaces.
+### net.isIP(string input)
+* `input` *string*
+* Returns: 4 if the input is an IPv4 address, 6 if the input is an IPv6 address,
+or 0 if the input is not an IP address.
 
-Bind socket to a local address and port. This is a required operation for
-server-side sockets, i.e., sockets that wait and receive data from other
-network nodes.  This module does not support domain name resolution, so only
-IP addresses are allowed. At the time of writing, local interface
-addresses are hardcoded to be: `'192.0.2.1'` (IPv4) and `'2001:db8::1'`
-(IPv6), but these will become configurable in the future.
+Checks if the input is a valid IP address.
 
-### DgramSocket.send(buf, offset, len, port, ip_addr, cb)
-* `buf` *Buffer*
-* `offset` *unsigned long*
-* `len` *unsigned long*
-* `port` *long*
-* `ip_addr` *string*
-* `cb` *SendCallback* Optional.
+### Net.isIPv4(string input)
+* `input` *string*
+* Returns: true if input is IPv4, false otherwise.
 
-Send data contained in a buffer to remote network node. A subset of
-data in `buf` can be sent using `offset` and `len` parameters. To send
-the entire buffer, use values `0` and `buf.length` respectively. See
-the `bind()`-method description for the format of `ip_addr`. An optional
-callback may be provided, which will be called with the result of the send
-operation: either a NetworkError object in the case of error, or `undefined`
-on success.
+Checks if input is an IPv4 address.
 
-### DgramSocket.close()
+### Net.isIPv6(string input)
+* `input` *string*
+* Returns: true if input is IPv6, false otherwise.
 
-Closes socket.
+Checks if input is an IPv6 address.
+
+Socket API
+----------
+
+Socket is an [EventEmitter](./events.md) with the following events:
+
+### Event: 'close'
+
+Emitted when the socket is closed, either by you or the remote end.
+
+### Event: 'connect'
+
+Emitted when the socket has made a successful connection to a remote TCP server.
+
+### Event: 'data'
+
+* `Buffer` `buf`
+
+Emitted when the socket has received data. `buf` is a Buffer containg the data
+received.
+
+### Event: 'error'
+
+Emitted when there was an error on the socket during read, write, or connect.
+
+### Event: 'timeout'
+
+Emitted only when a timeout set with `setTimeout` expires.
+
+### Socket.connect(options, onconnect)
+* `options` *AddressOptions* Describes the remote server being connected to.
+* `onconnect` *ListenerCallback* Optional callback added as the listener for the
+`connect` event.
+
+Connect to a remote TCP server.
+
+### Socket.pause()
+
+Pause a socket from receiving data. `data` event will not be emitted until
+`Socket.resume` is called.
+
+### Socket.resume()
+
+Allow a socket to resume receiving data after a call to `Socket.pause`.
+
+### Socket.setTimeout(time, ontimeout)
+* `time` *long*
+* `ontimeout` *ListenerCallback* Optional callback registered as a listener for the `timeout` event.
+
+Set a socket timeout. This will start a timer on the socket that will expire
+in `time` milliseconds if there has been no activity on the socket.
+
+### Socket.write(buf, writeDone)
+* `buf` *Buffer* `buf` Contains the data to be written.
+* `writeDone` *ListenerCallback* Optional function called once the data is written.
+
+Send data on the socket.
+
+Server API
+----------
+
+Server is an [EventEmitter](./events.md) with the following events:
+
+### Event: 'close'
+
+Emitted when the server has closed. This will only happen after a server has
+called `close()` and all its connections have been closed. Calling `close()`
+does not close all opened connections; that must be done manually.
+
+### Event: 'connection'
+
+* `Socket` `sock`
+
+Emitted when when a client has connected to the server. `sock` is the Socket
+representing the new connection.
+
+### Event: 'error'
+
+Emitted when the server has had an error.
+
+### Event: 'listening'
+
+Emitted when the server has been bound, after calling `server.listen()`.
+
+### Server.address
+`AddressInfo address(void)`
+
+Returns an AddressInfo object for the server:
+
+### Server.close()
+
+Signals the server to close. This will stop the server from accepting any new
+connections but will keep any existing connections alive. Once all existing
+connections have been closed the server will emit the `close` event.
+
+### Server.getConnections(ListenerCallback onconnection)
+* `onconnection` *ListenerCallback* Should be a function with `err` and `count` parameters.
+
+Get the number of connections to the server.
+
+### Server.listen(options, onlistening)
+* `options` *object*
+* `onlistening` *ListenerCallback* Optional function added to the `listening` event.
+
+Start listening for connections. The `options` object supports the following
+properties:
+```
+{
+    port : Port to bind to
+    host : IP to bind to
+    backlog : Max number of concurrent connections
+}
+```
 
 Sample Apps
 -----------
-* [IPv4 UDP echo server](../samples/UDPEchoServ4.js)
-* [IPv6 UDP echo server with `offset` param to send()](../samples/UDPEchoServ6.js)
+* [IPv6 Server sample](../samples/TCPEchoServ6.js)
+* [IPv6 Client sample](../samples/TCPClient6.js)
