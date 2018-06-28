@@ -37,7 +37,8 @@ interface Dgram {
 interface DgramSocket {
     void on(string event, RecvCallback cb);
     void bind(long port, string ip_addr);
-    void send(Buffer buf, unsigned long offset, unsigned long len, long port, string ip_addr, optional SendCallback cb);
+    void send(Buffer buf, unsigned long offset, unsigned long len, long port,
+              string ip_addr, optional SendCallback cb);
     void close();
 };
 <p>
