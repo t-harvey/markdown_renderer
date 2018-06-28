@@ -23,7 +23,7 @@ ZJS API for Net
   * [Socket.connect(options, onconnect)](#socketconnectoptions-onconnect)
   * [Socket.pause()](#socketpause)
   * [Socket.resume()](#socketresume)
-  * [Socket.setTimeout(time, ontimeout)](#socketsetTimeouttime-ontimeout)
+  * [Socket.setTimeout(time, ontimeout)](#socketsettimeouttime-ontimeout)
   * [Socket.write(buf, writeDone)](#socketwritebuf-writedone)
 * [Class: Server](#server-api)
   * [Event: 'close'](#event-close)
