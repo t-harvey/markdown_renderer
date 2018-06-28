@@ -17,7 +17,7 @@ ZJS API for Events
 
 Introduction
 ------------
-ZJS provides event APIs which match `Node.js` `Event`s. We describe
+ZJS provides event APIs that match `Node.js` `Event`s. We describe
 them here as there could be minor differences.
 
 Web IDL
@@ -44,14 +44,14 @@ callback ListenerCallback = void (any... params);<p>interface EventEmitter {
 EventEmitter API
 ----------------
 ### EventEmitter.on(event, listener)
-* `event` *string* The name of the event which you are adding a listener to.
+* `event` *string* The name of the event that you are adding a listener to.
 * `listener` *ListenerCallback* The function that you wish to be called when this event is emitted/triggered.
 * Returns: `this` so calls can be chained.
 
 Add an event listener function.
 
 ### EventEmitter.addListener(event, listener)
-* `event` *string* The name of the event which you are adding a listener to.
+* `event` *string* The name of the event that you are adding a listener to.
 * `listener` *ListenerCallback* The function that you wish to be called when this event is emitted/triggered.
 * Returns: `this` so calls can be chained.
 
@@ -62,7 +62,7 @@ Same as `EventEmitter.on()`.
 * `arg1` *optional* All other arguments will be given to any registered listener functions.
 * Returns: true if there were any listener functions called.
 
-Triggers an event. Any listener functions which have been added to the
+Triggers an event. Any listener functions that have been added to the
 event emitter under the event name will be called.
 
 
@@ -92,7 +92,7 @@ Get the maximum number of listeners allowed for this event emitter object.
 
 ### EventEmitter.listeners(event)
 * `event` *string* The name of the event from which to retrieve the listerners.
-* Returns: an array of functions which correspond to the `ListenerCallbacks` for the event specified.
+* Returns: an array of functions that correspond to the `ListenerCallbacks` for the event specified.
 
 Get a list of listeners for an event.
 
