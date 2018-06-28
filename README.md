@@ -3,9 +3,6 @@ ZJS API for UDP datagram sockets
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-
-
-
 * [Dgram API](#dgram-api)
   * [dgram.createSocket(type)](#dgramcreatesockettype)
 * [DgramSocket API](#dgramsocket-api)
@@ -13,11 +10,6 @@ ZJS API for UDP datagram sockets
   * [DgramSocket.bind(port, ip_addr)](#dgramsocketbindport-ip_addr)
   * [DgramSocket.send(buf, offset, len, port, ip_addr, cb)](#dgramsocketsendbuf-offset-len-port-ip_addr-cb)
   * [DgramSocket.close](#dgramsocketclose)
-
-
-
-
-
 * [Sample Apps](#sample-apps)
 
 Introduction
@@ -45,7 +37,7 @@ interface Dgram {
 interface DgramSocket {
     void on(string event, RecvCallback cb);
     void bind(long port, string ip_addr);
-    void send(Buffer buf, unsigned long offset, unsigned long len, long port, string ip_addr, [SendCallback cb]);
+    void send(Buffer buf, unsigned long offset, unsigned long len, long port, string ip_addr, optional SendCallback cb);
     void close();
 };
 <p>
@@ -103,7 +95,7 @@ addresses are hardcoded to be: `'192.0.2.1'` (IPv4) and `'2001:db8::1'`
 * `buf` *Buffer*
 * `offset` *unsigned long*
 * `len` *unsigned long*
-* `port` *int*
+* `port` *long*
 * `ip_addr` *string*
 * `cb` *SendCallback* Optional.
 
