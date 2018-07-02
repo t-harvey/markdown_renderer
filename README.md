@@ -12,7 +12,7 @@ ZJS API for OCF
   * [request.respond(data)](#requestresponddata)
 * [OCFClient-supported Events](#ocfclient-supported-events)
 * [Class: OCFClient](#ocfclient-api)
-  * [client.findResources(options, listener)](#clientfindresourcesoptions-listener)
+  * [client.findResources(options, [listener])](#clientfindresourcesoptions-listener)
   * [client.retrieve(deviceId, options)](#clientretrievedeviceid-options)
   * [client.update(resource)](#clientupdateresource)
   * [client.getPlatformInfo(deviceId)](#clientgetplatforminfodeviceid)
@@ -46,8 +46,8 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 interface OCFObject {
     attribute OCFServer server;         // OCF server object
     attribute OCFClient client;         // OCF client object
-    attribute Platform platform;     // OCF platform info
-    attribute Device device          // OCF device info
+    attribute Platform platform;        // OCF platform info
+    attribute Device device;            // OCF device info
     void start();
 };<p>dictionary Platform {
     string id;
@@ -59,14 +59,16 @@ interface OCFObject {
     string platformVersion;
     string firmwareVersion;
     string supportURL;
-}<p>dictionary Device {
+};<p>dictionary Device {
     string uuid;
     string name;
     string dataModels;
     string coreSpecVersion;
-}<p>///////////////////////////////////////////
+};<p>///////////////////////////////////////////
 // OCF Server
-///////////////////////////////////////////<p>interface OCFServer: EventEmitter {
+///////////////////////////////////////////<p>[ExternalInterface=(eventemitter,
+EventEmitter)]
+interface OCFServer: EventEmitter {
     Promise<OCFResource> register(ResourceInit init);
 };<p>dictionary ResourceInit {
     string resourcePath;      // OCF resource path
@@ -81,13 +83,15 @@ interface OCFObject {
     string resourcePath;      // Path for this resource
     object properties;        // Application specific resource properties
 };<p>interface Request {
-    OCFResource target;       // Target/destination resource
-    OCFResource source;       // Source/origin resource
-    object data;              // resource representation
+    attribute OCFResource target;       // Target/destination resource
+    attribute OCFResource source;       // Source/origin resource
+    attribute object data;              // resource representation
     Promise<void> respond(object data);
 };<p>///////////////////////////////////////////
 // OCF Client
-///////////////////////////////////////////<p>interface OCFClient: EventEmitter {
+///////////////////////////////////////////<p>[ExternalInterface=(eventemitter,
+EventEmitter)]
+interface OCFClient: EventEmitter {
     Promise<Resource> findResources(ClientOptions options, optional FoundListener listener);
     Promise<Resource> retrieve(string deviceId, object options);
     Promise<Resource> update(Resource resource);
@@ -97,7 +101,12 @@ interface OCFObject {
     string deviceId;
     string resourceType;
     string resourcePath;
-}<p>callback FoundListener = void (ClientResource);
+};<p>callback FoundListener = void (ClientResource resource);
+dictionary ClientResource {
+    string deviceId;
+    string resourceType;
+    string resourcePath;
+};
 </pre>
 </details>
 
@@ -179,17 +188,14 @@ Emitted when a resource is updated.
 
 OCFClient API
 -------------
-### client.findResources(options, listener)
+### client.findResources(options, [listener])
 * `options` *ClientOptions* Should contain a filter of resource options. Only
 resources matching these options will be found.
 * `listener` *FoundListener* An optional event-listener callback. This
 callback will be called if a resource is found (`onfound` event).
-* Returns: a promise which resolves to a `ClientResource` containing the resource properties.
+* Returns: a promise which resolves to a `ClientResource` containing the resource properties if a resource is found.
 
 Find remote resources matching `options` filter.
-
-Returns a promise which resolves with a `ClientResource` object if a resource
-was found.
 
 ### client.retrieve(deviceId, options)
 * `deviceId` *string* The device ID of the resource you are retrieving.
