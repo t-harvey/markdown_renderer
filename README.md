@@ -220,7 +220,7 @@ This object has 3 required fields:
 2. `properties` *array of strings* Possible values: 'read', 'write', and 'notify', depending on what is supported.
 3. `descriptors` *array of [Descriptors](#descriptor)*
 
-It may also contain these optional callback fields:T
+It may also contain these optional callback fields:
 1. `onReadRequest` *ReadCallback*
   * Called when the client is requesting to read data from the characteristic.
   * See below for common argument definitions
