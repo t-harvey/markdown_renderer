@@ -1,184 +1,270 @@
-ZJS API for File System
-==================
+ZJS API for Bluetooth Low Energy (BLE)
+======================================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class FS](#fs-api)
-  * [fs.openSync(path, mode)](#fsopensyncpath-mode)
-  * [fs.closeSync(fd)](#fsclosesyncfd)
-  * [fs.unlinkSync(path)](#fsunlinksyncpath)
-  * [fs.rmdirSync(path)](#fsrmdirsyncpath)
-  * [fs.writeSync(fd, data, offset, length, [position])](#fswritesyncfd-data-offset-length-position)
-  * [fs.readSync(fd, data, offset, length, [position])](#fsreadsyncfd-data-offset-length-position)
-  * [fs.truncateSync(path, length)](#fstruncatesyncpath-length)
-  * [fs.mkdirSync(path)](#fsmkdirsyncpath)
-  * [fs.readdirSync(path)](#fsreaddirsyncpath)
-  * [fs.statSync(path)](#fsstatsyncpath)
-  * [writeFileSync(file, data)](#writefilesyncfile-data)
-* [Class Stat](#stat-api)
-  * [stat.isFile()](#statisfile)
-  * [stat.isDirectory()](#statisdirectory)
+* [BLE-supported Events](#ble\-supported-events)
+* [Class: BLE](#ble-api)
+  * [ble.disconnect(address)](#bledisconnectaddress)
+  * [ble.startAdvertising(name, uuids, [url])](#blestartadvertisingname-uuids-url)
+  * [ble.stopAdvertising()](#blestopadvertising)
+  * [ble.setServices(primaryServices)](#blesetservicesprimaryservices)
+  * [ble.newPrimaryService(init)](#blenewprimaryserviceinit)
+  * [ble.newCharacteristic(init)](#blenewcharacteristicinit)
+  * [ble.newDescriptor(init)](#blenewdescriptorinit)
+* [Class: Characteristic](#characteristic-api)
+* [Supporting Objects](#supporting-objects)
+  * [PrimaryServiceInit](#primaryserviceinit)
+  * [CharacteristicInit](#characteristicinit)
+  * [DescriptorInit](#descriptorinit)
+* [Client Requirements](#client-requirements)
+* [Sample Apps](#sample-apps)
 
 Introduction
 ------------
+The BLE API is based off the [bleno API](https://github.com/sandeepmistry/bleno). Bluetooth Low Energy (aka
+[Bluetooth LE: Broadcast](https://www.bluetooth.com/what-is-bluetooth-technology/how-it-works/le-broadcast)) is a power-friendly version of Bluetooth
+intended for IoT devices. It provides the ability to support low-bandwidth data
+services to nearby devices.
 
-ZJS provides File System APIs that match Node.js' FS module. We
-describe them here to document any minor differences. It should be
-noted that by default, the FS module only contains the synchronous
-Node.js APIs. The asynchronous APIs can be compiled in by enabling the
-pre-processor value `ZJS_FS_ASYNC_APIS`. The default is to leave them
-out, because all of Zephyr's File System APIs are synchronous, so
-making the JavaScript APIs asynchronous was only adding ROM space.
+A note about UUIDs. The BLE standard lets you have full 128-bit UUIDs or short
+16-bit UUIDs (4 hex chars). We only support the short ones so far.
 
-On the Arduino 101, the flash file system uses SPI, and the pins are shared with
-IO10-13. For this reason, you will not be able to use these GPIO pins at the
-same time as the file system.
-
-Available file modes:
-
-`'r'` - Open file for only reading. An error will be thrown if the file does
-not exist.
-
-`'r+'` - Open a file for reading and writing. An error will be thrown if the
-file does not exist.
-
-`'w'` - Open a file for writing. The file will be overwritten if it already
-exists.
-
-`'w+'` - Open a file for writing and reading. The file will be overwritten if
-it already exists.
-
-`'a'` - Opens a file for appending. The write pointer will always seek
-to the end of the file during a write.
-
-`'a+'` - Opens a file for appending and reading. The write
-pointer will seek to the end for writes, but reads will be done from the
-start of the file (the read pointer is saved across different read calls).
+Based on the bleno API, these UUIDs are specified as a hexadecimal string, so
+"2901" really means 0x2901. *NOTE: This seems like a bad practice and we should
+perhaps require these numbers to be specified as "0x2901" instead, or else
+treat them like decimals.*
 
 Web IDL
 -------
-This IDL provides an overview of the interface; see below for
-documentation of specific API functions.  We have a short document
-explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
+This IDL provides an overview of the interface; see below for documentation of
+specific API functions.  We also have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <details>
-<summary>Click to show WebIDL</summary>
+<summary> Click to show/hide WebIDL</summary>
 <pre>
-// require returns a FS object
-// var fs = require('fs');
-<p>
-[ReturnFromRequire, ExternalInterface=(buffer,Buffer)]
-interface FS {
-    FileDescriptor openSync(string path, FileMode mode);
-    void closeSync(FileDescriptor fd);
-    void unlinkSync(string path);
-    void rmdirSync(string path);
-    long writeSync(FileDescriptor fd, (string or Buffer) data, long offset,
-                   long length, optional long position);
-    long readSync(FileDescriptor fd, Buffer data, long offset,
-                  long length, optional long position);
-    void truncateSync(string path, long length);
-    void mkdirSync(string path);
-    sequence < string > readdirSync(string path);
-    Stat statSync(string path);
-    void writeFileSync(string file, (string or Buffer) data);
-};<p>// file descriptors are inherently platform specific, so we leave this
-// as a placeholder
-dictionary FileDescriptor {
-    //string name;
-};<p>interface Stat {
-    boolean isFile();
-    boolean isDirectory();
-};<p>enum FileMode { "r", "w", "a", "r+", "w+", "a+" };</pre>
+// require returns a BLE object
+// var ble = require('ble');
+<p><p>
+[ReturnFromRequire,ExternalInterface=(eventemitter, EventEmitter)]
+interface BLE: EventEmitter {
+    void disconnect(string address);
+    void startAdvertising(string name, sequence < string > uuids, optional string url);
+    void stopAdvertising();
+    void setServices(sequence < PrimaryService > services);
+    PrimaryService newPrimaryService(PrimaryServiceInit init);
+    Characteristic newCharacteristic(CharacteristicInit init);
+    DescriptorInit newDescriptor(DescriptorInit init);
+};
+<p><p>
+dictionary PrimaryServiceInit {
+    string uuid;
+    sequence < Characteristic > characteristics;
+};<p>
+dictionary PrimaryService {
+    string uuid;
+    sequence < Characteristic > characteristics;
+};
+<p><p>
+dictionary CharacteristicInit {
+    string uuid;
+    sequence < string > properties;                // 'read', 'write', 'notify'
+    sequence < DescriptorInit > descriptors;
+    ReadCallback onReadRequest;         // optional
+    WriteCallback onWriteRequest;       // optional
+    SubscribeCallback onSubscribe;      // optional
+    UnsubscribeCallback onUnsubscribe;  // optional
+    NotifyCallback onNotify;            // optional
+};
+<p><p>
+interface Characteristic {
+    attribute ReadCallback onReadRequest;
+    attribute WriteCallback onWriteRequest;
+    attribute SubscribeCallback onSubscribe;
+    attribute UnsubscribeCallback onUnsubscribe;
+    attribute NotifyCallback onNotify;
+    attribute CharacteristicResult response;
+};
+<p><p>
+callback ReadCallback = void (unsigned long offset,
+                              FulfillReadCallback fulfillReadCallback);
+[ExternalInterface=(buffer,Buffer)]
+callback WriteCallback = void (Buffer data, unsigned long offset,
+                               boolean withoutResponse,
+                               FulfillWriteCallback fulfillWriteCallback);
+callback SubscribeCallback = void (unsigned long maxValueSize,
+                                   FulfillSubscribeCallback fullfillSubscribeCallback);
+callback FulfillReadCallback = void (CharacteristicResult result, Buffer data);
+callback FulfillWriteCallback = void (CharacteristicResult result);
+callback FulfillSubscribeCallback = void (Buffer data);
+callback NotifyCallback = void (any... params);
+callback UnsubscribeCallback = void (any... params);
+<p><p>
+enum CharacteristicResult { "RESULT_SUCCESS", "RESULT_INVALID_OFFSET",
+                            "RESULT_INVALID_ATTRIBUTE_LENGTH", "RESULT_UNLIKELY_ERROR" } ;
+<p><p>
+dictionary DescriptorInit {
+    string uuid;
+    string value;
+};</pre>
 </details>
 
-FS API
-------
+BLE-supported Events
+--------------------
+BLE is an [EventEmitter](./events.md) with the following events:
 
-### fs.openSync(path, mode)
-* `path` *string* The name and path of the file to open.
-* `mode` *FileMode* The mode in which to open the file.
-* Returns: an object representing the file descriptor.
+### Event: `accept`
 
-Opens a file.
+* `string` `clientAddress`
 
-### fs.closeSync(fd)
-* `fd` *FileDescriptor* The file descriptor for the file that will be closed.
+Emitted when a BLE client has connected. `clientAddress` is a unique BLE address
+for the client in colon-separated format (e.g. 01:23:45:67:89:AB).
 
-Closes a file.
+### Event: `advertisingStart`
 
-### fs.unlinkSync(path)
-* `path` *string* The name and path of the file to remove.
+* `int` `status`
 
-Unlink (remove) a file from the file system.
+Emitted when BLE services have begun to be advertised. The `status` will be 0
+for success, otherwise for an error.
 
-### fs.rmdirSync(path)
-* `path` *string* The name and path of the directory to be removed.
+### Event: `disconnect`
 
-Remove a directory from the file system.
+* `string` `clientAddress`
 
-### fs.writeSync(fd, data, offset, length, [position])
-* `fd` *FileDescriptor* The file descriptor returned from `openSync()`.
-* `data` *string or Buffer* The data to write to 'fd'.
-* `offset` *long* The position in 'data' from which to start writing.
-* `length` *long* The number of bytes to write to 'fd' from 'data'.
-* `position` *long* The offset from the beginning of the file where
-  'data' should be written. The parameter is optional; the default value is 0.
-* Returns: the number of bytes actually written (this may be different from 'length').
+Emitted when a BLE client has disconnected. `clientAddress` will be the same as
+one previously sent with the `accept` event.
 
-Write bytes to an opened file.
+### Event: `stateChange`
 
-### fs.readSync(fd, data, offset, length, [position])
-* `fd` *FileDescriptor* The file descriptor returned from 'openSync()'.
-* `data` *Buffer* The buffer into which the data will be read.
-* `offset` *long* The offset in 'data' at which to start writing.
-* `length` *long* The number of bytes to read.
-* `position` *long* The position in the file from which to start reading.
-* Returns: the number of bytes actually read. This may be different from
-'length' if there was a read error or if the file had no more data left to read.
+* `string` `newState`
 
-Read bytes from a file.
+Emitted with `poweredOn` when the BLE stack is ready to be used. No other states
+are supported at this time.
 
-### fs.truncateSync(path, length)
-* `path` *string* The name and path of the file.
-* `length` *long* The new length of the file.
+BLE API
+-------
+### ble.disconnect(address)
+* `address` *string* The address of the connected client.
 
-Truncate a file. If the length passed in is shorter than the existing file
-length, then the trailing file data will be lost.
+Disconnect the remote client.
 
-### fs.mkdirSync(path)
-* `path` *string* The name and path of the directory.
+### ble.startAdvertising(name, uuids, [url])
+* `name` *string* The `name` is limited to 26 characters and will be
+  advertised as the device name to nearby BLE devices.
+* `uuids` *string[]*  The `uuids` array may contain at most 7 16-bit
+  UUIDs (four hex digits each).  These UUIDs identify available
+  services to nearby BLE devices.
+* `url` *string* The `url` is optional and limited to around 24
+  characters (slightly more if part of the URL is able to be
+  [encoded](https://github.com/google/eddystone/tree/master/eddystone-url). If
+  provided, this will be used to create a physical web advertisement
+  that will direct users to the given URL. At that URL they might be
+  able to interact with the advertising device somehow.
 
-Create a directory. There is no effect if the directory already exists.
+Advertises the name and url of the device.
 
-### fs.readdirSync(path)
-* `path` *string* The name and path of the directory to read.
-* Returns: an array of filenames and directories found in 'path'.
+### ble.stopAdvertising()
 
-Read the contents of a directory.
+Currently does nothing.
 
-### fs.statSync(path)
-* `path` *string* The name and path of the file or directory.
-* Returns: a 'Stat' object for the file or directory or undefined if the
-file or directory does not exist.
+### ble.setServices(primaryServices)
+* `primaryServices` *array of [PrimaryService](#primaryservice) objects* The PrimaryService
+  objects are used to set up the services that are implemented by your
+  app.
 
-Get stats about a file or directory.
+The PrimaryService object contains the following fields:
 
-### writeFileSync(file, data)
-* `file` *string* The name of the file to which to write.
-* `data` *string or Buffer* The data to write into the file.
 
-Open and write data to a file. This will replace the file if it already exists.
+### ble.newPrimaryService(init)
+* `init` [*PrimaryServiceInit*](#primaryserviceinit)
+* Returns: a new PrimaryService object.
 
-Stat API
---------
+### ble.newCharacteristic(init)
+* `init` [*CharacteristicInit*](#characteristicinit)
+* Returns: a new Characteristic object.
 
-### stat.isFile()
-* Returns: true if the file descriptor is a file.
 
-### stat.isDirectory()
-* Returns: true if the file descriptor is a directory.
+### ble.newDescriptor(init)
+* `init` [*DescriptorInit*](#descriptorinit)
+* Returns: a new DescriptorInit object.
+
+
+Characteristic API
+------------------
+The "Characteristic" object contains the set of callbacks that...[[TODO!!!]]
+
+Explanation of common arguments to the above functions:
+* `offset` is a 0-based integer index into the data the characteristic
+    represents.
+* `result` is one of these values defined in the Characteristic object.
+  * RESULT_SUCCESS
+  * RESULT_INVALID_OFFSET
+  * RESULT_INVALID_ATTRIBUTE_LENGTH
+  * RESULT_UNLIKELY_ERROR
+* `data` is a [Buffer](./buffer.md) object.
+
+Supporting Objects
+------------------
+
+### PrimaryServiceInit
+
+This object has two fields:
+1. `uuid` *string* This field is a  16-bit service UUID (4 hex chars).
+2. `characteristics` *array of [Characteristics](#characteristic-api)*
+
+
+### CharacteristicInit
+
+This object has 3 required fields:
+1. `uuid` *string* This field is a 16-bit characteristic UUID (4 hex chars).
+2. `properties` *array of strings* Possible values: 'read', 'write', and 'notify', depending on what is supported.
+3. `descriptors` *array of [Descriptors](#descriptor)*
+
+It may also contain these optional callback fields:
+1. `onReadRequest` *ReadCallback*
+  * Called when the client is requesting to read data from the characteristic.
+  * See below for common argument definitions
+2. `onWriteRequest` *WriteCallback*
+  * Called when the client is requesting to write data to the characteristic.
+  * `withoutResponse` is true if the client doesn't want a response
+    * *TODO: verify this*
+3. `onSubscribe` *SubscribeCallback*
+  * Called when a client signs up to receive notify events when the
+      characteristic changes.
+  * `maxValueSize` is the maximum data size the client wants to receive.
+4. `onUnsubscribe` *UnsubscribeCallback*
+  * *NOTE: Never actually called currently.*
+5. `onNotify` *NotifyCallback*
+  * *NOTE: Never actually called currently.*
+
+
+### DescriptorInit
+
+This object has two fields:
+1. `uuid` *string* This is a 16-bit descriptor UUID (4 hex chars)
+    * Defined descriptors are listed here in [Bluetooth Specifications](https://www.bluetooth.com/specifications/gatt/descriptors)
+2. `value` *string* This string supplies the defined information.
+    * *NOTE: Values can also be Buffer objects, but that's not currently
+    supported.*
+
+Client Requirements
+-------------------
+You can use any device that has BLE support to connect to the Arduino 101 when
+running any of the BLE apps or demos. We've successfully tested the following
+setup:
+
+* Update the Bluetooth firmware, follow instructions [here](https://wiki.zephyrproject.org/view/Arduino_101#Bluetooth_firmware_for_the_Arduino_101)
+* Any Android device running Android 6.0 Marshmallow or higher (We use Nexus 5/5X, iOS devices not tested)
+* Let the x86 core use 256K of flash space with ROM=256 as described [here](https://github.com/intel/zephyr.js#getting-more-space-on-your-arduino-101)
+
+For the WebBluetooth Demo which supports the Physical Web, you'll need:
+* Chromium version 50.0 or higher
+* Make sure Bluetooth is on and Location Services is enabled
+* Go to chrome://flags and enable the #enable-web-bluetooth flag
 
 Sample Apps
 -----------
-* [FS test](../tests/test-fs.js)
+* [BLE with multiple services](../samples/BLE.js)
+* [WebBluetooth Demo](../samples/WebBluetoothDemo.js)
+* [WebBluetooth Demo with Grove LCD](../samples/WebBluetoothGroveLcdDemo.js)
+* [Heartrate Demo with Grove LCD](../samples/HeartRateDemo.js)
