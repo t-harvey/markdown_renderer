@@ -1,260 +1,184 @@
-ZJS API for Net
-===============
+ZJS API for File System
+==================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-
-
-
-
-
-* [Class: Net](#net-api)
-  * [net.createServer(callback onconnection)](#netcreateservercallback-onconnection)
-  * [net.Socket()](#netsocket)
-  * [net.isIP(string input)](#netisipstring-input)
-  * [Net.isIPv4(string input)](#netisipv4string-input)
-  * [Net.isIPv6(string input)](#netisipv6string-input)
-* [Class: Socket](#socket-api)
-  * [Event: 'close'](#event-close)
-  * [Event: 'connect'](#event-connect)
-  * [Event: 'data'](#event-data)
-  * [Event: 'error'](#event-error)
-  * [Event: 'timeout'](#event-timeout)
-  * [Socket.connect(options, onconnect)](#socketconnectoptions-onconnect)
-  * [Socket.pause()](#socketpause)
-  * [Socket.resume()](#socketresume)
-  * [Socket.setTimeout(time, ontimeout)](#socketsettimeouttime-ontimeout)
-  * [Socket.write(buf, writeDone)](#socketwritebuf-writedone)
-* [Class: Server](#server-api)
-  * [Event: 'close'](#event-close)
-  * [Event: 'connection'](#event-connection)
-  * [Event: 'error'](#event-error)
-  * [Event: 'listening'](#event-listening)
-  * [Server.address](#serveraddress)
-  * [Server.close()](#serverclose)
-  * [Server.getConnections(ListenerCallback onconnection)](#servergetconnectionslistenercallback-onconnection)
-  * [Server.listen(options, onlistening)](#serverlistenoptions-onlistening)
-
-
-
-
-
-* [Sample Apps](#sample-apps)
+* [Class FS](#fs-api)
+  * [fs.openSync(path, mode)](#fsopensyncpath-mode)
+  * [fs.closeSync(fd)](#fsclosesyncfd)
+  * [fs.unlinkSync(path)](#fsunlinksyncpath)
+  * [fs.rmdirSync(path)](#fsrmdirsyncpath)
+  * [fs.writeSync(fd, data, offset, length, [position])](#fswritesyncfd-data-offset-length-position)
+  * [fs.readSync(fd, data, offset, length, [position])](#fsreadsyncfd-data-offset-length-position)
+  * [fs.truncateSync(path, length)](#fstruncatesyncpath-length)
+  * [fs.mkdirSync(path)](#fsmkdirsyncpath)
+  * [fs.readdirSync(path)](#fsreaddirsyncpath)
+  * [fs.statSync(path)](#fsstatsyncpath)
+  * [writeFileSync(file, data)](#writefilesyncfile-data)
+* [Class Stat](#stat-api)
+  * [stat.isFile()](#statisfile)
+  * [stat.isDirectory()](#statisdirectory)
 
 Introduction
 ------------
-ZJS provides net (TCP) APIs that closely mimic the Node.js 'net'
-module, which allows you to create a TCP/IP server or client.
+
+ZJS provides File System APIs that match Node.js' FS module. We
+describe them here to document any minor differences. It should be
+noted that by default, the FS module only contains the synchronous
+Node.js APIs. The asynchronous APIs can be compiled in by enabling the
+pre-processor value `ZJS_FS_ASYNC_APIS`. The default is to leave them
+out, because all of Zephyr's File System APIs are synchronous, so
+making the JavaScript APIs asynchronous was only adding ROM space.
+
+On the Arduino 101, the flash file system uses SPI, and the pins are shared with
+IO10-13. For this reason, you will not be able to use these GPIO pins at the
+same time as the file system.
+
+Available file modes:
+
+`'r'` - Open file for only reading. An error will be thrown if the file does
+not exist.
+
+`'r+'` - Open a file for reading and writing. An error will be thrown if the
+file does not exist.
+
+`'w'` - Open a file for writing. The file will be overwritten if it already
+exists.
+
+`'w+'` - Open a file for writing and reading. The file will be overwritten if
+it already exists.
+
+`'a'` - Opens a file for appending. The write pointer will always seek
+to the end of the file during a write.
+
+`'a+'` - Opens a file for appending and reading. The write
+pointer will seek to the end for writes, but reads will be done from the
+start of the file (the read pointer is saved across different read calls).
 
 Web IDL
 -------
-This IDL provides an overview of the interface; see below for documentation of
-specific API functions.  We also have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+This IDL provides an overview of the interface; see below for
+documentation of specific API functions.  We have a short document
+explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+
 <details>
-<summary> Click to show/hide WebIDL</summary>
+<summary>Click to show WebIDL</summary>
 <pre>
-// require returns a Net object
-// var net = require('net');<p><p>[ReturnFromRequire]
-interface Net {
-    Server createServer(optional callback onconnection);
-    Socket Socket();
-    long isIP(string input);
-    Boolean isIPv4(string input);
-    Boolean isIPv6(string input);
-};
-<p>[ExternalInterface=(eventemitter,EventEmitter),ExternalInterface=(buffer,Buffer),ExternalCallback=(eventemitter,ListenerCallback)]
-interface Socket: EventEmitter {
-    // Socket methods
-    void connect(object options, optional ListenerCallback onconnect);
-    void pause();
-    void resume();
-    void setTimeout(long timeout, ListenerCallback ontimeout);
-    void write(Buffer buf, optional ListenerCallback writeDone);
-    // Socket properties
-    attribute long bufferSize;    // Size of read buffer
-    attribute long bytesRead;     // Total bytes read for the socket
-    attribute long bytesWritten;  // Total bytes written for the socket
-    attribute string localAddress;  // Sockets local IP
-    attribute long localPort;     // Sockets local port
-    attribute string remoteAddress; // Remote IP address
-    attribute string remoteFamily;  // Remote IP family
-    attribute long remotePort;    // Remote port
-};<p>
-[ExternalInterface=(eventemitter, EventEmitter),ExternalCallback=(eventemitter,ListenerCallback)]
-interface Server: EventEmitter {
-    // Server methods
-    AddressInfo address();
-    void close();
-    void getConnections(ListenerCallback onconnection);
-    void listen(object options, optional ListenerCallback onlistening);
-    // Server properties
-    attribute boolean listening;      // true if the server is listening
-    attribute long maxConnections;  // maximum number of connections
-};
+// require returns a FS object
+// var fs = require('fs');
 <p>
-dictionary AddressOptions {
-    long port;          // Port the client should connect to (required)
-    string host;          // Host the client should connect to
-    string localAddress;  // Local address to bind to
-    long localPort;     // local port to bind to
-    long family;        // Version of IP stack, deafults to 4
-}
-<p>
-dictionary AddressInfo {
-    long port;    // Server port
-    string family;  // IPv4 or IPv6
-    string address; // IP address for the server
-}
-</pre>
+[ReturnFromRequire, ExternalInterface=(buffer,Buffer)]
+interface FS {
+    FileDescriptor openSync(string path, FileMode mode);
+    void closeSync(FileDescriptor fd);
+    void unlinkSync(string path);
+    void rmdirSync(string path);
+    long writeSync(FileDescriptor fd, (string or Buffer) data, long offset,
+                   long length, optional long position);
+    long readSync(FileDescriptor fd, Buffer data, long offset,
+                  long length, optional long position);
+    void truncateSync(string path, long length);
+    void mkdirSync(string path);
+    sequence < string > readdirSync(string path);
+    Stat statSync(string path);
+    void writeFileSync(string file, (string or Buffer) data);
+};<p>// file descriptors are inherently platform specific, so we leave this
+// as a placeholder
+dictionary FileDescriptor {
+    //string name;
+};<p>interface Stat {
+    boolean isFile();
+    boolean isDirectory();
+};<p>enum FileMode { "r", "w", "a", "r+", "w+", "a+" };</pre>
 </details>
 
-Net API
--------
+FS API
+------
 
-### net.createServer(callback onconnection)
-* `onconnection` *callback* The (optional) callback function registered as the the event listener for the `connection` event.
-* Returns: a `Server` object.
+### fs.openSync(path, mode)
+* `path` *string* The name and path of the file to open.
+* `mode` *FileMode* The mode in which to open the file.
+* Returns: an object representing the file descriptor.
 
-Create a TCP server that can accept client connections.
+Opens a file.
 
-### net.Socket()
-* Returns: a new Socket object that can be used to connect to a remote TCP server.
+### fs.closeSync(fd)
+* `fd` *FileDescriptor* The file descriptor for the file that will be closed.
 
-Socket constructor.
+Closes a file.
 
-### net.isIP(string input)
-* `input` *string*
-* Returns: 4 if the input is an IPv4 address, 6 if the input is an IPv6 address,
-or 0 if the input is not an IP address.
+### fs.unlinkSync(path)
+* `path` *string* The name and path of the file to remove.
 
-Checks if the input is a valid IP address.
+Unlink (remove) a file from the file system.
 
-### Net.isIPv4(string input)
-* `input` *string*
-* Returns: true if input is IPv4, false otherwise.
+### fs.rmdirSync(path)
+* `path` *string* The name and path of the directory to be removed.
 
-Checks if input is an IPv4 address.
+Remove a directory from the file system.
 
-### Net.isIPv6(string input)
-* `input` *string*
-* Returns: true if input is IPv6, false otherwise.
+### fs.writeSync(fd, data, offset, length, [position])
+* `fd` *FileDescriptor* The file descriptor returned from `openSync()`.
+* `data` *string or Buffer* The data to write to 'fd'.
+* `offset` *long* The position in 'data' from which to start writing.
+* `length` *long* The number of bytes to write to 'fd' from 'data'.
+* `position` *long* The offset from the beginning of the file where
+  'data' should be written. The parameter is optional; the default value is 0.
+* Returns: the number of bytes actually written (this may be different from 'length').
 
-Checks if input is an IPv6 address.
+Write bytes to an opened file.
 
-Socket API
-----------
+### fs.readSync(fd, data, offset, length, [position])
+* `fd` *FileDescriptor* The file descriptor returned from 'openSync()'.
+* `data` *Buffer* The buffer into which the data will be read.
+* `offset` *long* The offset in 'data' at which to start writing.
+* `length` *long* The number of bytes to read.
+* `position` *long* The position in the file from which to start reading.
+* Returns: the number of bytes actually read. This may be different from
+'length' if there was a read error or if the file had no more data left to read.
 
-Socket is an [EventEmitter](./events.md) with the following events:
+Read bytes from a file.
 
-### Event: 'close'
+### fs.truncateSync(path, length)
+* `path` *string* The name and path of the file.
+* `length` *long* The new length of the file.
 
-Emitted when the socket is closed, either by you or the remote end.
+Truncate a file. If the length passed in is shorter than the existing file
+length, then the trailing file data will be lost.
 
-### Event: 'connect'
+### fs.mkdirSync(path)
+* `path` *string* The name and path of the directory.
 
-Emitted when the socket has made a successful connection to a remote TCP server.
+Create a directory. There is no effect if the directory already exists.
 
-### Event: 'data'
+### fs.readdirSync(path)
+* `path` *string* The name and path of the directory to read.
+* Returns: an array of filenames and directories found in 'path'.
 
-* `Buffer` `buf`
+Read the contents of a directory.
 
-Emitted when the socket has received data. `buf` is a Buffer containg the data
-received.
+### fs.statSync(path)
+* `path` *string* The name and path of the file or directory.
+* Returns: a 'Stat' object for the file or directory or undefined if the
+file or directory does not exist.
 
-### Event: 'error'
+Get stats about a file or directory.
 
-Emitted when there was an error on the socket during read, write, or connect.
+### writeFileSync(file, data)
+* `file` *string* The name of the file to which to write.
+* `data` *string or Buffer* The data to write into the file.
 
-### Event: 'timeout'
+Open and write data to a file. This will replace the file if it already exists.
 
-Emitted only when a timeout set with `setTimeout` expires.
+Stat API
+--------
 
-### Socket.connect(options, onconnect)
-* `options` *AddressOptions* Describes the remote server being connected to.
-* `onconnect` *ListenerCallback* Optional callback added as the listener for the
-`connect` event.
+### stat.isFile()
+* Returns: true if the file descriptor is a file.
 
-Connect to a remote TCP server.
-
-### Socket.pause()
-
-Pause a socket from receiving data. `data` event will not be emitted until
-`Socket.resume` is called.
-
-### Socket.resume()
-
-Allow a socket to resume receiving data after a call to `Socket.pause`.
-
-### Socket.setTimeout(time, ontimeout)
-* `time` *long*
-* `ontimeout` *ListenerCallback* Optional callback registered as a listener for the `timeout` event.
-
-Set a socket timeout. This will start a timer on the socket that will expire
-in `time` milliseconds if there has been no activity on the socket.
-
-### Socket.write(buf, writeDone)
-* `buf` *Buffer* `buf` Contains the data to be written.
-* `writeDone` *ListenerCallback* Optional function called once the data is written.
-
-Send data on the socket.
-
-Server API
-----------
-
-Server is an [EventEmitter](./events.md) with the following events:
-
-### Event: 'close'
-
-Emitted when the server has closed. This will only happen after a server has
-called `close()` and all its connections have been closed. Calling `close()`
-does not close all opened connections; that must be done manually.
-
-### Event: 'connection'
-
-* `Socket` `sock`
-
-Emitted when when a client has connected to the server. `sock` is the Socket
-representing the new connection.
-
-### Event: 'error'
-
-Emitted when the server has had an error.
-
-### Event: 'listening'
-
-Emitted when the server has been bound, after calling `server.listen()`.
-
-### Server.address
-`AddressInfo address(void)`
-
-Returns an AddressInfo object for the server:
-
-### Server.close()
-
-Signals the server to close. This will stop the server from accepting any new
-connections but will keep any existing connections alive. Once all existing
-connections have been closed the server will emit the `close` event.
-
-### Server.getConnections(ListenerCallback onconnection)
-* `onconnection` *ListenerCallback* Should be a function with `err` and `count` parameters.
-
-Get the number of connections to the server.
-
-### Server.listen(options, onlistening)
-* `options` *object*
-* `onlistening` *ListenerCallback* Optional function added to the `listening` event.
-
-Start listening for connections. The `options` object supports the following
-properties:
-```
-{
-    port : Port to bind to
-    host : IP to bind to
-    backlog : Max number of concurrent connections
-}
-```
+### stat.isDirectory()
+* Returns: true if the file descriptor is a directory.
 
 Sample Apps
 -----------
-* [IPv6 Server sample](../samples/TCPEchoServ6.js)
-* [IPv6 Client sample](../samples/TCPClient6.js)
+* [FS test](../tests/test-fs.js)
