@@ -213,7 +213,7 @@ This object has two fields:
 2. `characteristics` *array of [Characteristics](#characteristic-api)*
 
 
-### CharacteristicInit TEMPORARYSTRING
+### CharacteristicInit
 
 This object has 3 required fields:
 1. `uuid` *string* This field is a 16-bit characteristic UUID (4 hex chars).
