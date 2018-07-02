@@ -1,160 +1,83 @@
-ZJS API for GFX
+ZJS API for I2C
 ===============
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class: GFX](#gfx-api)
-  * [gfx.init(screen_width, screen_height, init_screen, draw, [this])](#gfxinitscreen_width-screen_height-init_screen-draw-this)
-* [Class: GFXContext](#gfxcontext-api)
-  * [gfxcontext.fillRect(x_coord, y_coord, width, height, color)](#gfxcontextfillrectx_coord-y_coord-width-height-color)
-  * [gfxcontext.drawPixel(x_coord, y_coord, color)](#gfxcontextdrawpixelx_coord-y_coord-color)
-  * [gfxcontext.drawLine(x0_coord, y0_coord, x1_coord, y1_coord, color, [size])](#gfxcontextdrawlinex0_coord-y0_coord-x1_coord-y1_coord-color-size)
-  * [gfxcontext.drawVLine(x_coord, y_coord, height, color, [size])](#gfxcontextdrawvlinex_coord-y_coord-height-color-size)
-  * [gfxcontext.drawHLine(x_coord, y_coord, width, color, [size])](#gfxcontextdrawhlinex_coord-y_coord-width-color-size)
-  * [gfxcontext.drawRect(x_coord, y_coord, width, height, color, [size])](#gfxcontextdrawrectx_coord-y_coord-width-height-color-size)
-  * [gfxcontext.drawChar(x_coord, y_coord, char, color, [size])](#gfxcontextdrawcharx_coord-y_coord-char-color-size)
-  * [gfxcontext.drawString(x_coord, y_coord, str, color, [size])](#gfxcontextdrawstringx_coord-y_coord-str-color-size)
+* [I2C API](#i2c-api)
+  * [i2c.open(init)](#i2copeninit)
+* [I2CBus API](#i2cbus-api)
+  * [i2cBus.write(device, data)](#i2cbuswritedevice-data)
+  * [i2cBus.read(device, size, registerAddress)](#i2cbusreaddevice-size-registeraddress)
+  * [I2CBus.burstRead(device, size, registerAddress)](#i2cbusburstreaddevice-size-registeraddress)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The GFX module provides a generic way to create pixel buffers that can
-be displayed on a display of some kind.  A JavaScript method for initializing
-the screen and drawing a data buffer are required to use it.
-See module/ST7735.js and samples/SPI_Screen.js for an example.
+The I2C API supports the I2C protocol, which allows multiple slave chips to
+communicate with one or more master chips.  Each I2C bus has two signals - SDA
+and SCL. SDA is the data signal and SCL is the clock signal.
 
 Web IDL
 -------
-This IDL provides an overview of the interface; see below for documentation of
-specific API functions.  We also have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+This IDL provides an overview of the interface; see below for
+documentation of specific API functions.  We have a short document
+explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+
 <details>
-<summary> Click to show/hide WebIDL</summary>
-<pre>
-// require returns a GFX object
-// var gfx = require('gfx');<p><p>[ReturnFromRequire]
-interface GFX {
-    GFXContext init(long screen_width, long screen_height, InitCallback init_screen,
-                    DrawingCallback draw, optional this this_object);
-};<p>interface GFXContext {
-    void fillRect(long x_coord, long y_coord, long width, long height,
-                  sequence < byte > color);
-    void drawPixel(long x_coord, long y_coord, sequence < byte > color);
-    void drawLine(long x0_coord, long y0_coord, long x1_coord,
-                  long y1_coord, sequence < byte > color, optional long size);
-    void drawVLine(long x_coord, long y_coord, long height, sequence < byte > color,
-                   optional long size);
-    void drawHLine(long x_coord, long y_coord, long width, sequence < byte > color,
-                   optional long size);
-    void drawRect(long x_coord, long y_coord, long width, long height,
-                  sequence < byte > color, optional long size);
-    void drawChar(long x_coord, long y_coord, byte char, sequence < byte > color,
-                  optional long size);
-    void drawString(long x_coord, long y_coord, string str, sequence < byte > color,
-                    optional long size);
+<summary>Click to show WebIDL</summary>
+<pre>// require returns a I2C object
+// var i2c = require('i2c');<p><p>[ReturnFromRequire]
+interface I2C {
+    I2CBus open(I2CInit init);
+};<p>dictionary I2CInit {
+    octet bus;
+    I2CBusSpeed speed;
+};<p>[ExternalInterface=(buffer,Buffer)]
+interface I2CBus {
+    // has all the properties of I2CInit as read-only attributes
+    void write(octet device, Buffer data);
+    void read(octet device, unsigned long size, octet registerAddress);
+    void burstRead(octet device, unsigned long size, octet registerAddress);
 };
-callback InitCallback = void (any... params);
-callback DrawingCallback = void (any... params);
-</pre>
+<p>
+typedef I2CBusSpeed long;</pre>
 </details>
 
-GFX API
+I2C API
 -------
-### gfx.init(screen_width, screen_height, init_screen, draw, this)
-* `screen_width` *long* Width of the screen.
-* `screen_height` *long* Height of the screen.
-* `init_screen` *InitCallback*
-* `draw` *DrawingCallback*
-* `this` *object*
+### i2c.open(init)
+* `init` *I2CInit* Lets you set the I2C bus you wish to use and the speed you
+want to operate at. Speed options are 10, 100, 400, 1000, and 34000. Speed is
+measured in kbs.
+* Returns: an I2CBus object.
 
-Initializes the GFX module with the screen size, an init function, and a draw
-callback.  A 'this' object can also be provided if needed.
+I2CBus API
+----------
+### i2cBus.write(device, data)
+* `device` *octet* The device address.
+* `data` *Buffer* The data to be written.
 
-GFXContext API
---------------
-### gfxcontext.fillRect(x_coord, y_coord, width, height, color)
-* `x_coord` *long*
-* `y_coord` *long*
-* `width` *long*
-* `height` *long*
-* `color` *byte array*
+Writes the data to the given device address. The first byte of data typically
+contains the register you want to write the data to.  This will vary from device
+to device.
 
-Draws a solid rectangle of the given color at the coordinates provided.
+### i2cBus.read(device, size, registerAddress)
+* `device` *octet* The device address.
+* `size` *unsigned long* The number of bytes of data to read.
+* `registerAddress` *octet* The register on the device from which to read.
 
-### gfxcontext.drawPixel(x_coord, y_coord, color)
-* `x_coord` *long*
-* `y_coord` *long*
-* `color` *byte array*
+Reads 'size' bytes of data from the device at the registerAddress. The default
+value of registerAdress is 0x00;
 
-Draws a pixel of the given color at the coordinates provided.
+### I2CBus.burstRead(device, size, registerAddress)
+* `device` *octet* The device address.
+* `size` *long* The number of bytes of data to read.
+* `registerAddress` *octet* The number of the starting address from which to read.
 
-### gfxcontext.drawLine(x0_coord, y0_coord, x1_coord, y1_coord, color, [size])
-* `x0_coord` *long*
-* `y0_coord` *long*
-* `x1_coord` *long*
-* `y1_coord` *long*
-* `color` *byte array*
-* `size` *long* Optional.
-
-
-Draws a line of the given color at the coordinates provided.  The optional
-size number controls how thick the line is.
-
-### gfxcontext.drawVLine(x_coord, y_coord, height, color, [size])
-* `x_coord` *long*
-* `y_coord` *long*
-* `height` *long*
-* `color` *byte array*
-* `size` *long* Optional.
-
-
-Draws a vertical line of the given color at the coordinates provided.  The
-optional size number controls how thick the line is.
-
-### gfxcontext.drawHLine(x_coord, y_coord, width, color, [size])
-* `x_coord` *long*
-* `y_coord` *long*
-* `width` *long*
-* `color` *byte array*
-* `size` *long* Optional.
-
-
-Draws a horizontal line of the given color at the coordinates provided.  The
-optional size number controls how thick the line is.
-
-### gfxcontext.drawRect(x_coord, y_coord, width, height, color, [size])
-* `x_coord` *long*
-* `y_coord` *long*
-* `width` *long*
-* `height` *long*
-* `color` *byte array*
-* `size` *long* Optional.
-
-
-Draws a hollow rectangle of the given color at the coordinates provided.  The
-optional size number controls how thick the line is.
-
-### gfxcontext.drawChar(x_coord, y_coord, char, color, [size])
-* `x_coord` *long*
-* `y_coord` *long*
-* `char` *byte*
-* `color` *byte array*
-* `size` *long* Optional.
-
-
-Draw a character at the coordinates given. The optional size number sets how
-large the character is.
-
-### gfxcontext.drawString(x_coord, y_coord, str, color, [size])
-* `x_coord` *long*
-* `y_coord` *long*
-* `str` *string*
-* `color` *byte array*
-* `size` *long* Optional.
-
-
-Draw a string at the coordinates given. The optional size number sets how
-large the character is.
+Reads 'size' bytes of data from the device across multiple addresses starting
+at the registerAddress. The default value of registerAdress is 0x00;
 
 Sample Apps
 -----------
-* [GFX sample](../samples/SPI_Screen.js)
+* [I2C sample](../samples/I2C.js)
+* [BMP280 temp](../samples/I2CBMP280.js)
