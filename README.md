@@ -24,7 +24,6 @@ documentation of specific API functions.  We have a short document
 explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 <details>
-<pre>
 <summary>Click to show WebIDL</summary>
 // require returns a I2C object
 // var i2c = require('i2c');
@@ -47,7 +46,7 @@ interface I2CBus {
     void burstRead(octet device, unsigned long size, octet registerAddress);
 };
 <p>
-typedef I2CBusSpeed long;</pre>
+typedef I2CBusSpeed long;
 </details>
 
 I2C API
