@@ -45,8 +45,7 @@ interface I2CBus {
     void burstRead(octet device, unsigned long size, octet registerAddress);
 };
 
-typedef I2CBusSpeed long;
-</details></pre>
+typedef I2CBusSpeed long;</details></pre>
 
 I2C API
 -------
