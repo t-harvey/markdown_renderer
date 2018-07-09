@@ -24,8 +24,7 @@ documentation of specific API functions.  We have a short document
 explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 <pre>
-<details>
-<summary>Click to show WebIDL</summary>// require returns a I2C object
+<details><summary>Click to show WebIDL</summary>// require returns a I2C object
 // var i2c = require('i2c');
 
 [ReturnFromRequire]
