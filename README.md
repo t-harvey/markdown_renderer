@@ -23,6 +23,7 @@ This IDL provides an overview of the interface; see below for
 documentation of specific API functions.  We have a short document
 explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
+<pre>
 <details>
 <summary>Click to show WebIDL</summary>
 // require returns a I2C object
@@ -47,7 +48,7 @@ interface I2CBus {
 };
 <p>
 typedef I2CBusSpeed long;
-</details>
+</details></pre>
 
 I2C API
 -------
