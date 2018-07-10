@@ -50,7 +50,8 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 [ReturnFromRequire]
 interface PWM {
     PWMPin open((long or string or PWMInit) init);
-};<p>dictionary PWMInit {
+};<p>
+dictionary PWMInit {
     (long or string) pin;
     boolean reversePolarity = false;
 };<p>interface PWMPin {
