@@ -47,7 +47,7 @@ dictionary GPIOInit {
     attribute ChangeCallback onchange;
 };<p>callback ChangeCallback = void (GPIOEvent event);<p>dictionary GPIOEvent {
     long value;
-};
+};<p>
 enum GPIOMode  { "out", "in" };
 enum GPIOEdge  { "none", "rising", "falling", "any" };
 enum GPIOState { "none", "up", "down" };</pre>
