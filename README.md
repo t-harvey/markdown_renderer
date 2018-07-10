@@ -3,28 +3,23 @@ ZJS API for Net
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-
-
-
-
-
 * [Class: Net](#net-api)
-  * [net.createServer(callback onconnection)](#netcreateservercallback-onconnection)
+  * [net.createServer([onconnection])](#netcreateserveronconnection)
   * [net.Socket()](#netsocket)
-  * [net.isIP(string input)](#netisipstring-input)
-  * [Net.isIPv4(string input)](#netisipv4string-input)
-  * [Net.isIPv6(string input)](#netisipv6string-input)
+  * [net.isIP(input)](#netisipinput)
+  * [Net.isIPv4(input)](#netisipv4input)
+  * [Net.isIPv6(input)](#netisipv6input)
 * [Class: Socket](#socket-api)
   * [Event: 'close'](#event-close)
   * [Event: 'connect'](#event-connect)
   * [Event: 'data'](#event-data)
   * [Event: 'error'](#event-error)
   * [Event: 'timeout'](#event-timeout)
-  * [Socket.connect(options, onconnect)](#socketconnectoptions-onconnect)
+  * [Socket.connect(options, [onconnect])](#socketconnectoptions-onconnect)
   * [Socket.pause()](#socketpause)
   * [Socket.resume()](#socketresume)
   * [Socket.setTimeout(time, ontimeout)](#socketsettimeouttime-ontimeout)
-  * [Socket.write(buf, writeDone)](#socketwritebuf-writedone)
+  * [Socket.write(buf, [writeDone])](#socketwritebuf-writedone)
 * [Class: Server](#server-api)
   * [Event: 'close'](#event-close)
   * [Event: 'connection'](#event-connection)
@@ -32,13 +27,8 @@ ZJS API for Net
   * [Event: 'listening'](#event-listening)
   * [Server.address](#serveraddress)
   * [Server.close()](#serverclose)
-  * [Server.getConnections(ListenerCallback onconnection)](#servergetconnectionslistenercallback-onconnection)
-  * [Server.listen(options, onlistening)](#serverlistenoptions-onlistening)
-
-
-
-
-
+  * [Server.getConnections(onconnection)](#servergetconnectionsonconnection)
+  * [Server.listen(options, [onlistening])](#serverlistenoptions-onlistening)
 * [Sample Apps](#sample-apps)
 
 Introduction
@@ -54,15 +44,15 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 <summary> Click to show/hide WebIDL</summary>
 <pre>
 // require returns a Net object
-// var net = require('net');<p><p>[ReturnFromRequire]
+// var net = require('net');
+[ReturnFromRequire,ExternalCallback=(ListenerCallback)]
 interface Net {
-    Server createServer(optional callback onconnection);
+    Server createServer(optional ListenerCallback onconnection);
     Socket Socket();
     long isIP(string input);
-    Boolean isIPv4(string input);
-    Boolean isIPv6(string input);
-};
-<p>[ExternalInterface=(eventemitter,EventEmitter),ExternalInterface=(buffer,Buffer),ExternalCallback=(eventemitter,ListenerCallback)]
+    boolean isIPv4(string input);
+    boolean isIPv6(string input);
+};<p>[ExternalInterface=(EventEmitter),ExternalInterface=(Buffer),ExternalCallback=(ListenerCallback)]
 interface Socket: EventEmitter {
     // Socket methods
     void connect(object options, optional ListenerCallback onconnect);
@@ -79,8 +69,7 @@ interface Socket: EventEmitter {
     attribute string remoteAddress; // Remote IP address
     attribute string remoteFamily;  // Remote IP family
     attribute long remotePort;    // Remote port
-};<p>
-[ExternalInterface=(eventemitter, EventEmitter),ExternalCallback=(eventemitter,ListenerCallback)]
+};<p>[ExternalInterface=(EventEmitter),ExternalCallback=(ListenerCallback)]
 interface Server: EventEmitter {
     // Server methods
     AddressInfo address();
@@ -90,28 +79,24 @@ interface Server: EventEmitter {
     // Server properties
     attribute boolean listening;      // true if the server is listening
     attribute long maxConnections;  // maximum number of connections
-};
-<p>
-dictionary AddressOptions {
+};<p>dictionary AddressOptions {
     long port;          // Port the client should connect to (required)
     string host;          // Host the client should connect to
     string localAddress;  // Local address to bind to
     long localPort;     // local port to bind to
     long family;        // Version of IP stack, deafults to 4
-}
-<p>
-dictionary AddressInfo {
+};<p>dictionary AddressInfo {
     long port;    // Server port
     string family;  // IPv4 or IPv6
     string address; // IP address for the server
-}
+};
 </pre>
 </details>
 
 Net API
 -------
 
-### net.createServer(callback onconnection)
+### net.createServer([onconnection])
 * `onconnection` *callback* The (optional) callback function registered as the the event listener for the `connection` event.
 * Returns: a `Server` object.
 
@@ -122,20 +107,20 @@ Create a TCP server that can accept client connections.
 
 Socket constructor.
 
-### net.isIP(string input)
+### net.isIP(input)
 * `input` *string*
 * Returns: 4 if the input is an IPv4 address, 6 if the input is an IPv6 address,
 or 0 if the input is not an IP address.
 
 Checks if the input is a valid IP address.
 
-### Net.isIPv4(string input)
+### Net.isIPv4(input)
 * `input` *string*
 * Returns: true if input is IPv4, false otherwise.
 
 Checks if input is an IPv4 address.
 
-### Net.isIPv6(string input)
+### Net.isIPv6(input)
 * `input` *string*
 * Returns: true if input is IPv6, false otherwise.
 
@@ -169,7 +154,7 @@ Emitted when there was an error on the socket during read, write, or connect.
 
 Emitted only when a timeout set with `setTimeout` expires.
 
-### Socket.connect(options, onconnect)
+### Socket.connect(options, [onconnect])
 * `options` *AddressOptions* Describes the remote server being connected to.
 * `onconnect` *ListenerCallback* Optional callback added as the listener for the
 `connect` event.
@@ -192,7 +177,7 @@ Allow a socket to resume receiving data after a call to `Socket.pause`.
 Set a socket timeout. This will start a timer on the socket that will expire
 in `time` milliseconds if there has been no activity on the socket.
 
-### Socket.write(buf, writeDone)
+### Socket.write(buf, [writeDone])
 * `buf` *Buffer* `buf` Contains the data to be written.
 * `writeDone` *ListenerCallback* Optional function called once the data is written.
 
@@ -235,12 +220,12 @@ Signals the server to close. This will stop the server from accepting any new
 connections but will keep any existing connections alive. Once all existing
 connections have been closed the server will emit the `close` event.
 
-### Server.getConnections(ListenerCallback onconnection)
+### Server.getConnections(onconnection)
 * `onconnection` *ListenerCallback* Should be a function with `err` and `count` parameters.
 
 Get the number of connections to the server.
 
-### Server.listen(options, onlistening)
+### Server.listen(options, [onlistening])
 * `options` *object*
 * `onlistening` *ListenerCallback* Optional function added to the `listening` event.
 
