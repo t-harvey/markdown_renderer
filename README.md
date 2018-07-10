@@ -1,87 +1,111 @@
-ZJS API for I2C
-===============
+ZJS API for Analog I/O (AIO)
+============================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [I2C API](#i2c-api)
-  * [i2c.open(init)](#i2copeninit)
-* [I2CBus API](#i2cbus-api)
-  * [i2cBus.write(device, data)](#i2cbuswritedevice-data)
-  * [i2cBus.read(device, size, registerAddress)](#i2cbusreaddevice-size-registeraddress)
-  * [I2CBus.burstRead(device, size, registerAddress)](#i2cbusburstreaddevice-size-registeraddress)
+* [Class: AIO](#aio-api)
+  * [aio.open(AIOInit)](#aioopenaioinit)
+* [Class: AIOPin](#aiopin-api)
+  * [pin.read()](#pinread)
+  * [pin.readAsync(ReadCallback)](#pinreadasyncreadcallback)
+  * [pin.on(eventType, ReadCallback)](#pinoneventtype-readcallback)
+  * [pin.close()](#pinclose)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The I2C API supports the I2C protocol, which allows multiple slave chips to
-communicate with one or more master chips.  Each I2C bus has two signals - SDA
-and SCL. SDA is the data signal and SCL is the clock signal.
+The AIO API supports analog I/O pins. So far, the support is just for
+analog-to-digital conversion (ADC). This measures an analog voltage input on a
+pin and converts it into a digital representation. The values are dependent on
+the resolution and limits of the particular device. For example, the Arduino 101
+has 12-bit resolution and uses 3.3V on its six analog input pins. So for a
+voltage between 0 - 3.3V it returns a digital value of 0 - 4095.
+
+Other Arduino devices typically have 10-bit resolution and some may use 5V as
+the upper limit instead.
+
+Hardware may have other analog features such as comparators but so far, we do
+not have support for this.
 
 Web IDL
 -------
+
 This IDL provides an overview of the interface; see below for
 documentation of specific API functions.  We have a short document
 explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
+<details>
+<summary>Click to show WebIDL</summary>
 <pre>
-<details><summary>Click to show WebIDL</summary>// require returns a I2C object
-// var i2c = require('i2c');
+// require returns an AIO object
+// var aio = require('aio');<p>[ReturnFromRequire]
+interface AIO {
+    AIOPin open(AIOInit init);
+};<p>dictionary AIOInit {
+    (unsigned long or string) pin;
+};<p>interface AIOPin {
+    unsigned long read();
+    void readAsync(ReadCallback callback);  // TODO: change to return a promise
+    void on(string eventType, ReadCallback callback);
+    void close();
+};<p>callback ReadCallback = void (unsigned long value);
+</pre>
+</details>fff
 
-[ReturnFromRequire]
-interface I2C {
-    I2CBus open(I2CInit init);
-};
-
-dictionary I2CInit {
-    octet bus;
-    I2CBusSpeed speed;
-};
-
-[ExternalInterface=(buffer,Buffer)]
-interface I2CBus {
-    // has all the properties of I2CInit as read-only attributes
-    void write(octet device, Buffer data);
-    void read(octet device, unsigned long size, octet registerAddress);
-    void burstRead(octet device, unsigned long size, octet registerAddress);
-};
-
-typedef I2CBusSpeed long;</details></pre>
-
-I2C API
+AIO API
 -------
-### i2c.open(init)
-* `init` *I2CInit* Lets you set the I2C bus you wish to use and the speed you
-want to operate at. Speed options are 10, 100, 400, 1000, and 34000. Speed is
-measured in kbs.
-* Returns: an I2CBus object.
+### aio.open(init)
+* 'init' *AIOInit object*  The AIOInit object has a single field called "pin"
+  that represents the name of the pin (either an integer or a string,
+  depending on the board).
+* Returns: an AIOPin object that may be used to read values from the pin.
 
-I2CBus API
+When setting the pin number, you can either use a raw
+number for your device or use the board support module such as
+[Arduino 101](./boards/arduino_101.md) or [K64F](./boards/frdm_k64f.md) to
+specify a named pin.
+
+AIOPin API
 ----------
-### i2cBus.write(device, data)
-* `device` *octet* The device address.
-* `data` *Buffer* The data to be written.
+### pin.read()
+* Returns: the latest reading from the pin (an unsigned integer). Blocks until it gets the result.
 
-Writes the data to the given device address. The first byte of data typically
-contains the register you want to write the data to.  This will vary from device
-to device.
+### pin.readAsync(callback)
+* 'callback' *ReadCallback* User-provided callback function that takes
+  a single unsigned integer and has no return value.
 
-### i2cBus.read(device, size, registerAddress)
-* `device` *octet* The device address.
-* `size` *unsigned long* The number of bytes of data to read.
-* `registerAddress` *octet* The register on the device from which to read.
+Pass a function for `ReadCallback` that will be called later when the result is
+obtained.
 
-Reads 'size' bytes of data from the device at the registerAddress. The default
-value of registerAdress is 0x00;
+*WARNING: Making an async call like this allocates some memory while the call
+is pending; if async calls are issued faster than they are fulfilled,
+the system will
+eventually run out of memory - pretty soon on these small devices. So the best
+practice would be to have only a small, fixed number pending at
+any given time.*
 
-### I2CBus.burstRead(device, size, registerAddress)
-* `device` *octet* The device address.
-* `size` *long* The number of bytes of data to read.
-* `registerAddress` *octet* The number of the starting address from which to read.
+*NOTE: This function will probably be replaced with a version that instead
+returns a promise.*
 
-Reads 'size' bytes of data from the device across multiple addresses starting
-at the registerAddress. The default value of registerAdress is 0x00;
+### pin.on(eventType, callback)
+* 'eventType' *string* Type of event; currently, the only supported
+  type is "change".
+* 'callback' *ReadCallback* User-provided callback function that takes
+  a single, unsigned integer and has no return value; can be null.
+
+The callback function is called any time the analog voltage changes. (At the moment,
+it actually gets called periodically even when it hasn't changed.) When null is
+passed for the change event, the previously registered callback will be
+discarded and no longer called.
+
+### pin.close()
+
+Closes the AIOPin. Once it is closed, all registered event handlers will no
+longer be called.
 
 Sample Apps
 -----------
-* [I2C sample](../samples/I2C.js)
-* [BMP280 temp](../samples/I2CBMP280.js)
+* [AIO sample](../samples/AIO.js)
+* [Arduino Read Analog Voltage sample](../samples/arduino/basics/ReadAnalogVoltage.js)
+* [Arduino Analog Read Serial sample](../samples/arduino/basics/AnalogReadSerial.js)
+* [WebBluetooth Demo](../samples/WebBluetoothDemo.js)
