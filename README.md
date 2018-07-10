@@ -1,107 +1,183 @@
-ZJS API for Events
+ZJS API for File System
 ==================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class: EventEmitter](#eventemitter-api)
-  * [EventEmitter.on(event, listener)](#eventemitteronevent-listener)
-  * [EventEmitter.addListener(event, listener)](#eventemitteraddlistenerevent-listener)
-  * [EventEmitter.emit(event, [args...])](#eventemitteremitevent-args)
-  * [EventEmitter.removeListener(event, listener)](#eventemitterremovelistenerevent-listener)
-  * [EventEmitter.removeAllListeners(event)](#eventemitterremovealllistenersevent)
-  * [EventEmitter.eventNames()](#eventemittereventnames)
-  * [EventEmitter.getMaxListeners()](#eventemittergetmaxlisteners)
-  * [EventEmitter.listeners(event)](#eventemitterlistenersevent)
-  * [EventEmitter.setMaxListeners(max)](#eventemittersetmaxlistenersmax)
-* [Sample Apps](#sample-apps)
+* [Class FS](#fs-api)
+  * [fs.openSync(path, mode)](#fsopensyncpath-mode)
+  * [fs.closeSync(fd)](#fsclosesyncfd)
+  * [fs.unlinkSync(path)](#fsunlinksyncpath)
+  * [fs.rmdirSync(path)](#fsrmdirsyncpath)
+  * [fs.writeSync(fd, data, offset, length, [position])](#fswritesyncfd-data-offset-length-position)
+  * [fs.readSync(fd, data, offset, length, [position])](#fsreadsyncfd-data-offset-length-position)
+  * [fs.truncateSync(path, length)](#fstruncatesyncpath-length)
+  * [fs.mkdirSync(path)](#fsmkdirsyncpath)
+  * [fs.readdirSync(path)](#fsreaddirsyncpath)
+  * [fs.statSync(path)](#fsstatsyncpath)
+  * [writeFileSync(file, data)](#writefilesyncfile-data)
+* [Class Stat](#stat-api)
+  * [stat.isFile()](#statisfile)
+  * [stat.isDirectory()](#statisdirectory)
 
 Introduction
 ------------
-ZJS provides event APIs that match `Node.js` `Event`s. We describe
-them here as there could be minor differences.
+
+ZJS provides File System APIs that match Node.js' FS module. We
+describe them here to document any minor differences. It should be
+noted that by default, the FS module only contains the synchronous
+Node.js APIs. The asynchronous APIs can be compiled in by enabling the
+pre-processor value `ZJS_FS_ASYNC_APIS`. The default is to leave them
+out, because all of Zephyr's File System APIs are synchronous, so
+making the JavaScript APIs asynchronous was only adding ROM space.
+
+On the Arduino 101, the flash file system uses SPI, and the pins are shared with
+IO10-13. For this reason, you will not be able to use these GPIO pins at the
+same time as the file system.
+
+Available file modes:
+
+`'r'` - Open file for only reading. An error will be thrown if the file does
+not exist.
+
+`'r+'` - Open a file for reading and writing. An error will be thrown if the
+file does not exist.
+
+`'w'` - Open a file for writing. The file will be overwritten if it already
+exists.
+
+`'w+'` - Open a file for writing and reading. The file will be overwritten if
+it already exists.
+
+`'a'` - Opens a file for appending. The write pointer will always seek
+to the end of the file during a write.
+
+`'a+'` - Opens a file for appending and reading. The write
+pointer will seek to the end for writes, but reads will be done from the
+start of the file (the read pointer is saved across different read calls).
 
 Web IDL
 -------
-This IDL provides an overview of the interface; see below for documentation of
-specific API functions.  We also have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+This IDL provides an overview of the interface; see below for
+documentation of specific API functions.  We have a short document
+explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+
 <details>
-<summary> Click to show/hide WebIDL</summary>
+<summary>Click to show WebIDL</summary>
 <pre>
-callback ListenerCallback = void (any... params);<p>interface EventEmitter {
-    this on(string event, ListenerCallback listener);
-    this addListener(string event, ListenerCallback listener);
-    boolean emit(string event, any... args);
-    this removeListener(string event, ListenerCallback listener);
-    this removeAllListeners(string event);
-    sequence < string > eventNames();
-    long getMaxListeners();
-    sequence < ListenerCallback > listeners(string event);
-    this setMaxListeners(long max);
-};
-</pre>
+// require returns a FS object
+// var fs = require('fs');
+[ReturnFromRequire, ExternalInterface=(Buffer)]
+interface FS {
+    FileDescriptor openSync(string path, FileMode mode);
+    void closeSync(FileDescriptor fd);
+    void unlinkSync(string path);
+    void rmdirSync(string path);
+    long writeSync(FileDescriptor fd, (string or Buffer) data, long offset,
+                   long length, optional long position);
+    long readSync(FileDescriptor fd, Buffer data, long offset,
+                  long length, optional long position);
+    void truncateSync(string path, long length);
+    void mkdirSync(string path);
+    sequence < string > readdirSync(string path);
+    Stat statSync(string path);
+    void writeFileSync(string file, (string or Buffer) data);
+};<p>// file descriptors are inherently platform specific, so we leave this
+// as a placeholder
+dictionary FileDescriptor {
+    //string name;
+};<p>interface Stat {
+    boolean isFile();
+    boolean isDirectory();
+};<p>enum FileMode { "r", "w", "a", "r+", "w+", "a+" };</pre>
 </details>
 
-EventEmitter API
-----------------
-### EventEmitter.on(event, listener)
-* `event` *string* The name of the event that you are adding a listener to.
-* `listener` *ListenerCallback* The function that you wish to be called when this event is emitted/triggered.
-* Returns: `this` so calls can be chained.
+FS API
+------
 
-Add an event listener function.
+### fs.openSync(path, mode)
+* `path` *string* The name and path of the file to open.
+* `mode` *FileMode* The mode in which to open the file.
+* Returns: an object representing the file descriptor.
 
-### EventEmitter.addListener(event, listener)
-* `event` *string* The name of the event that you are adding a listener to.
-* `listener` *ListenerCallback* The function that you wish to be called when this event is emitted/triggered.
-* Returns: `this` so calls can be chained.
+Opens a file.
 
-Same as `EventEmitter.on()`.
+### fs.closeSync(fd)
+* `fd` *FileDescriptor* The file descriptor for the file that will be closed.
 
-### EventEmitter.emit(event, [args...])
-* `event` *string* The name of the event that you want to emit.
-* `args` *optional* All other arguments will be given to any registered listener functions.
-* Returns: true if there were any listener functions called.
+Closes a file.
 
-Triggers an event. Any listener functions that have been added to the
-event emitter under the event name will be called.
+### fs.unlinkSync(path)
+* `path` *string* The name and path of the file to remove.
 
+Unlink (remove) a file from the file system.
 
-### EventEmitter.removeListener(event, listener)
-* `event` *string* The name of the event you are removing the listener from.
-* `listener` *ListenerCallback* The function you want to remove as a listener.
-* Returns: `this` so calls can be chained.
+### fs.rmdirSync(path)
+* `path` *string* The name and path of the directory to be removed.
 
-Removes a listener function from an event.
+Remove a directory from the file system.
 
-### EventEmitter.removeAllListeners(event)
-* `event` *string* The name of the event from which to remove all listeners.
-* Returns: `this` so calls can be chained.
+### fs.writeSync(fd, data, offset, length, [position])
+* `fd` *FileDescriptor* The file descriptor returned from `openSync()`.
+* `data` *string or Buffer* The data to write to 'fd'.
+* `offset` *long* The position in 'data' from which to start writing.
+* `length` *long* The number of bytes to write to 'fd' from 'data'.
+* `position` *long* The offset from the beginning of the file where
+  'data' should be written. The parameter is optional; the default value is 0.
+* Returns: the number of bytes actually written (this may be different from 'length').
 
-Removes all listeners from an event
+Write bytes to an opened file.
 
+### fs.readSync(fd, data, offset, length, [position])
+* `fd` *FileDescriptor* The file descriptor returned from 'openSync()'.
+* `data` *Buffer* The buffer into which the data will be read.
+* `offset` *long* The offset in 'data' at which to start writing.
+* `length` *long* The number of bytes to read.
+* `position` *long* The position in the file from which to start reading.
+* Returns: the number of bytes actually read. This may be different from
+'length' if there was a read error or if the file had no more data left to read.
 
-### EventEmitter.eventNames()
-* Returns: an array of strings that correspond to any events. Will return undefined if there are no event's or event listeners for this event emitter.
+Read bytes from a file.
 
-Get a list of event names from an event emitter object.
+### fs.truncateSync(path, length)
+* `path` *string* The name and path of the file.
+* `length` *long* The new length of the file.
 
-### EventEmitter.getMaxListeners()
-* Returns: the maximum number of listeners allowed.
+Truncate a file. If the length passed in is shorter than the existing file
+length, then the trailing file data will be lost.
 
-Get the maximum number of listeners allowed for this event emitter object.
+### fs.mkdirSync(path)
+* `path` *string* The name and path of the directory.
 
-### EventEmitter.listeners(event)
-* `event` *string* The name of the event from which to retrieve the listerners.
-* Returns: an array of functions that correspond to the `ListenerCallbacks` for the event specified.
+Create a directory. There is no effect if the directory already exists.
 
-Get a list of listeners for an event.
+### fs.readdirSync(path)
+* `path` *string* The name and path of the directory to read.
+* Returns: an array of filenames and directories found in 'path'.
 
-### EventEmitter.setMaxListeners(max)
-* `max` *long*  The number of listeners the event emitter can have.
-* Returns: `this`, so calls can be chained.
+Read the contents of a directory.
 
-Set the max number of listeners for an event emitter object
+### fs.statSync(path)
+* `path` *string* The name and path of the file or directory.
+* Returns: a 'Stat' object for the file or directory or undefined if the
+file or directory does not exist.
+
+Get stats about a file or directory.
+
+### writeFileSync(file, data)
+* `file` *string* The name of the file to which to write.
+* `data` *string or Buffer* The data to write into the file.
+
+Open and write data to a file. This will replace the file if it already exists.
+
+Stat API
+--------
+
+### stat.isFile()
+* Returns: true if the file descriptor is a file.
+
+### stat.isDirectory()
+* Returns: true if the file descriptor is a directory.
 
 Sample Apps
 -----------
-* [Events sample](../samples/tests/Events.js)
+* [FS test](../tests/test-fs.js)
