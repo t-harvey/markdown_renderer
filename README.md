@@ -40,16 +40,14 @@ dictionary GPIOInit {
     GPIOMode  mode =  "out";
     GPIOEdge  edge =  "none";
     GPIOState state = "none";
-};<p>
-interface GPIOPin {
+};<p>interface GPIOPin {
     long read();
     void write(long value);
     void close();
     attribute ChangeCallback onchange;
-};<p>
-callback ChangeCallback = void (GPIOEvent event);<p>dictionary GPIOEvent {
+};<p>callback ChangeCallback = void (GPIOEvent event);<p>dictionary GPIOEvent {
     long value;
-};<p>
+};
 enum GPIOMode  { "out", "in" };
 enum GPIOEdge  { "none", "rising", "falling", "any" };
 enum GPIOState { "none", "up", "down" };</pre>
