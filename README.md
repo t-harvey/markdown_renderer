@@ -1,198 +1,137 @@
-ZJS API for Pattern Matching Engine (PME)
-=========================================
+ZJS API for Pulse Width Modulation (PWM)
+========================================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class: PME](#pme-api)
-  * [pme.begin()](#pmebegin)
-  * [pme.forget()](#pmeforget)
-  * [pme.configure(context, classificationMode, distanceMode, minInfluence, maxInfluence)](#pmeconfigurecontext-classificationmode-distancemode-mininfluence-maxinfluence)
-  * [pme.learn(pattern, category)](#pmelearnpattern-category)
-  * [pme.classify(pattern)](#pmeclassifypattern)
-  * [pme.readNeuron(id)](#pmereadneuronid)
-  * [pme.writeVector(pattern)](#pmewritevectorpattern)
-  * [pme.getCommittedCount()](#pmegetcommittedcount)
-  * [pme.getGlobalContext()](#pmegetglobalcontext)
-  * [pme.getClassifierMode()](#pmegetclassifiermode)
-  * [pme.setClassifierMode(mode)](#pmesetclassifiermodemode)
-  * [pme.getDistanceMode()](#pmegetdistancemode)
-  * [pme.setDistanceMode(mode)](#pmesetdistancemodemode)
-  * [pme.saveNeurons()](#pmesaveneurons)
-  * [pme.restoreNeurons(objects)](#pmerestoreneuronsobjects)
+* [Class: PWM](#pwm-api)
+  * [pwm.open(init)](#pwmopeninit)
+* [Class: PWMPin](#pwmpin-api)
+  * [pin.setCycles(period, pulseWidth)](#pinsetcyclesperiod-pulsewidth)
+  * [pin.setMilliseconds(periodMS, pulseWidthMS)](#pinsetmillisecondsperiodms-pulsewidthms)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The Pattern Matching Engine API is the JavaScript version of the parallel data-recognition engine with the following features:
+The PWM API supports pins with dedicated pulse width modulation support. This
+uses programmable hardware to generate a repeated signal, a squarewave pulse,
+where the signal goes up and down at specific times. For example, you can tell
+the PWM hardware to pulse pin IO3 for 1ms every 3ms, and it will do that
+indefinitely until you tell it otherwise, without further software intervention.
 
- - 128 parallel Processing Elements (PE) each with
-     - 128 byte input vector
-     - 128 byte model memory
-     - 8-Bit Arithmetic Units
- - Two distance-evaluation norms with 16-bit resolution:
-    - L1 norm (Manhattan Distance)
-    - Lsup (Supremum) norm (Chebyshev Distance)
- - Support for up to 32,768 Categories
- - Classification states:
-   - ID  - Identified
-   - UNC - Uncertain
-   - UNK - Unknown
- - Two Classification Functions:
-   - k-nearest neighbors (KNN)
-   - Radial Basis Function (RBF)
- - Support for up to 127 Contexts
+There are two ways to control hardware devices with PWM. Some devices, like
+servos, use different pulse widths as control commands. One example is a servo
+that will turn 90 degrees to the left with a 1ms pulse and 90 degress to the
+right with a 2ms pulse. Anything in between will turn it a proportional,
+variable amount. So a 1.25ms pulse will turn it 45 degrees left of center, and a
+1.5ms pulse will recenter it. For such a servo, the period is not as important.
+It might be 5ms or 20ms and have the same effect.
+
+The other way to use PWM to control a device is to think about the duty cycle;
+that is, what percentage of the time is the signal "on". The Arduino API calls
+this "analogWrite" which is a bit of a misnomer: the signal is still a digital
+squarewave. But if you control, for example, an LED with a PWM, and give it a
+duty cycle of 50% (such as 1ms on, 1ms off), it will glow at half brightness.
+If you give it a duty cycle of 10% (such as 1ms on, 9ms off), it will glow at
+10% brightness. So as with the Arduino API, you can think of this as a way to
+set an "analog" brightness, not just "on" or "off".
+
+The PWM API intends to follow the [iot-js-api specification](https://github.com/intel/iot-js-api/tree/master/board/pwm.md).
 
 Web IDL
 -------
+
 This IDL provides an overview of the interface; see below for documentation of
 specific API functions.  We also have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <details>
 <summary> Click to show/hide WebIDL</summary>
 <pre>
-// require returns a PME object
-// var pme = require('pme');
+// require returns a PWM object
+// var pwm = require('pwm');
 [ReturnFromRequire]
-interface PME {
-    void begin();
-    void forget();
-    void configure(unsigned short context,
-                   unsigned short classificationMode,
-                   unsigned short distanceMode,
-                   unsigned short minInfluence,
-                   unsigned short maxInfluence);
-    void learn(sequence < long > pattern, unsigned long category);
-    unsigned long classify(sequence < long > pattern);
-    Neuron readNeuron(unsigned long id);
-    void writeVector(sequence < long > pattern);
-    unsigned short getCommittedCount();
-    unsigned short getGlobalContext();
-    unsigned short getClassifierMode();
-    void setClassifierMode(unsigned short mode);
-    unsigned short getDistanceMode();
-    void setDistanceMode(unsigned short mode);
-    sequence < Json > saveNeurons();
-    void restoreNeurons(sequence < Json > objects);
-<p>
-    attribute unsigned short RBF_MODE;       // RBF classification mode
-    attribute unsigned short KNN_MODE;       // KNN classification mode
-    attribute unsigned short L1_DISTANCE;    // L1 distance mode
-    attribute unsigned short LSUP_DISTANCE;  // LSUP distance mode
-    attribute unsigned long NO_MATCH;        // indicates a pattern could not
-                                             // be classified
-    attribute unsigned short MIN_CONTEXT;    // minimum context value
-    attribute unsigned short MAX_CONTEXT;    // maximum context value
-    attribute unsigned long MAX_VECTOR_SIZE; // Maximum pattern size (in bytes)
-    attribute unsigned long FIRST_NEURON_ID; // ID of first neuron in network
-    attribute unsigned long LAST_NEURON_ID;  // ID of last neuron in network
-    attribute unsigned long MAX_NEURONS;     // Number of neurons in the network
-};<p>dictionary Neuron {
-    unsigned short category;
-    unsigned short context;
-    unsigned short AIF;
-    unsigned short minIF;
-};
-</pre>
+interface PWM {
+    PWMPin open((long or string or PWMInit) init);
+};<p>dictionary PWMInit {
+    (long or string) pin;
+    boolean reversePolarity = false;
+};<p>interface PWMPin {
+    void setCycles(unsigned long period, unsigned long pulseWidth);
+    void setMilliseconds(double period, double pulseWidth);
+};</pre>
 </details>
 
-PME API
+PWM API
 -------
-### pme.begin()
+### pwm.open(init)
 
-Initialize the PME so it is ready for operation.
+* `init` *long of string or PWMInit* A numerical argument indicates
+a pin channel number. If the argument is a string, it is a pin
+name. Otherwise, it must be a `PWMInit` object.
+* Returns: a PWMPin object that can be used to set the period and
+pulse width.
 
-### pme.forget()
+The `init` object lets you set the pin channel number with the `pin`
+property.  You can use a pin name like "PWM_0.2", where "PWM_0" is the
+name of a Zephyr pwm controller device for your board and 210 is the
+pin/channel number. This will work on any board as long as you find
+the right values in the Zephyr documentation. For boards with specific
+ZJS support (currently: Arduino 101 and FRDM-K64F), you can use
+friendly names.
 
-Clear any data committed to the network, making the network ready to learn again.
+*Arduino 101*
+For the A101, you can use numbers 0-3, strings "PWM0" through "PWM3", or the
+corresponding digital pin names "IO3", "IO5", "IO6", and "IO9".
 
-### pme.configure(context, classificationMode, distanceMode, minInfluence, maxInfluence)
-* `context` *unsigned short* This value has a range between 1-127. A context value of 0 enables all neurons, with no regard to their context.
-* `classificationMode` *unsigned short* The classifying function to use. Valid values are: PME.RBF_MODE (default) or PME.KNN_MODE.
-* `distanceMode` *unsigned short* The distance function to use. Valid values are: PME.LSUP_DISTANCE or PME.L1_DISTANCE.
-* `minInfluence` *unsigned short*  The minimum influence value used on the neuron.
-* `maxInfluence` *unsigned short* The maximum influence value used on the neuron.
+*FRDM-K64F*
+For the K64F, you can use numbers 0-11, strings "D3", "D5" through "D13",
+and "A4" and "A5".
 
-Configure the engine with parameters used for training data.
+The term 'channel' refers to multiple channels on the PWM controller
+hardware, but these are connected to output pins, so the hardware user
+should think of them as pins.
 
-### pme.learn(pattern, category)
-* `pattern` *array of bytes* An array of bytes up to 128 bytes in length.
-* `category` *unsigned long* Indicates to the PME to which category this training vector belongs; that is, if a future input has a sufficiently similar pattern, it will be classified as the same category as the passed-in pattern.
+The `reversePolarity` value should flip the signal if set to 'reverse', meaning
+the signal will be off (low) for the pulseWidth, and on (high) for the
+rest of the period.
 
-Takes a pattern and commits it to the network as training data for a given category.
+PWMPin API
+----------
 
-### pme.classify(pattern)
-* `pattern` *array of bytes* An array of bytes up to 128 bytes in length.
-* Returns: `PME.NO_MATCH` if the input data did not match any of the trained categories. Otherwise, the trained category assigned by the network will be returned.
+### pin.setCycles(period, pulseWidth)
+* `period` *unsigned long*
+* `pulseWidth` *unsigned long*
 
-Takes a pattern and uses the committed neurons in the network to classify the pattern.
+Sets the repeat period and pulse width for the signal, in terms of hardware
+cycles. One hardware cycle is the minimum amount of time the hardware supports
+having the pulse signal on (high).
 
-### pme.readNeuron(id)
-* `id` *unsigned long* A value between 1-128 representing a specific neuron.
-* Returns: the `Neuron` object in which to write the neuron data.
+Throws an error if pulseWidth is greater than period.
 
-Read a specific neuron by its ID.
+This version of the API is useful when the duty cycle is what matters (e.g.,
+using the 'analog' model of PWM control described in the
+[Introduction](#introduction)). For example, a period of 20 with a pulse width
+of 10 will make an LED at 50% brightness, with no flicker because the changes
+occur far faster than visible to the human eye.
 
-### pme.writeVector(pattern)
-* `pattern` *array of bytes* An array of bytes up to 128 bytes in length.
+### pin.setMilliseconds(periodMS, pulseWidthMS)
+* `periodMS` *double*  Signal repeat period.
+* ` pulseWidthMS` *double* Signal pulse width.
 
-(Should only be used in KNN_MODE.) Takes a pattern and uses the committed neurons in the network to classify the pattern.
+Sets the repeat period and pulse width for the signal. The values are given in
+milliseconds, so these can be fractional to provide microsecond
+timings, for example.
+The actual resolution available will depend on the hardware, so the value you
+provide may get rounded.
+*TODO: We could probably have the period attribute show the actual setting for
+the device when it is read back.*
 
-### pme.getCommittedCount()
-*Returns: the number of comitted neurons in the network (a value between 0-128).
+Throws an error if pulseWidth is greater than period.
 
-Gets the number of committed neurons in the network.
-
-### pme.getGlobalContext()
-* Returns: the contents of the Global Context Register (a value between 0-127).
-
-Reads the Global Context Register.
-
-### pme.getClassifierMode()
-* Returns: the classifying function being used. Possible values are: PME.RBF_MODE or PME.KNN_MODE.
-
-Gets the classifying function being used by the network.
-
-### pme.setClassifierMode(mode)
-* `mode` *unsigned short* The classifying function to use. Valid values are: PME.RBF_MODE (default) or PME.KNN_MODE.
-
-Sets the classifying function to be used by the network.
-
-### pme.getDistanceMode()
-* Returns: the distance function being used. Possible values are: PME.LSUP_DISTANCE or PME.L1_DISTANCE.
-
-Gets the distance function being used by the network.
-
-### pme.setDistanceMode(mode)
-* `mode` *unsigned short* The distance function to use. Valid values are: PME.LSUP_DISTANCE or PME.L1_DISTANCE.
-
-Sets the distance function to be used by the network.
-
-### pme.saveNeurons()
-* Returns: an array of JSON objects.
-
-Export committed neuron data into an array of JSON objects in the following format, maximum number of objects to save is 128:
-
-`{
-     "category": 100,
-     "context": 1,
-     "AIF": 40,
-     "minIF": 2,
-     "vector": [10,10,10,10] // up to 128 bytes
- }`
-
-### pme.restoreNeurons(objects)
-* `objects` *array of JSON objects*
-
-Restore neurons in an array of JSON objects in the following format, maximum number of objects to restore is 128:
-
-`{
-     "category": 100,
-     "context": 1,
-     "AIF": 40,
-     "minIF": 2,
-     "vector": [10,10,10,10] // up to 128 bytes
- }`
+This version of the API is useful when the timing of the pulse matters (e.g.,
+the 'servo' model of PWM control described in the
+[Introduction](#introduction)).
 
 Sample Apps
 -----------
-* [PME sample](../samples/PME.js)
-* [PME Save and Restore sample](../samples/PMESaveRestore.js)
+* [PWM sample](../samples/PWM.js)
+* [Arduino Fade sample](../samples/arduino/basics/Fade.js)
+* [WebBluetooth Demo](../samples/WebBluetoothDemo.js)
