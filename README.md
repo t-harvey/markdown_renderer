@@ -8,7 +8,7 @@ ZJS API for UDP datagram sockets
 * [DgramSocket API](#dgramsocket-api)
   * [DgramSocket.on(event, callback)](#dgramsocketonevent-callback)
   * [DgramSocket.bind(port, ip_addr)](#dgramsocketbindport-ip_addr)
-  * [DgramSocket.send(buf, offset, len, port, ip_addr, cb)](#dgramsocketsendbuf-offset-len-port-ip_addr-cb)
+  * [DgramSocket.send(buf, offset, len, port, ip_addr, [cb])](#dgramsocketsendbuf-offset-len-port-ip_addr-cb)
   * [DgramSocket.close](#dgramsocketclose)
 * [Sample Apps](#sample-apps)
 
@@ -27,27 +27,19 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 <pre>
 // require returns a socket factory object
 // var dgram = require('dgram');
-<p><p>
 [ReturnFromRequire]
 interface Dgram {
     DgramSocket createSocket(string udp4_or_udp6);
-};
-<p>
-[ExternalInterface=(buffer,Buffer)]
+};<p>[ExternalInterface=(Buffer)]
 interface DgramSocket {
     void on(string event, RecvCallback cb);
     void bind(long port, string ip_addr);
     void send(Buffer buf, unsigned long offset, unsigned long len, long port,
               string ip_addr, optional SendCallback cb);
     void close();
-};
-<p>
-callback RecvCallback = void (Buffer msg, RemoteInfo rinfo);
+};<p>callback RecvCallback = void (Buffer msg, RemoteInfo rinfo);
 callback SendCallback = void (Error err);  // or undefined if no error
-<p>
-callback EventCallback = void (any... args);  // callback args depend on event
-<p>
-dictionary RemoteInfo {
+callback EventCallback = void (any... args);  // callback args depend on event<p>dictionary RemoteInfo {
     string ip_addr;
     string family;
     long port;
@@ -92,7 +84,7 @@ IP addresses are allowed. At the time of writing, local interface
 addresses are hardcoded to be: `'192.0.2.1'` (IPv4) and `'2001:db8::1'`
 (IPv6), but these will become configurable in the future.
 
-### DgramSocket.send(buf, offset, len, port, ip_addr, cb)
+### DgramSocket.send(buf, offset, len, port, ip_addr, [cb])
 * `buf` *Buffer*
 * `offset` *unsigned long*
 * `len` *unsigned long*
