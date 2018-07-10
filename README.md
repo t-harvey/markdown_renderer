@@ -37,7 +37,8 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 [ReturnFromRequire]
 interface WebSocket {
     WebSocketServer Server(object options);
-};<p>[ExternalInterface=(EventEmitter)]
+};<p>
+[ExternalInterface=(EventEmitter)]
 interface WebSocketServer: EventEmitter{};<p>[ExternalInterface=(Buffer),]
 interface WebSocketConnection: EventEmitter {
     void send(Buffer data, boolean mask);
