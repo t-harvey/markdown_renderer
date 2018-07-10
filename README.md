@@ -77,7 +77,7 @@ interface PME {
     attribute unsigned short KNN_MODE;       // KNN classification mode
     attribute unsigned short L1_DISTANCE;    // L1 distance mode
     attribute unsigned short LSUP_DISTANCE;  // LSUP distance mode
-    attribute unsigned long NO_MATCH;        // indicate a pattern could not
+    attribute unsigned long NO_MATCH;        // indicates a pattern could not
                                              // be classified
     attribute unsigned short MIN_CONTEXT;    // minimum context value
     attribute unsigned short MAX_CONTEXT;    // maximum context value
