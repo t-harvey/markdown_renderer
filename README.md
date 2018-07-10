@@ -1,19 +1,24 @@
-ZJS API for Timers
-==================
+Zephyr.js API for UART
+======================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class: Timers](#timers-api)
-  * [timers.setInterval(func, delay, args_for_func)](#timerssetintervalfunc-delay-args_for_func)
-  * [timers.setTimeout(func, delay, args_for_func)](#timerssettimeoutfunc-delay-args_for_func)
-  * [timers.clearInterval(intervalID)](#timersclearintervalintervalid)
-  * [timers.clearTimeout(timeoutID)](#timerscleartimeouttimeoutid)
-* [Sample Apps](#sample-apps)
+* [Class UART](#uart-api)
+  * [uart.init(options)](#uartinitoptions)
+* [UARTConnection API](#uartconnection-api)
+  * [Event: 'read'](#event-read)
+  * [uartConnection.write(data)](#uartconnectionwritedata)
+  * [uartConnection.setReadRange(min, max)](#uartconnectionsetreadrangemin-max)
 
 Introduction
 ------------
-ZJS provides the familiar setTimeout and setInterval interfaces. They are always
-available.
+The UART module supports both read and write capabilities. Writes are
+done through the 'write' function, and reads are done via a callback function property that
+can be set. Read and write data should be a JavaScript string.
+
+The module can be used on both QEMU and the Arduino 101. When using QEMU, you
+can just type directly into the terminal console. For the Arduino 101, UART is
+read/written from the serial console just as print does.
 
 Web IDL
 -------
@@ -23,52 +28,57 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 <details>
 <summary>Click to show WebIDL</summary>
-<pre>
-// require returns a Timers object
-// var timers = require('timers');
-[ReturnFromRequire]
-interface Timers {
-    intervalID setInterval(TimerCallback func, unsigned long delay, any... args_for_func);
-    timeoutID setTimeout(TimerCallback func, unsigned long delay, any... args_for_func);
-    void clearInterval(long intervalID);
-    void clearTimeout(long timeoutID);
-};<p>
-callback TimerCallback = void (any... callback_args);
-<p>typedef long timeoutID;
-typedef long intervalID;</pre>
+<pre>// require returns a UART object
+// var uart = require('uart');
+interface UART {
+    UARTConnection init(UARTOptions options);
+};<p>dictionary UARTOptions {
+    string port;
+    // long baud = 115200;
+    // long dataBits = 8;
+    // long stopBits = 1;
+    // UARTParity parity = "none";
+    // boolean flowControl = false;
+};<p>[ExternalInterface=(Buffer),ExternalInterface=(EventEmitter)]
+interface UARTConnection: EventEmitter {
+    // void close();
+    void write(Buffer data);
+    void setReadRange(long min, long max);
+};<p>enum UARTParity { "none", "event", "odd" };
+</pre>
 </details>
 
-Timers API
-----------
-### timers.setInterval(func, delay, args_for_func)
-* `func` *TimerCallback* A callback function that will take the arguments passed in the variadic `args_for_func` parameter.
-* `delay` *unsigned long* The `delay` argument is in milliseconds. Currently, the delay resolution is about 10 milliseconds, and if you choose a value less than that it will probably fail.
-* `args_for_func` *any* The user can pass an arbitrary number of additional arguments that will then be passed to `func`.
-* Returns: an `intervalID` value that can be passed to `clearInterval` to stop the timer.
+UART API
+--------
+### uart.init(options)
+* `options` *UARTOptions* The `UARTOptions` object lets you choose the
+  UART device/port you would like to initialize. The Arduino 101, for
+  example, should be "tty0".
+* Returns: UARTConnection interface, described below.
 
-Every `delay` milliseconds, your callback function will be called.
+UARTConnection API
+------------------
 
-### timers.setTimeout(func, delay, args_for_func)
-* `func` *TimerCallback* A callback function that will take the arguments passed in the variadic `args_for_func` parameter.
-* `delay` *unsigned long* The `delay` argument is in milliseconds. Currently, the delay resolution is about 10 milliseconds.
-* `args_for_func` *any* The user can pass an arbitrary number of additional arguments that will then be passed to `func`.
-* Returns: a `timeoutID` that can be passed to `clearTimeout` to stop the timer.
+A UARTConnection is an [EventEmitter](./events.md) with the following events:
 
-After `delay` milliseconds, your callback function will be called *one time*.
+### Event: 'read'
+* `Buffer` `data`
 
-### timers.clearInterval(intervalID)
-* `intervalID` *long* This value was returned from a call to `setInterval`.
+Emitted when data is received on the UART RX line. The `data` parameter is a
+`Buffer` with the received data.
 
-That interval timer will be cleared and its callback function
-no longer called.
+### uartConnection.write(data)
+* `data` *Buffer* The data to be written.
 
-### timers.clearTimeout(timeoutID)
-* `timeoutID` *long* This value was returned from a call to `setTimeout`.
+Write data out to the UART TX line.
 
-The `timeoutID` timer will be cleared and its callback function will not be
-called.
+### uartConnection.setReadRange(min, max);`
+* `min` *long* The minimum number of bytes for triggering the `onread` event.
+* `max` *long* The maximum number of bytes for triggering the `onread` event.
+
+Whenever at least the `min` number of bytes is available, a `Buffer` object
+containing at most `max` number of bytes is sent with the `onread` event.
 
 Sample Apps
 -----------
-* [Timers sample](../samples/Timers.js)
-* [Spaceship2 sample](../samples/arduino/starterkit/Spaceship2.js)
+* [UART sample](../samples/UART.js)
