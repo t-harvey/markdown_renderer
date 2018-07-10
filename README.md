@@ -30,7 +30,7 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 [ReturnFromRequire]
 interface Dgram {
     DgramSocket createSocket(string udp4_or_udp6);
-};
+};<p>
 [ExternalInterface=(Buffer)]
 interface DgramSocket {
     void on(string event, RecvCallback cb);
