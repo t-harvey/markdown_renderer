@@ -61,8 +61,7 @@ interface BLE: EventEmitter {
 dictionary PrimaryService {
     string uuid;
     sequence < Characteristic > characteristics;
-};
-<p>
+};<p>
 dictionary CharacteristicInit {
     string uuid;
     sequence < string > properties;                // 'read', 'write', 'notify'
