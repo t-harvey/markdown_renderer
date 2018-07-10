@@ -53,6 +53,7 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 interface SPI {
     SPIBus open(SPIOptions init);
 };
+
 dictionary SPIOptions {
     octet bus;
     long speed;  // bus clock frequency in Hz
