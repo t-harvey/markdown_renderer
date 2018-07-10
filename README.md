@@ -47,16 +47,13 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 <pre>
 // require returns a PWM object
 // var pwm = require('pwm');
-<p>
 [ReturnFromRequire]
 interface PWM {
-    PWMPin open((number or string or PWMInit) init);
-};<p>
-dictionary PWMInit {
-    (number or string) pin;
+    PWMPin open((long or string or PWMInit) init);
+};<p>dictionary PWMInit {
+    (long or string) pin;
     boolean reversePolarity = false;
-};<p>
-interface PWMPin {
+};<p>interface PWMPin {
     void setCycles(unsigned long period, unsigned long pulseWidth);
     void setMilliseconds(double period, double pulseWidth);
 };</pre>
@@ -66,7 +63,7 @@ PWM API
 -------
 ### pwm.open(init)
 
-* `init` *number of string or PWMInit* A numerical argument indicates
+* `init` *long of string or PWMInit* A numerical argument indicates
 a pin channel number. If the argument is a string, it is a pin
 name. Otherwise, it must be a `PWMInit` object.
 * Returns: a PWMPin object that can be used to set the period and
