@@ -1,132 +1,182 @@
-ZJS API for General Purpose I/O (GPIO)
-======================================
+ZJS API for Grove LCD
+=====================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class GPIO](#gpio-api)
-  * [GPIO.open(init)](#gpioopeninit)
-* [Class GPIOPin](#gpiopin-api)
-  * [pin.read()](#pinread)
-  * [pin.write()](#pinwritevalue)
-  * [pin.close()](#pinclose)
-  * [pin.onchange](#pinonchange)
+* [GroveLCD API](#grovelcd-api)
+  * [grove_lcd.init()](#grove_lcdinit)
+* [GroveLCDDevice API](#grovelcddevice-api)
+  * [groveLCDDevice.print(string text)](#grovelcddeviceprinttext)
+  * [groveLCDDevice.clear()](#grovelcddeviceclear)
+  * [groveLCDDevice.setCursorPos(col, row)](#grovelcddevicesetcursorposcol-row)
+  * [groveLCDDevice.selectColor(index)](#grovelcddeviceselectcolorindex)
+  * [groveLCDDevice.setColor(r, g, b)](#grovelcddevicesetcolorr-g-b)
+  * [groveLCDDevice.setFunction(config)](#grovelcddevicesetfunctionconfig)
+  * [groveLCDDevice.getFunction()](#grovelcddevicegetfunction)
+  * [groveLCDDevice.setDisplayState(config)](#grovelcddevicesetdisplaystateconfig)
+  * [GroveLCDDevice.getDisplayState()](#grovelcddevicegetdisplaystate)
+
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The GPIO API supports digital I/O pins. Pins can be configured as inputs or
-outputs, with some board-specific limitations.
-
-The GPIO API intends to follow the [iot-js-api specification](https://github.com/intel/iot-js-api/tree/master/board/gpio.md),
-but both that and ZJS are under a lot of change at the moment.
+The Grove LCD API is the JavaScript version of the Zephyr API that supports the
+Grove LCD.  It works over I2C to allow user to send text to the LCD screen
+and also configure the LCD to different RGB backlight colors.
 
 Web IDL
 -------
-This IDL provides an overview of the interface; see below for documentation of
-specific API functions.  We have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+This IDL provides an overview of the interface; see below for
+documentation of specific API functions.  We have a short document
+explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 <details>
-<summary> Click to show/hide WebIDL</summary>
-<pre>
-// require returns a GPIO object
-// var gpio = require('gpio');
+<summary>Click to show WebIDL</summary>
+<pre>// require returns a GroveLCD object
+// var grove_lcd = require('grove_lcd');
 [ReturnFromRequire]
-interface GPIO {
-    GPIOPin open( (long or string or GPIOInit) init);
-};<p>
-dictionary GPIOInit {
-    (long or string) pin;
-    boolean activeLow = false;
-    GPIOMode  mode =  "out";
-    GPIOEdge  edge =  "none";
-    GPIOState state = "none";
-};<p>interface GPIOPin {
-    long read();
-    void write(long value);
-    void close();
-    attribute ChangeCallback onchange;
-};<p>callback ChangeCallback = void (GPIOEvent event);<p>dictionary GPIOEvent {
-    long value;
-};<p>enum GPIOMode  { "out", "in" };
-enum GPIOEdge  { "none", "rising", "falling", "any" };
-enum GPIOState { "none", "up", "down" };</pre>
+interface GroveLCD {
+    GroveLCDDevice init();
+    attribute unsigned long GLCD_FS_8BIT_MODE;
+    attribute unsigned long GLCD_FS_ROWS_2;
+    attribute unsigned long GLCD_FS_ROWS_1;
+    attribute unsigned long GLCD_FS_DOT_SIZE_BIG;
+    attribute unsigned long GLCD_FS_DOT_SIZE_LITTLE;
+<p>
+    attribute unsigned long GLCD_DS_DISPLAY_ON;
+    attribute unsigned long GLCD_DS_DISPLAY_OFF;
+    attribute unsigned long GLCD_DS_CURSOR_ON;
+    attribute unsigned long GLCD_DS_CURSOR_OFF;
+    attribute unsigned long GLCD_DS_BLINK_ON;
+    attribute unsigned long GLCD_DS_BLINK_OFF;
+<p>
+    attribute unsigned long GLCD_IS_SHIFT_INCREMENT;
+    attribute unsigned long GLCD_IS_SHIFT_DECREMENT;
+    attribute unsigned long GLCD_IS_ENTRY_LEFT;
+    attribute unsigned long GLCD_IS_ENTRY_RIGHT;
+<p>
+    attribute unsigned long GROVE_RGB_WHITE;
+    attribute unsigned long GROVE_RGB_RED;
+    attribute unsigned long GROVE_RGB_GREEN;
+    attribute unsigned long GROVE_RGB_BLUE;
+};<p>interface GroveLCDDevice {
+    void print(string text);
+    void clear();
+    void setCursorPos(unsigned long col, unsigned long row);
+    void selectColor(unsigned long index);
+    void setColor(unsigned long r, unsigned long g, unsigned long b);
+    void setFunction(unsigned long config);
+    unsigned long getFunction();
+    void setDisplayState(unsigned long config);
+    unsigned long getDisplayState();
+};</pre>
 </details>
 
-GPIO API
---------
-### gpio.open(init)
-* `init` *long or string or GPIOInit* If the argument is a number, it is a pin number. If it is a
-string, it is a pin name. Otherwise, it must be a GPIOInit object.
-* Returns: a GPIOPin object that can be used to read or write the pin.
+GroveLCD API
+------------
+### grove_lcd.init()
+* Returns: a GroveLCDDevice object that can be used to
+talk to the Grove LCD panel.
 
-If the pin number or name is valid for the given board, the call will succeed.
-You can use a pin name like "GPIO_0.10" where "GPIO_0" is the name of a Zephyr
-gpio port device for your board and 10 is the pin number. This will work on any
-board as long as you find the right values in Zephyr documentation. But for
-boards with specific ZJS support, you can use friendly names. Currently, this
-means Arduino 101 and FRDM-K64F. For the A101, you can use numbers 0-13 or
-strings "IO0" through "IO13", as well as "LED0" through "LED2". For K64F, you
-can use numbers 0-15 or strings "D0" through "D15", as well as "LEDR", "LEDG",
-and "LEDB" for the RGB LED, and "SW2" and "SW3" for onboard switches.
+Initializes the Grove LCD panel.
 
-The GPIOInit object can take a string or number as the pin argument,
-and all of the rest of the fields are optional. The `activeLow`
-setting determines whether high (default) or low means active. When
-you read or write a boolean value, true means 'active' and false means
-'inactive'.
+*NOTE: Zephyr's Grove LCD API is on top of the I2C, which is only accessible
+from the ARC side on the Arduino 101, so all the APIs in here will use the
+IPM to send commands over to the API, and all this API will be synchronous.*
 
-The `mode` value determines whether the pin is an input ('in') or output
-('out').
+GroveLCDDevice API
+------------------
+### groveLCDDevice.print(text)
+* `text` *string* The text to be printed.
 
-The `edge` value is for input pins and tells whether the `onchange` callback
-will be called on the rising edge of the signal, falling edge, or both.
+Send text to the screen on the current line cursor is set to,
+if the text is longer than number of characters it can fit on that line,
+any additional characters will not wrap around and be dropped,
+so a 16x2 LCD will have a maximum of 16 characters.
 
-The `state` value is useful when the architecture has an internal
-pullup or pulldown resistor. This would be used for inputs to provide
-a default (high or low) when the input is floating (not being
-intentionally driven to a particular value).
+### groveLCDDevice.clear()
 
-*NOTE: When we last checked, Zephyr did not use this state setting, at least for
-Arduino 101. Perhaps there is no hardware support, but in any case, it didn't
-work. You can always provide an external resistor for this purpose instead.*
+Clear the current display.
 
-GPIOPin API
------------
-### pin.read()
-* Returns: the current reading from the pin.
+### groveLCDDevice.setCursorPos(col, row)
+* `col` *unsigned long* The column for the cursor to be moved to (0-15).
+* `row` *unsigned long* The row the column should be moved to (0 or 1).
 
-This is a synchronous function, because it is nearly
-instantaneous on the devices we've tested with so far. The value will
-be 1 if the pin is active (high by default, low for a pin configured
-active low), 0 if inactive.
+Set text cursor position for the next print.
 
-### pin.write(value)
-* `value` *long*  Pass 1 for `value` to make an output pin active
-(high by default, low for a pin configured active low), 0 to make it inactive.
+### groveLCDDevice.selectColor(index)
+* `index` *unsigned long* The color selection, as defined, below.
 
-### pin.close()
+Set LCD background to a predfined color.
 
-Free up resources associated with the pin. The onchange function for this pin
-will no longer be called, and the object should not be used for reading and
-writing anymore.
+The `index` should be a one of the following color selections:
 
-### pin.onchange
+GroveLCD.GROVE_RGB_WHITE
 
-* `onchange` *ChangeCallback*
+GroveLCD.GROVE_RGB_RED
 
-Set this attribute to a function that will receive events whenever the pin
-changes according to the edge condition specified at pin initialization. The
-event object contains a `value` field with the current pin state.
+GroveLCD.GROVE_RGB_GREEN
+
+GroveLCD.GROVE_RGB_BLUE
+
+### groveLCDDevice.setColor(r, g, b)
+* `r` *unsigned long* The numeric value for the red color (max is 255).
+* `g` *unsigned long* The numeric value for the green color (max is 255).
+* `b` *unsigned long* The numeric value for the blue color (max is 255).
+
+Set LCD background to custom RGB color value.
+
+### groveLCDDevice.setFunction(config)
+* `config` *unsigned long* The bit mask to change the display state, as described, below.
+
+This function provides the user the ability to change the state
+of the display, controlling things like the number of rows,
+dot size, and text display quality.
+
+The `config` bit mask can take the following configurations:
+
+GroveLCD.GLCD_FS_8BIT_MODE
+
+GroveLCD.GLCD_FS_ROWS_2
+
+GroveLCD.GLCD_FS_ROWS_1
+
+GroveLCD.GLCD_FS_DOT_SIZE_BIG
+
+GroveLCD.GLCD_FS_DOT_SIZE_LITTLE
+
+### groveLCDDevice.getFunction()
+*Returns: the function-features set associated with the device.
+
+### groveLCDDevice.setDisplayState(config)
+* `config` *unsigned long* The bit mask to change the display state, as described, below.
+
+This function provides the user the ability to change the state
+of the display, controlling things like powering on or off
+the screen, the option to display the cursor or not, and the ability to
+blink the cursor.
+
+The `config` is bit mask of the following configurations:
+
+GroveLCD.GLCD_DS_DISPLAY_ON
+
+GroveLCD.GLCD_DS_DISPLAY_OFF
+
+GroveLCD.GLCD_DS_CURSOR_ON
+
+GroveLCD.GLCD_DS_CURSOR_OFF
+
+GroveLCD.GLCD_DS_BLINK_ON
+
+GroveLCD.GLCD_DS_BLINK_OFF
+
+### GroveLCDDevice.getDisplayState()
+* Returns: the display-feature set associated with the device.
 
 Sample Apps
 -----------
-* GPIO input only
-  * [Arduino DigitalReadSerial sample](../samples/arduino/basics/DigitalReadSerial.js)
-* GPIO output only
-  * [Arduino Blink sample](../samples/arduino/basics/Blink.js)
-  * [RGB LED sample](../samples/RGB.js)
-* GPIO input/output
-  * [AutoButton sample](../samples/AutoButton.js)
-  * [Arduino Button sample](../samples/arduino/digital/Button.js)
-  * [ButtonLEDs sample](../samples/ButtonLEDs.js)
-  * [TwoButtons sample](../samples/TwoButtons.js)
+* Grove LCD only
+  * [Grove LCD sample](../samples/GroveLCD.js)
+* Demos
+  * [WebBluetooth Grove LCD Demo](../samples/WebBluetoothGroveLcdDemo.js)
+  * [Heart Rate Demo](../samples/HeartRateDemo.js)
