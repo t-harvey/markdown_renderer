@@ -57,8 +57,7 @@ interface BLE: EventEmitter {
 };<p>dictionary PrimaryServiceInit {
     string uuid;
     sequence < Characteristic > characteristics;
-};<p>
-dictionary PrimaryService {
+};<p>dictionary PrimaryService {
     string uuid;
     sequence < Characteristic > characteristics;
 };<p>
