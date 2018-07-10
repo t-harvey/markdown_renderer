@@ -1,161 +1,135 @@
-ZJS API for GFX
-===============
+ZJS API for General Purpose I/O (GPIO)
+======================================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class: GFX](#gfx-api)
-  * [gfx.init(screen_width, screen_height, init_screen, draw, [this])](#gfxinitscreen_width-screen_height-init_screen-draw-this)
-* [Class: GFXContext](#gfxcontext-api)
-  * [gfxcontext.fillRect(x_coord, y_coord, width, height, color)](#gfxcontextfillrectx_coord-y_coord-width-height-color)
-  * [gfxcontext.drawPixel(x_coord, y_coord, color)](#gfxcontextdrawpixelx_coord-y_coord-color)
-  * [gfxcontext.drawLine(x0_coord, y0_coord, x1_coord, y1_coord, color, [size])](#gfxcontextdrawlinex0_coord-y0_coord-x1_coord-y1_coord-color-size)
-  * [gfxcontext.drawVLine(x_coord, y_coord, height, color, [size])](#gfxcontextdrawvlinex_coord-y_coord-height-color-size)
-  * [gfxcontext.drawHLine(x_coord, y_coord, width, color, [size])](#gfxcontextdrawhlinex_coord-y_coord-width-color-size)
-  * [gfxcontext.drawRect(x_coord, y_coord, width, height, color, [size])](#gfxcontextdrawrectx_coord-y_coord-width-height-color-size)
-  * [gfxcontext.drawChar(x_coord, y_coord, char, color, [size])](#gfxcontextdrawcharx_coord-y_coord-char-color-size)
-  * [gfxcontext.drawString(x_coord, y_coord, str, color, [size])](#gfxcontextdrawstringx_coord-y_coord-str-color-size)
+* [Class GPIO](#gpio-api)
+  * [GPIO.open(init)](#gpioopeninit)
+* [Class GPIOPin](#gpiopin-api)
+  * [pin.read()](#pinread)
+  * [pin.write()](#pinwritevalue)
+  * [pin.close()](#pinclose)
+  * [pin.onchange](#pinonchange)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The GFX module provides a generic way to create pixel buffers that can
-be displayed on a display of some kind.  A JavaScript method for initializing
-the screen and drawing a data buffer are required to use it.
-See module/ST7735.js and samples/SPI_Screen.js for an example.
+The GPIO API supports digital I/O pins. Pins can be configured as inputs or
+outputs, with some board-specific limitations.
+
+The GPIO API intends to follow the [iot-js-api specification](https://github.com/intel/iot-js-api/tree/master/board/gpio.md),
+but both that and ZJS are under a lot of change at the moment.
 
 Web IDL
 -------
 This IDL provides an overview of the interface; see below for documentation of
-specific API functions.  We also have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+specific API functions.  We have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+
 <details>
 <summary> Click to show/hide WebIDL</summary>
 <pre>
-// require returns a GFX object
-// var gfx = require('gfx');
+// require returns a GPIO object
+// var gpio = require('gpio');
 [ReturnFromRequire]
-interface GFX {
-    GFXContext init(long screen_width, long screen_height, InitCallback init_screen,
-                    DrawingCallback draw, optional this this_object);
+interface GPIO {
+    GPIOPin open( (long or string or GPIOInit) init);
 };<p>
-interface GFXContext {
-    void fillRect(long x_coord, long y_coord, long width, long height,
-                  sequence < byte > color);
-    void drawPixel(long x_coord, long y_coord, sequence < byte > color);
-    void drawLine(long x0_coord, long y0_coord, long x1_coord,
-                  long y1_coord, sequence < byte > color, optional long size);
-    void drawVLine(long x_coord, long y_coord, long height, sequence < byte > color,
-                   optional long size);
-    void drawHLine(long x_coord, long y_coord, long width, sequence < byte > color,
-                   optional long size);
-    void drawRect(long x_coord, long y_coord, long width, long height,
-                  sequence < byte > color, optional long size);
-    void drawChar(long x_coord, long y_coord, byte char, sequence < byte > color,
-                  optional long size);
-    void drawString(long x_coord, long y_coord, string str, sequence < byte > color,
-                    optional long size);
-};<p>callback InitCallback = void (any... params);
-callback DrawingCallback = void (any... params);
-</pre>
+dictionary GPIOInit {
+    (long or string) pin;
+    boolean activeLow = false;
+    GPIOMode  mode =  "out";
+    GPIOEdge  edge =  "none";
+    GPIOState state = "none";
+};<p>
+interface GPIOPin {
+    long read();
+    void write(long value);
+    void close();
+    attribute ChangeCallback onchange;
+};<p>
+callback ChangeCallback = void (GPIOEvent event);<p>dictionary GPIOEvent {
+    long value;
+};<p>
+enum GPIOMode  { "out", "in" };
+enum GPIOEdge  { "none", "rising", "falling", "any" };
+enum GPIOState { "none", "up", "down" };</pre>
 </details>
 
-GFX API
--------
-### gfx.init(screen_width, screen_height, init_screen, draw, this)
-* `screen_width` *long* Width of the screen.
-* `screen_height` *long* Height of the screen.
-* `init_screen` *InitCallback*
-* `draw` *DrawingCallback*
-* `this` *object*
+GPIO API
+--------
+### gpio.open(init)
+* `init` *long or string or GPIOInit* If the argument is a number, it is a pin number. If it is a
+string, it is a pin name. Otherwise, it must be a GPIOInit object.
+* Returns: a GPIOPin object that can be used to read or write the pin.
 
-Initializes the GFX module with the screen size, an init function, and a draw
-callback.  A 'this' object can also be provided if needed.
+If the pin number or name is valid for the given board, the call will succeed.
+You can use a pin name like "GPIO_0.10" where "GPIO_0" is the name of a Zephyr
+gpio port device for your board and 10 is the pin number. This will work on any
+board as long as you find the right values in Zephyr documentation. But for
+boards with specific ZJS support, you can use friendly names. Currently, this
+means Arduino 101 and FRDM-K64F. For the A101, you can use numbers 0-13 or
+strings "IO0" through "IO13", as well as "LED0" through "LED2". For K64F, you
+can use numbers 0-15 or strings "D0" through "D15", as well as "LEDR", "LEDG",
+and "LEDB" for the RGB LED, and "SW2" and "SW3" for onboard switches.
 
-GFXContext API
---------------
-### gfxcontext.fillRect(x_coord, y_coord, width, height, color)
-* `x_coord` *long*
-* `y_coord` *long*
-* `width` *long*
-* `height` *long*
-* `color` *byte array*
+The GPIOInit object can take a string or number as the pin argument,
+and all of the rest of the fields are optional. The `activeLow`
+setting determines whether high (default) or low means active. When
+you read or write a boolean value, true means 'active' and false means
+'inactive'.
 
-Draws a solid rectangle of the given color at the coordinates provided.
+The `mode` value determines whether the pin is an input ('in') or output
+('out').
 
-### gfxcontext.drawPixel(x_coord, y_coord, color)
-* `x_coord` *long*
-* `y_coord` *long*
-* `color` *byte array*
+The `edge` value is for input pins and tells whether the `onchange` callback
+will be called on the rising edge of the signal, falling edge, or both.
 
-Draws a pixel of the given color at the coordinates provided.
+The `state` value is useful when the architecture has an internal
+pullup or pulldown resistor. This would be used for inputs to provide
+a default (high or low) when the input is floating (not being
+intentionally driven to a particular value).
 
-### gfxcontext.drawLine(x0_coord, y0_coord, x1_coord, y1_coord, color, [size])
-* `x0_coord` *long*
-* `y0_coord` *long*
-* `x1_coord` *long*
-* `y1_coord` *long*
-* `color` *byte array*
-* `size` *long* Optional.
+*NOTE: When we last checked, Zephyr did not use this state setting, at least for
+Arduino 101. Perhaps there is no hardware support, but in any case, it didn't
+work. You can always provide an external resistor for this purpose instead.*
 
+GPIOPin API
+-----------
+### pin.read()
+* Returns: the current reading from the pin.
 
-Draws a line of the given color at the coordinates provided.  The optional
-size number controls how thick the line is.
+This is a synchronous function, because it is nearly
+instantaneous on the devices we've tested with so far. The value will
+be 1 if the pin is active (high by default, low for a pin configured
+active low), 0 if inactive.
 
-### gfxcontext.drawVLine(x_coord, y_coord, height, color, [size])
-* `x_coord` *long*
-* `y_coord` *long*
-* `height` *long*
-* `color` *byte array*
-* `size` *long* Optional.
+### pin.write(value)
+* `value` *long*  Pass 1 for `value` to make an output pin active
+(high by default, low for a pin configured active low), 0 to make it inactive.
 
+### pin.close()
 
-Draws a vertical line of the given color at the coordinates provided.  The
-optional size number controls how thick the line is.
+Free up resources associated with the pin. The onchange function for this pin
+will no longer be called, and the object should not be used for reading and
+writing anymore.
 
-### gfxcontext.drawHLine(x_coord, y_coord, width, color, [size])
-* `x_coord` *long*
-* `y_coord` *long*
-* `width` *long*
-* `color` *byte array*
-* `size` *long* Optional.
+### pin.onchange
 
+* `onchange` *ChangeCallback*
 
-Draws a horizontal line of the given color at the coordinates provided.  The
-optional size number controls how thick the line is.
-
-### gfxcontext.drawRect(x_coord, y_coord, width, height, color, [size])
-* `x_coord` *long*
-* `y_coord` *long*
-* `width` *long*
-* `height` *long*
-* `color` *byte array*
-* `size` *long* Optional.
-
-
-Draws a hollow rectangle of the given color at the coordinates provided.  The
-optional size number controls how thick the line is.
-
-### gfxcontext.drawChar(x_coord, y_coord, char, color, [size])
-* `x_coord` *long*
-* `y_coord` *long*
-* `char` *byte*
-* `color` *byte array*
-* `size` *long* Optional.
-
-
-Draw a character at the coordinates given. The optional size number sets how
-large the character is.
-
-### gfxcontext.drawString(x_coord, y_coord, str, color, [size])
-* `x_coord` *long*
-* `y_coord` *long*
-* `str` *string*
-* `color` *byte array*
-* `size` *long* Optional.
-
-
-Draw a string at the coordinates given. The optional size number sets how
-large the character is.
+Set this attribute to a function that will receive events whenever the pin
+changes according to the edge condition specified at pin initialization. The
+event object contains a `value` field with the current pin state.
 
 Sample Apps
 -----------
-* [GFX sample](../samples/SPI_Screen.js)
+* GPIO input only
+  * [Arduino DigitalReadSerial sample](../samples/arduino/basics/DigitalReadSerial.js)
+* GPIO output only
+  * [Arduino Blink sample](../samples/arduino/basics/Blink.js)
+  * [RGB LED sample](../samples/RGB.js)
+* GPIO input/output
+  * [AutoButton sample](../samples/AutoButton.js)
+  * [Arduino Button sample](../samples/arduino/digital/Button.js)
+  * [ButtonLEDs sample](../samples/ButtonLEDs.js)
+  * [TwoButtons sample](../samples/TwoButtons.js)
