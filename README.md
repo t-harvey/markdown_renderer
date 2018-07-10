@@ -66,8 +66,7 @@ interface OCFObject {
     string coreSpecVersion;
 };<p>///////////////////////////////////////////
 // OCF Server
-///////////////////////////////////////////<p>[ExternalInterface=(eventemitter,
-EventEmitter)]
+///////////////////////////////////////////<p>[ExternalInterface=(EventEmitter)]
 interface OCFServer: EventEmitter {
     Promise<OCFResource> register(ResourceInit init);
 };<p>dictionary ResourceInit {
@@ -89,8 +88,7 @@ interface OCFServer: EventEmitter {
     Promise<void> respond(object data);
 };<p>///////////////////////////////////////////
 // OCF Client
-///////////////////////////////////////////<p>[ExternalInterface=(eventemitter,
-EventEmitter)]
+///////////////////////////////////////////<p>[ExternalInterface=(EventEmitter)]
 interface OCFClient: EventEmitter {
     Promise<Resource> findResources(ClientOptions options, optional FoundListener listener);
     Promise<Resource> retrieve(string deviceId, object options);
@@ -106,7 +104,9 @@ dictionary ClientResource {
     string deviceId;
     string resourceType;
     string resourcePath;
-};
+};<p>
+typedef long OCFResource; /* THIS WAS ADD JUST TO GET THIS FILE
+                             TO COMPILE!!! 7/6/18 */
 </pre>
 </details>
 
