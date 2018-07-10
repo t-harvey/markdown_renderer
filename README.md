@@ -1,28 +1,21 @@
-ZJS API for Web Sockets
-=======================
+ZJS API for I2C
+===============
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [WebSocket API](#websocket-api)
-  * [ws.Server(options)](#wsserveroptions)
-* [WebSocketServer API](#websocketserver-api)
-  * [Event: 'connection'](#event-connection)
-* [WebSocket API](#websocket-api)
-  * [Event: 'close'](#event-close)
-  * [Event: 'error'](#event-error)
-  * [Event: 'message'](#event-message)
-  * [Event: 'ping'](#event-ping)
-  * [Event: 'pong'](#event-pong)
-* [WebSocketConnection API](#websocketconnection-api)
-  * [webSocketConnection.send(data, mask)](#websocketconnectionsenddata-mask)
-  * [webSocketConnection.ping(data, mask)](#websocketconnectionpingdata-mask)
-  * [webSocketConnection.pong(data, mask)](#websocketconnectionpongdata-mask)
+* [I2C API](#i2c-api)
+  * [i2c.open(init)](#i2copeninit)
+* [I2CBus API](#i2cbus-api)
+  * [i2cBus.write(device, data)](#i2cbuswritedevice-data)
+  * [i2cBus.read(device, size, registerAddress)](#i2cbusreaddevice-size-registeraddress)
+  * [I2CBus.burstRead(device, size, registerAddress)](#i2cbusburstreaddevice-size-registeraddress)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The Web Socket API is modeled after Node.js' 'ws' module. This module only
-supports the Web Socket server portion of that API.
+The I2C API supports the I2C protocol, which allows multiple slave chips to
+communicate with one or more master chips.  Each I2C bus has two signals - SDA
+and SCL. SDA is the data signal and SCL is the clock signal.
 
 Web IDL
 -------
@@ -30,120 +23,76 @@ This IDL provides an overview of the interface; see below for
 documentation of specific API functions.  We have a short document
 explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
+<pre>
 <details>
 <summary>Click to show WebIDL</summary>
-<pre>// require returns a WebSocket object
-// var ws = require('ws');
+<<<<<<< HEAD
+<pre>// require returns a I2C object
+// var i2c = require('i2c');
 [ReturnFromRequire]
-interface WebSocket {
-    WebSocketServer Server(object options);
+interface I2C {
+    I2CBus open(I2CInit init);
 };<p>
-[ExternalInterface=(EventEmitter)]
-interface WebSocketServer: EventEmitter{};<p>[ExternalInterface=(Buffer),]
-interface WebSocketConnection: EventEmitter {
-    void send(Buffer data, boolean mask);
-    void ping(Buffer data, boolean mask);
-    void pong(Buffer data, boolean mask);
-};</pre>
+=======
+// require returns a I2C object
+// var i2c = require('i2c');
+
+[ReturnFromRequire]
+interface I2C {
+    I2CBus open(I2CInit init);
+};
+
+>>>>>>> 620b41acf983c00dd5cf4f49bd00584e68203026
+dictionary I2CInit {
+    octet bus;
+    I2CBusSpeed speed;
+};
+
+[ExternalInterface=(Buffer)]
+interface I2CBus {
+    // has all the properties of I2CInit as read-only attributes
+    void write(octet device, Buffer data);
+    void read(octet device, unsigned long size, octet registerAddress);
+    void burstRead(octet device, unsigned long size, octet registerAddress);
+};<p>typedef long I2CBusSpeed;
+</pre>
 </details>
 
-WebSocket API
--------------
+I2C API
+-------
+### i2c.open(init)
+* `init` *I2CInit* Lets you set the I2C bus you wish to use and the speed you
+want to operate at. Speed options are 10, 100, 400, 1000, and 34000. Speed is
+measured in kbs.
+* Returns: an I2CBus object.
 
-### ws.Server(options)
-* `options` *Object*
-* Returns: a WebSocketServer object.
+I2CBus API
+----------
+### i2cBus.write(device, data)
+* `device` *octet* The device address.
+* `data` *Buffer* The data to be written.
 
-Create a Web Socket server object. Options object may contain:
+Writes the data to the given device address. The first byte of data typically
+contains the register you want to write the data to.  This will vary from device
+to device.
 
-WebSocketServer API
--------------------
+### i2cBus.read(device, size, registerAddress)
+* `device` *octet* The device address.
+* `size` *unsigned long* The number of bytes of data to read.
+* `registerAddress` *octet* The register on the device from which to read.
 
-WebSocketServer is [EventEmitter](./events.md) with the following events:
+Reads 'size' bytes of data from the device at the registerAddress. The default
+value of registerAdress is 0x00;
 
-### Event: 'connection'
+### I2CBus.burstRead(device, size, registerAddress)
+* `device` *octet* The device address.
+* `size` *long* The number of bytes of data to read.
+* `registerAddress` *octet* The number of the starting address from which to read.
 
-* `WebSocketConnection` `conn`
-
-Emitted when a client has connected to the server. The argument to any
-registered listener will be a `WebSocketConnection` object which can be used to
-communicate with the client.
-```
-{
-    port : Port to bind to
-    backlog : Max number of concurrent connections
-    clientTracking : enable client tracking
-    maxPayload : set the max payload bytes per message
-    acceptHandler : handler to call to accept/deny connections
-}
-```
-The `acceptHandler` property sets a function handler to be called when there is
-a new connection. The argument will be an array of sub-protocols (Strings) that
-the client is requesting to use. To accept the connection, return one of these
-strings from the handler.
-
-Returns a `WebSocketServer` object.
-
-WebSocket API
--------------
-
-WebSocketServer is an [EventEmitter](./events.md) with the following events:
-
-### Event: 'close'
-
-Emitted when the web socket has closed.
-
-### Event: 'error'
-
-* `Error` `err`
-
-Emitted when the web socket has an error. They type of error can be found in
-the `err` object argument.
-
-### Event: 'message'
-
-* `Buffer` `data`
-
-Emitted when the web socket has received data. The data will be contained in
-the `data` Buffer argument.
-
-### Event: 'ping'
-
-* `Buffer` `data`
-
-Emitted when the socket has received a ping. The ping's payload is contained in
-the `data` argument.
-
-### Event: 'pong'
-
-* `Buffer` `data`
-
-Emitted when the socket has received a pong. The pong's payload is contained in
-the `data` argument.
-
-
-WebSocketConnection API
------------------------
-
-### webSocketConnection.send(data, mask)
-* `data` *Buffer* The data payload to send.
-* `mask` *boolean* Describes whether the data payload should be masked.
-
-Send data to the other end of the web socket connection.
-
-### webSocketConnection.ping(data, mask)
-* `data` *Buffer* Contains the data payload to send.
-* `mask` *boolean* Describes whether the data payload should be masked.
-
-Send a ping to the other end of the web socket connection.
-
-### webSocketConnection.pong(data, mask)
-* `data` *Buffer* The data payload to send.
-* `mask` *boolean* Describes whether the data payload should be masked.
-
-Send a pong to the other end of the web socket connection.
+Reads 'size' bytes of data from the device across multiple addresses starting
+at the registerAddress. The default value of registerAdress is 0x00;
 
 Sample Apps
 -----------
-* [Web Socket Server sample](../samples/websockets/WebSocketServer.js)
-* [Node Web Socket Client sample](../samples/websockets/NodeWebSocketClient.js)
+* [I2C sample](../samples/I2C.js)
+* [BMP280 temp](../samples/I2CBMP280.js)
