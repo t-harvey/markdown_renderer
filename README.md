@@ -6,7 +6,7 @@ ZJS API for Events
 * [Class: EventEmitter](#eventemitter-api)
   * [EventEmitter.on(event, listener)](#eventemitteronevent-listener)
   * [EventEmitter.addListener(event, listener)](#eventemitteraddlistenerevent-listener)
-  * [EventEmitter.emit(event, args...)](#eventemitteremitevent-args)
+  * [EventEmitter.emit(event, [args...])](#eventemitteremitevent-args)
   * [EventEmitter.removeListener(event, listener)](#eventemitterremovelistenerevent-listener)
   * [EventEmitter.removeAllListeners(event)](#eventemitterremovealllistenersevent)
   * [EventEmitter.eventNames()](#eventemittereventnames)
@@ -33,10 +33,10 @@ callback ListenerCallback = void (any... params);<p>interface EventEmitter {
     boolean emit(string event, any... args);
     this removeListener(string event, ListenerCallback listener);
     this removeAllListeners(string event);
-    sequence < string > eventNames(void);
-    number getMaxListeners(void);
+    sequence < string > eventNames();
+    long getMaxListeners();
     sequence < ListenerCallback > listeners(string event);
-    this setMaxListeners(number max);
+    this setMaxListeners(long max);
 };
 </pre>
 </details>
@@ -57,7 +57,7 @@ Add an event listener function.
 
 Same as `EventEmitter.on()`.
 
-### EventEmitter.emit(event, args...)
+### EventEmitter.emit(event, [args...])
 * `event` *string* The name of the event that you want to emit.
 * `args` *optional* All other arguments will be given to any registered listener functions.
 * Returns: true if there were any listener functions called.
@@ -97,7 +97,7 @@ Get the maximum number of listeners allowed for this event emitter object.
 Get a list of listeners for an event.
 
 ### EventEmitter.setMaxListeners(max)
-* `max` *number*  The number of listeners the event emitter can have.
+* `max` *long*  The number of listeners the event emitter can have.
 * Returns: `this`, so calls can be chained.
 
 Set the max number of listeners for an event emitter object
