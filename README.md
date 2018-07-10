@@ -99,8 +99,7 @@ interface OCFClient: EventEmitter {
     string deviceId;
     string resourceType;
     string resourcePath;
-};<p>callback FoundListener = void (ClientResource resource);
-dictionary ClientResource {
+};<p>callback FoundListener = void (ClientResource resource);<p>dictionary ClientResource {
     string deviceId;
     string resourceType;
     string resourcePath;
