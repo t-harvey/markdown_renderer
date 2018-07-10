@@ -29,7 +29,8 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <details>
 <summary>Click to show WebIDL</summary>
 <pre>// require returns a UART object
-// var uart = require('uart');<p><p>interface UART {
+// var uart = require('uart');
+interface UART {
     UARTConnection init(UARTOptions options);
 };<p>dictionary UARTOptions {
     string port;
@@ -38,12 +39,12 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
     // long stopBits = 1;
     // UARTParity parity = "none";
     // boolean flowControl = false;
-};<p>[ExternalInterface=(buffer,Buffer)]
+};<p>[ExternalInterface=(Buffer),ExternalInterface=(EventEmitter)]
 interface UARTConnection: EventEmitter {
     // void close();
     void write(Buffer data);
     void setReadRange(long min, long max);
-};<p>enum UARTParity { "none", "event", "odd" }
+};<p>enum UARTParity { "none", "event", "odd" };
 </pre>
 </details>
 
