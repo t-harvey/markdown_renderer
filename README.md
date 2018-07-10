@@ -1,115 +1,100 @@
-ZJS API for W3C Generic Sensors
-==============================
+ZJS API for SPI
+===============
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class: Sensor](#sensor-api)
-  * [onreading](#onreading)
-  * [onactivate](#onactivate)
-  * [onerror](#onerror)
-  * [sensor.start()](#sensorstart)
-  * [sensor.stop()](#sensorstop)
-* [Sample Apps](#sample-apps)
+* [SPI API](#spi-api)
+  * [spi.open(options)](#spiopenoptions)
+* [SPIBus API](#spibus-api)
+  * [spiBus.transceive(target, data, direction)](#spibustransceivetarget-data-direction)
+  * [spiBus.close()](#spibusclose)
 
 Introduction
 ------------
-ZJS Generic Sensor API implements the W3C Sensor API, and it's intended to
-provide a consistent API that allows apps to communicate with sensors like
-an accelerometer or gyroscope. Since the W3C Sensor API is still a draft spec,
-our implementation only provides a subset of the API -- and this API could be
-slightly different even though we try to follow the latest spec as closely as
-possible.
+The SPI API supports the Serial Peripheral Interface, a synchronous
+serial protocol that allows multiple slave chips to communicate with a
+master chip.  A single SPI bus uses the following pins: SCLK for
+clock, MOSI (Master Out, Slave In) for write, MISO (Master In, Slave
+Out) for read, and one or more SS (Slave Select) for selecting the
+slave device.
 
-Note: The currently supported hardware is Arduino 101 that has a
-built-in BMI160 chip with accelerometer, gyroscope, and temperature
-sensors.  The supported ambient light sensor is the Grove light sensor
-that comes with the Grove starter kit.  The light sensor can be
-connected using an analog pin.
+For each clock signal, one bit is written from the master to the
+selected slave, and one bit is read by the master from the selected
+slave, so there is one transceive operation, instead of a separate
+read and write.
+
+When a slave device's chip select is 0 (low), it communicates with the
+master; otherwise it ignores the master. The master can select
+multiple slaves in a write-only configuration; in this case, no slave
+is writing data, each only reads.
+
+Since the SS pins may be connected to slave chip select through a
+demultiplexer and thereby work as an address bus, slave devices are
+identified by an index in this API, rather than by SS pins. Also,
+since multiple SPI buses may be present on a board, these are
+identified by an index in this API. Implementations SHOULD encapsulate
+the mapping from SPI bus number and device number to the physical SPI
+pins.
+
+Note that on the Arduino 101, using SPI will cause one of the onboard LEDs to
+become unavailable.
 
 Web IDL
 -------
-
 This IDL provides an overview of the interface; see below for
 documentation of specific API functions.  We have a short document
 explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 <details>
 <summary>Click to show WebIDL</summary>
-<pre>
-interface Sensor {
-    readonly attribute boolean activated;   // whether the sensor is activated or not
-    readonly attribute boolean hasReading;  // whether the sensor has readings available
-    readonly attribute double timestamp;    // timestamp of the latest reading in milliseconds
-    attribute double frequency;             // sampling frequency in hertz
-    void start();                           // starts the sensor
-    void stop();                            // stops the sensor
-    attribute ChangeCallback onreading;     // callback handler for change events
-    attribute ActivateCallback onactivate;  // callback handler for activate events
-    attribute ErrorCallback onerror;        // callback handler for error events
-};<p>
-dictionary SensorOptions {
-    double frequency;  // desired frequency, default is 20 if unset
-};<p>interface SensorErrorEvent {
-    attribute Error error;
-};<p>callback ChangeCallback = void();
-callback ActivateCallback = void();
-callback ErrorCallback = void(SensorErrorEvent error);<p>[Constructor(optional AccelerometerOptions accelerometerOptions)]
-interface Accelerometer : Sensor {
-    readonly attribute double x;
-    readonly attribute double y;
-    readonly attribute double z;
-};<p>dictionary AccelerometerOptions : SensorOptions  {
-    string controller;       // controller name, default to "bmi160"
-};<p>[Constructor(optional SensorOptions sensorOptions)]
-interface GyroscopeSensor : Sensor {
-    readonly attribute double x;
-    readonly attribute double y;
-    readonly attribute double z;
-};<p>dictionary GyroscopeOptions : SensorOptions  {
-    string controller;  // controller name, default to "bmi160"
-};<p>[Constructor(optional SensorOptions sensorOptions)]
-interface AmbientLightSensor : Sensor {
-    readonly attribute unsigned long pin;
-    readonly attribute double illuminance;
-};<p>dictionary AmbientLightSensorOptions : SensorOptions  {
-    string controller;  // controller name, default to "ADC_0"
-    unsigned long pin;  // analog pin where the light is connected
-};<p>[Constructor(optional SensorOptions sensorOptions)]
-interface TemperatureSensor : Sensor {
-    readonly attribute double celsius;
-};<p>dictionary TemperatureSensorOptions : SensorOptions  {
-    string controller;  // controller name, default to "bmi160"
-};</pre></details>
+<pre>// require returns a SPI object
+// var spi = require('spi');
+[ReturnFromRequire]
+interface SPI {
+    SPIBus open(SPIOptions init);
+};
+dictionary SPIOptions {
+    octet bus;
+    long speed;  // bus clock frequency in Hz
+    boolean msbFirst;
+    long polarity;
+    long phase;
+    unsigned long frameGap;
+    string topology;
+};<p>[ExternalInterface=(Buffer)]
+interface SPIBus {
+    void transceive(octet target, Buffer data, string direction);
+    void close();
+};
+</pre>
+</details>
 
-Sensor API
+SPI API
+-------
+### spi.open(options)
+* `options` *SPIOptions* The `options` object lets you pass optional values to use instead of the defaults.
+* Returns: an SPIBus object.
+
+Note these `options` values can't be changed once the SPI object is
+created.  If you need to change the settings afterwards, you'll need
+to use the 'close' command and create a new SPI object with the
+settings you desire.
+
+SPIBus API
 ----------
+### spiBus.transceive(target, data, direction)
+* `target` *octet* The number identifying the slave.
+* `data` *Buffer* The data to be written to, and returned from, the slave.
+* `direction` *string*
 
-### onreading
-`Sensor.onreading`
+Writes data buffer using SPI to the slave identified by the target argument, and
+reads from the slave device into a readBuffer that is returned.  The read and
+write buffers are the same size.
 
-The onreading attribute is an EventHandler, which is called whenever a new reading is available.
+### spiBus.close()
 
-### onactivate
-`Sensor.onactivate`
-
-The onactivate attribute is an EventHandler which is called when the sensor is activated after calling start().
-
-### onerror
-`Sensor.onerror`
-
-The onactivate attribute is an EventHandler which is called whenever an exception cannot be handled synchronously.
-
-### sensor.start()
-
-Starts the sensor instance, the sensor will get callback on onreading whenever there's a new reading available.
-
-### sensor.stop()
-
-Stop the sensor instance, the sensor will stop reporting new readings.
+Closes the SPI connection.
 
 Sample Apps
 -----------
-* [Accelerometer sample](../samples/BMI160Accelerometer.js)
-* [Gyroscope sample](../samples/BMI160Gyroscope.js)
-* [Ambient Light sample](../samples/AmbientLight.js)
-* [Temperature sample](../samples/BMI160Temperature.js)
+* [SPI sample](../samples/SPI.js)
