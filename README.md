@@ -33,7 +33,8 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <details>
 <summary>Click to show WebIDL</summary>
 <pre>// require returns a GroveLCD object
-// var grove_lcd = require('grove_lcd');<p><p>[ReturnFromRequire]
+// var grove_lcd = require('grove_lcd');
+[ReturnFromRequire]
 interface GroveLCD {
     GroveLCDDevice init();
     attribute unsigned long GLCD_FS_8BIT_MODE;
@@ -65,9 +66,9 @@ interface GroveLCD {
     void selectColor(unsigned long index);
     void setColor(unsigned long r, unsigned long g, unsigned long b);
     void setFunction(unsigned long config);
-    attribute unsigned long getFunction();
+    unsigned long getFunction();
     void setDisplayState(unsigned long config);
-    attribute unsigned long getDisplayState();
+    unsigned long getDisplayState();
 };</pre>
 </details>
 
