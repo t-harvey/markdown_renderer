@@ -31,7 +31,8 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 <summary> Click to show/hide WebIDL</summary>
 <pre>
 // require returns a GFX object
-// var gfx = require('gfx');<p><p>[ReturnFromRequire]
+// var gfx = require('gfx');
+[ReturnFromRequire]
 interface GFX {
     GFXContext init(long screen_width, long screen_height, InitCallback init_screen,
                     DrawingCallback draw, optional this this_object);
