@@ -32,7 +32,8 @@ interface Timers {
     timeoutID setTimeout(TimerCallback func, unsigned long delay, any... args_for_func);
     void clearInterval(long intervalID);
     void clearTimeout(long timeoutID);
-};<p>callback TimerCallback = void (any... callback_args);
+};<p>
+callback TimerCallback = void (any... callback_args);
 <p>typedef long timeoutID;
 typedef long intervalID;</pre>
 </details>
