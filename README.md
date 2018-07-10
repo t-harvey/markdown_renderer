@@ -52,7 +52,8 @@ interface Net {
     long isIP(string input);
     boolean isIPv4(string input);
     boolean isIPv6(string input);
-};<p>[ExternalInterface=(EventEmitter),ExternalInterface=(Buffer),ExternalCallback=(ListenerCallback)]
+};<p>
+[ExternalInterface=(EventEmitter),ExternalInterface=(Buffer),ExternalCallback=(ListenerCallback)]
 interface Socket: EventEmitter {
     // Socket methods
     void connect(object options, optional ListenerCallback onconnect);
