@@ -53,8 +53,7 @@ interface GroveLCD {
     attribute unsigned long GLCD_IS_SHIFT_INCREMENT;
     attribute unsigned long GLCD_IS_SHIFT_DECREMENT;
     attribute unsigned long GLCD_IS_ENTRY_LEFT;
-    attribute unsigned long GLCD_IS_ENTRY_RIGHT;
-<p>
+    attribute unsigned long GLCD_IS_ENTRY_RIGHT; <p>
     attribute unsigned long GROVE_RGB_WHITE;
     attribute unsigned long GROVE_RGB_RED;
     attribute unsigned long GROVE_RGB_GREEN;
