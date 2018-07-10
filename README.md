@@ -90,7 +90,8 @@ callback FulfillSubscribeCallback = void (Buffer data);
 callback NotifyCallback = void (any... params);
 callback UnsubscribeCallback = void (any... params);
 enum CharacteristicResult { "RESULT_SUCCESS", "RESULT_INVALID_OFFSET",
-                            "RESULT_INVALID_ATTRIBUTE_LENGTH", "RESULT_UNLIKELY_ERROR" } ;<p>dictionary DescriptorInit {
+                            "RESULT_INVALID_ATTRIBUTE_LENGTH", "RESULT_UNLIKELY_ERROR" };
+dictionary DescriptorInit {
     string uuid;
     string value;
 };</pre>
