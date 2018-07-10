@@ -1,24 +1,28 @@
-Zephyr.js API for UART
-======================
+ZJS API for Web Sockets
+=======================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class UART](#uart-api)
-  * [uart.init(options)](#uartinitoptions)
-* [UARTConnection API](#uartconnection-api)
-  * [Event: 'read'](#event-read)
-  * [uartConnection.write(data)](#uartconnectionwritedata)
-  * [uartConnection.setReadRange(min, max)](#uartconnectionsetreadrangemin-max)
+* [WebSocket API](#websocket-api)
+  * [ws.Server(options)](#wsserveroptions)
+* [WebSocketServer API](#websocketserver-api)
+  * [Event: 'connection'](#event-connection)
+* [WebSocket API](#websocket-api)
+  * [Event: 'close'](#event-close)
+  * [Event: 'error'](#event-error)
+  * [Event: 'message'](#event-message)
+  * [Event: 'ping'](#event-ping)
+  * [Event: 'pong'](#event-pong)
+* [WebSocketConnection API](#websocketconnection-api)
+  * [webSocketConnection.send(data, mask)](#websocketconnectionsenddata-mask)
+  * [webSocketConnection.ping(data, mask)](#websocketconnectionpingdata-mask)
+  * [webSocketConnection.pong(data, mask)](#websocketconnectionpongdata-mask)
+* [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The UART module supports both read and write capabilities. Writes are
-done through the 'write' function, and reads are done via a callback function property that
-can be set. Read and write data should be a JavaScript string.
-
-The module can be used on both QEMU and the Arduino 101. When using QEMU, you
-can just type directly into the terminal console. For the Arduino 101, UART is
-read/written from the serial console just as print does.
+The Web Socket API is modeled after Node.js' 'ws' module. This module only
+supports the Web Socket server portion of that API.
 
 Web IDL
 -------
@@ -28,58 +32,117 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 <details>
 <summary>Click to show WebIDL</summary>
-<pre>// require returns a UART object
-// var uart = require('uart');
-interface UART {
-    UARTConnection init(UARTOptions options);
-};<p>
-dictionary UARTOptions {
-    string port;
-    // long baud = 115200;
-    // long dataBits = 8;
-    // long stopBits = 1;
-    // UARTParity parity = "none";
-    // boolean flowControl = false;
-};<p>[ExternalInterface=(Buffer),ExternalInterface=(EventEmitter)]
-interface UARTConnection: EventEmitter {
-    // void close();
-    void write(Buffer data);
-    void setReadRange(long min, long max);
-};<p>enum UARTParity { "none", "event", "odd" };
-</pre>
+<pre>// require returns a WebSocket object
+// var ws = require('ws');
+[ReturnFromRequire]
+interface WebSocket {
+    WebSocketServer Server(object options);
+};<p>[ExternalInterface=(EventEmitter)]
+interface WebSocketServer: EventEmitter{};<p>[ExternalInterface=(Buffer),]
+interface WebSocketConnection: EventEmitter {
+    void send(Buffer data, boolean mask);
+    void ping(Buffer data, boolean mask);
+    void pong(Buffer data, boolean mask);
+};</pre>
 </details>
 
-UART API
---------
-### uart.init(options)
-* `options` *UARTOptions* The `UARTOptions` object lets you choose the
-  UART device/port you would like to initialize. The Arduino 101, for
-  example, should be "tty0".
-* Returns: UARTConnection interface, described below.
+WebSocket API
+-------------
 
-UARTConnection API
-------------------
+### ws.Server(options)
+* `options` *Object*
+* Returns: a WebSocketServer object.
 
-A UARTConnection is an [EventEmitter](./events.md) with the following events:
+Create a Web Socket server object. Options object may contain:
 
-### Event: 'read'
+WebSocketServer API
+-------------------
+
+WebSocketServer is [EventEmitter](./events.md) with the following events:
+
+### Event: 'connection'
+
+* `WebSocketConnection` `conn`
+
+Emitted when a client has connected to the server. The argument to any
+registered listener will be a `WebSocketConnection` object which can be used to
+communicate with the client.
+```
+{
+    port : Port to bind to
+    backlog : Max number of concurrent connections
+    clientTracking : enable client tracking
+    maxPayload : set the max payload bytes per message
+    acceptHandler : handler to call to accept/deny connections
+}
+```
+The `acceptHandler` property sets a function handler to be called when there is
+a new connection. The argument will be an array of sub-protocols (Strings) that
+the client is requesting to use. To accept the connection, return one of these
+strings from the handler.
+
+Returns a `WebSocketServer` object.
+
+WebSocket API
+-------------
+
+WebSocketServer is an [EventEmitter](./events.md) with the following events:
+
+### Event: 'close'
+
+Emitted when the web socket has closed.
+
+### Event: 'error'
+
+* `Error` `err`
+
+Emitted when the web socket has an error. They type of error can be found in
+the `err` object argument.
+
+### Event: 'message'
+
 * `Buffer` `data`
 
-Emitted when data is received on the UART RX line. The `data` parameter is a
-`Buffer` with the received data.
+Emitted when the web socket has received data. The data will be contained in
+the `data` Buffer argument.
 
-### uartConnection.write(data)
-* `data` *Buffer* The data to be written.
+### Event: 'ping'
 
-Write data out to the UART TX line.
+* `Buffer` `data`
 
-### uartConnection.setReadRange(min, max);`
-* `min` *long* The minimum number of bytes for triggering the `onread` event.
-* `max` *long* The maximum number of bytes for triggering the `onread` event.
+Emitted when the socket has received a ping. The ping's payload is contained in
+the `data` argument.
 
-Whenever at least the `min` number of bytes is available, a `Buffer` object
-containing at most `max` number of bytes is sent with the `onread` event.
+### Event: 'pong'
+
+* `Buffer` `data`
+
+Emitted when the socket has received a pong. The pong's payload is contained in
+the `data` argument.
+
+
+WebSocketConnection API
+-----------------------
+
+### webSocketConnection.send(data, mask)
+* `data` *Buffer* The data payload to send.
+* `mask` *boolean* Describes whether the data payload should be masked.
+
+Send data to the other end of the web socket connection.
+
+### webSocketConnection.ping(data, mask)
+* `data` *Buffer* Contains the data payload to send.
+* `mask` *boolean* Describes whether the data payload should be masked.
+
+Send a ping to the other end of the web socket connection.
+
+### webSocketConnection.pong(data, mask)
+* `data` *Buffer* The data payload to send.
+* `mask` *boolean* Describes whether the data payload should be masked.
+
+Send a pong to the other end of the web socket connection.
 
 Sample Apps
 -----------
-* [UART sample](../samples/UART.js)
+* [Web Socket Server sample](../samples/websockets/WebSocketServer.js)
+* [Node Web Socket Client sample](../samples/websockets/NodeWebSocketClient.js)
