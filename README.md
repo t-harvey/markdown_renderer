@@ -60,8 +60,7 @@ interface BLE: EventEmitter {
 };<p>dictionary PrimaryService {
     string uuid;
     sequence < Characteristic > characteristics;
-};<p>
-dictionary CharacteristicInit {
+};<p>dictionary CharacteristicInit {
     string uuid;
     sequence < string > properties;                // 'read', 'write', 'notify'
     sequence < DescriptorInit > descriptors;
@@ -70,18 +69,14 @@ dictionary CharacteristicInit {
     SubscribeCallback onSubscribe;      // optional
     UnsubscribeCallback onUnsubscribe;  // optional
     NotifyCallback onNotify;            // optional
-};
-<p>
-interface Characteristic {
+};<p>interface Characteristic {
     attribute ReadCallback onReadRequest;
     attribute WriteCallback onWriteRequest;
     attribute SubscribeCallback onSubscribe;
     attribute UnsubscribeCallback onUnsubscribe;
     attribute NotifyCallback onNotify;
     attribute CharacteristicResult response;
-};
-<p>
-callback ReadCallback = void (unsigned long offset,
+};<p>callback ReadCallback = void (unsigned long offset,
                               FulfillReadCallback fulfillReadCallback);
 [ExternalInterface=(Buffer)]
 callback WriteCallback = void (Buffer data, unsigned long offset,
@@ -93,12 +88,8 @@ callback FulfillReadCallback = void (CharacteristicResult result, Buffer data);
 callback FulfillWriteCallback = void (CharacteristicResult result);
 callback FulfillSubscribeCallback = void (Buffer data);
 callback NotifyCallback = void (any... params);
-callback UnsubscribeCallback = void (any... params);
-<p>
-enum CharacteristicResult { "RESULT_SUCCESS", "RESULT_INVALID_OFFSET",
-                            "RESULT_INVALID_ATTRIBUTE_LENGTH", "RESULT_UNLIKELY_ERROR" } ;
-<p>
-dictionary DescriptorInit {
+callback UnsubscribeCallback = void (any... params);<p>enum CharacteristicResult { "RESULT_SUCCESS", "RESULT_INVALID_OFFSET",
+                            "RESULT_INVALID_ATTRIBUTE_LENGTH", "RESULT_UNLIKELY_ERROR" } ;<p>dictionary DescriptorInit {
     string uuid;
     string value;
 };</pre>
