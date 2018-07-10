@@ -1,22 +1,24 @@
-ZJS API for UDP datagram sockets
-================================
+ZJS API for Events
+==================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Dgram API](#dgram-api)
-  * [dgram.createSocket(type)](#dgramcreatesockettype)
-* [DgramSocket API](#dgramsocket-api)
-  * [DgramSocket.on(event, callback)](#dgramsocketonevent-callback)
-  * [DgramSocket.bind(port, ip_addr)](#dgramsocketbindport-ip_addr)
-  * [DgramSocket.send(buf, offset, len, port, ip_addr, [cb])](#dgramsocketsendbuf-offset-len-port-ip_addr-cb)
-  * [DgramSocket.close](#dgramsocketclose)
+* [Class: EventEmitter](#eventemitter-api)
+  * [EventEmitter.on(event, listener)](#eventemitteronevent-listener)
+  * [EventEmitter.addListener(event, listener)](#eventemitteraddlistenerevent-listener)
+  * [EventEmitter.emit(event, [args...])](#eventemitteremitevent-args)
+  * [EventEmitter.removeListener(event, listener)](#eventemitterremovelistenerevent-listener)
+  * [EventEmitter.removeAllListeners(event)](#eventemitterremovealllistenersevent)
+  * [EventEmitter.eventNames()](#eventemittereventnames)
+  * [EventEmitter.getMaxListeners()](#eventemittergetmaxlisteners)
+  * [EventEmitter.listeners(event)](#eventemitterlistenersevent)
+  * [EventEmitter.setMaxListeners(max)](#eventemittersetmaxlistenersmax)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The `dgram` API is based on a subset of the
-[corresponding module](https://nodejs.org/api/dgram.html) in Node.js.
-It allows you to send and receive UDP datagrams.
+ZJS provides event APIs that match `Node.js` `Event`s. We describe
+them here as there could be minor differences.
 
 Web IDL
 -------
@@ -25,87 +27,81 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 <details>
 <summary> Click to show/hide WebIDL</summary>
 <pre>
-// require returns a socket factory object
-// var dgram = require('dgram');
-[ReturnFromRequire]
-interface Dgram {
-    DgramSocket createSocket(string udp4_or_udp6);
-};<p>
-[ExternalInterface=(Buffer)]
-interface DgramSocket {
-    void on(string event, RecvCallback cb);
-    void bind(long port, string ip_addr);
-    void send(Buffer buf, unsigned long offset, unsigned long len, long port,
-              string ip_addr, optional SendCallback cb);
-    void close();
-};<p>callback RecvCallback = void (Buffer msg, RemoteInfo rinfo);
-callback SendCallback = void (Error err);  // or undefined if no error
-callback EventCallback = void (any... args);  // callback args depend on event<p>dictionary RemoteInfo {
-    string ip_addr;
-    string family;
-    long port;
+callback ListenerCallback = void (any... params);<p>interface EventEmitter {
+    this on(string event, ListenerCallback listener);
+    this addListener(string event, ListenerCallback listener);
+    boolean emit(string event, any... args);
+    this removeListener(string event, ListenerCallback listener);
+    this removeAllListeners(string event);
+    sequence < string > eventNames();
+    long getMaxListeners();
+    sequence < ListenerCallback > listeners(string event);
+    this setMaxListeners(long max);
 };
 </pre>
 </details>
 
-Dgram API
----------
-### dgram.createSocket(type)
-* `type` *string* Must be `'udp4'` or `'udp6'`.
-* Returns: DgramSocket object.
+EventEmitter API
+----------------
+### EventEmitter.on(event, listener)
+* `event` *string* The name of the event that you are adding a listener to.
+* `listener` *ListenerCallback* The function that you wish to be called when this event is emitted/triggered.
+* Returns: `this` so calls can be chained.
 
-Create a datagram socket of the given type.
+Add an event listener function.
 
-DgramSocket API
----------------
-### DgramSocket.on(event, callback)
-* `event` *string*
-* `callback` *RecvCallback*
+### EventEmitter.addListener(event, listener)
+* `event` *string* The name of the event that you are adding a listener to.
+* `listener` *ListenerCallback* The function that you wish to be called when this event is emitted/triggered.
+* Returns: `this` so calls can be chained.
 
-Registers a callback. The `event` may be one of the following:
+Same as `EventEmitter.on()`.
 
-* `'message'` - a datagram received. `callback` receives a Buffer
-  containing incoming datagram data and RemoteInfo dictionary with
-  information about the source address.
-* `'error'` - error occurred. `callback` receives an Error object.
-  (In the current version, this callback is never called, but this
-  will change in future versions.)
+### EventEmitter.emit(event, [args...])
+* `event` *string* The name of the event that you want to emit.
+* `args` *optional* All other arguments will be given to any registered listener functions.
+* Returns: true if there were any listener functions called.
 
-### DgramSocket.bind(port, ip_addr)
-* `port` *long*
-* `ip_addr` *string* `ip_addr` A string representing an IP address of
-a *local* network interface, or a "wildcard" address of `'0.0.0.0'` (IPv4)
-or `'::'` (IPv6), in which case a socket will be bound to all local
-interfaces.
+Triggers an event. Any listener functions that have been added to the
+event emitter under the event name will be called.
 
-Bind socket to a local address and port. This is a required operation for
-server-side sockets, i.e., sockets that wait and receive data from other
-network nodes.  This module does not support domain name resolution, so only
-IP addresses are allowed. At the time of writing, local interface
-addresses are hardcoded to be: `'192.0.2.1'` (IPv4) and `'2001:db8::1'`
-(IPv6), but these will become configurable in the future.
 
-### DgramSocket.send(buf, offset, len, port, ip_addr, [cb])
-* `buf` *Buffer*
-* `offset` *unsigned long*
-* `len` *unsigned long*
-* `port` *long*
-* `ip_addr` *string*
-* `cb` *SendCallback* Optional.
+### EventEmitter.removeListener(event, listener)
+* `event` *string* The name of the event you are removing the listener from.
+* `listener` *ListenerCallback* The function you want to remove as a listener.
+* Returns: `this` so calls can be chained.
 
-Send data contained in a buffer to remote network node. A subset of
-data in `buf` can be sent using `offset` and `len` parameters. To send
-the entire buffer, use values `0` and `buf.length` respectively. See
-the `bind()`-method description for the format of `ip_addr`. An optional
-callback may be provided, which will be called with the result of the send
-operation: either a NetworkError object in the case of error, or `undefined`
-on success.
+Removes a listener function from an event.
 
-### DgramSocket.close()
+### EventEmitter.removeAllListeners(event)
+* `event` *string* The name of the event from which to remove all listeners.
+* Returns: `this` so calls can be chained.
 
-Closes socket.
+Removes all listeners from an event
+
+
+### EventEmitter.eventNames()
+* Returns: an array of strings that correspond to any events. Will return undefined if there are no event's or event listeners for this event emitter.
+
+Get a list of event names from an event emitter object.
+
+### EventEmitter.getMaxListeners()
+* Returns: the maximum number of listeners allowed.
+
+Get the maximum number of listeners allowed for this event emitter object.
+
+### EventEmitter.listeners(event)
+* `event` *string* The name of the event from which to retrieve the listerners.
+* Returns: an array of functions that correspond to the `ListenerCallbacks` for the event specified.
+
+Get a list of listeners for an event.
+
+### EventEmitter.setMaxListeners(max)
+* `max` *long*  The number of listeners the event emitter can have.
+* Returns: `this`, so calls can be chained.
+
+Set the max number of listeners for an event emitter object
 
 Sample Apps
 -----------
-* [IPv4 UDP echo server](../samples/UDPEchoServ4.js)
-* [IPv6 UDP echo server with `offset` param to send()](../samples/UDPEchoServ6.js)
+* [Events sample](../samples/tests/Events.js)
