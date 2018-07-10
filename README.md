@@ -32,7 +32,8 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 // var uart = require('uart');
 interface UART {
     UARTConnection init(UARTOptions options);
-};<p>dictionary UARTOptions {
+};<p>
+dictionary UARTOptions {
     string port;
     // long baud = 115200;
     // long dataBits = 8;
