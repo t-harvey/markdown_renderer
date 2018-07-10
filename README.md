@@ -48,9 +48,7 @@ interface AIO {
     void readAsync(ReadCallback callback);  // TODO: change to return a promise
     void on(string eventType, ReadCallback callback);
     void close();
-};<p>callback ReadCallback = void (unsigned long value);
-</pre>
-</details>
+};<p>callback ReadCallback = void (unsigned long value); </pre> </details>
 
 AIO API
 -------
