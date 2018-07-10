@@ -44,7 +44,7 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 <summary> Click to show/hide WebIDL</summary>
 <pre>
 // require returns a BLE object
-// var ble = require('ble');<p>
+// var ble = require('ble');
 [ReturnFromRequire,ExternalInterface=(EventEmitter)]
 interface BLE: EventEmitter {
     void disconnect(string address);
