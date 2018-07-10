@@ -1,43 +1,19 @@
-ZJS API for SPI
-===============
+ZJS API for Timers
+==================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [SPI API](#spi-api)
-  * [spi.open(options)](#spiopenoptions)
-* [SPIBus API](#spibus-api)
-  * [spiBus.transceive(target, data, direction)](#spibustransceivetarget-data-direction)
-  * [spiBus.close()](#spibusclose)
+* [Class: Timers](#timers-api)
+  * [timers.setInterval(func, delay, args_for_func)](#timerssetintervalfunc-delay-args_for_func)
+  * [timers.setTimeout(func, delay, args_for_func)](#timerssettimeoutfunc-delay-args_for_func)
+  * [timers.clearInterval(intervalID)](#timersclearintervalintervalid)
+  * [timers.clearTimeout(timeoutID)](#timerscleartimeouttimeoutid)
+* [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The SPI API supports the Serial Peripheral Interface, a synchronous
-serial protocol that allows multiple slave chips to communicate with a
-master chip.  A single SPI bus uses the following pins: SCLK for
-clock, MOSI (Master Out, Slave In) for write, MISO (Master In, Slave
-Out) for read, and one or more SS (Slave Select) for selecting the
-slave device.
-
-For each clock signal, one bit is written from the master to the
-selected slave, and one bit is read by the master from the selected
-slave, so there is one transceive operation, instead of a separate
-read and write.
-
-When a slave device's chip select is 0 (low), it communicates with the
-master; otherwise it ignores the master. The master can select
-multiple slaves in a write-only configuration; in this case, no slave
-is writing data, each only reads.
-
-Since the SS pins may be connected to slave chip select through a
-demultiplexer and thereby work as an address bus, slave devices are
-identified by an index in this API, rather than by SS pins. Also,
-since multiple SPI buses may be present on a board, these are
-identified by an index in this API. Implementations SHOULD encapsulate
-the mapping from SPI bus number and device number to the physical SPI
-pins.
-
-Note that on the Arduino 101, using SPI will cause one of the onboard LEDs to
-become unavailable.
+ZJS provides the familiar setTimeout and setInterval interfaces. They are always
+available.
 
 Web IDL
 -------
@@ -47,54 +23,52 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 <details>
 <summary>Click to show WebIDL</summary>
-<pre>// require returns a SPI object
-// var spi = require('spi');
+<pre>
+// require returns a Timers object
+// var timers = require('timers');
 [ReturnFromRequire]
-interface SPI {
-    SPIBus open(SPIOptions init);
-};<p>
-dictionary SPIOptions {
-    octet bus;
-    long speed;  // bus clock frequency in Hz
-    boolean msbFirst;
-    long polarity;
-    long phase;
-    unsigned long frameGap;
-    string topology;
-};<p>[ExternalInterface=(Buffer)]
-interface SPIBus {
-    void transceive(octet target, Buffer data, string direction);
-    void close();
-};
-</pre>
+interface Timers {
+    intervalID setInterval(TimerCallback func, unsigned long delay, any... args_for_func);
+    timeoutID setTimeout(TimerCallback func, unsigned long delay, any... args_for_func);
+    void clearInterval(long intervalID);
+    void clearTimeout(long timeoutID);
+};<p>callback TimerCallback = void (any... callback_args);
+<p>
+typedef long timeoutID;
+typedef long intervalID;</pre>
 </details>
 
-SPI API
--------
-### spi.open(options)
-* `options` *SPIOptions* The `options` object lets you pass optional values to use instead of the defaults.
-* Returns: an SPIBus object.
-
-Note these `options` values can't be changed once the SPI object is
-created.  If you need to change the settings afterwards, you'll need
-to use the 'close' command and create a new SPI object with the
-settings you desire.
-
-SPIBus API
+Timers API
 ----------
-### spiBus.transceive(target, data, direction)
-* `target` *octet* The number identifying the slave.
-* `data` *Buffer* The data to be written to, and returned from, the slave.
-* `direction` *string*
+### timers.setInterval(func, delay, args_for_func)
+* `func` *TimerCallback* A callback function that will take the arguments passed in the variadic `args_for_func` parameter.
+* `delay` *unsigned long* The `delay` argument is in milliseconds. Currently, the delay resolution is about 10 milliseconds, and if you choose a value less than that it will probably fail.
+* `args_for_func` *any* The user can pass an arbitrary number of additional arguments that will then be passed to `func`.
+* Returns: an `intervalID` value that can be passed to `clearInterval` to stop the timer.
 
-Writes data buffer using SPI to the slave identified by the target argument, and
-reads from the slave device into a readBuffer that is returned.  The read and
-write buffers are the same size.
+Every `delay` milliseconds, your callback function will be called.
 
-### spiBus.close()
+### timers.setTimeout(func, delay, args_for_func)
+* `func` *TimerCallback* A callback function that will take the arguments passed in the variadic `args_for_func` parameter.
+* `delay` *unsigned long* The `delay` argument is in milliseconds. Currently, the delay resolution is about 10 milliseconds.
+* `args_for_func` *any* The user can pass an arbitrary number of additional arguments that will then be passed to `func`.
+* Returns: a `timeoutID` that can be passed to `clearTimeout` to stop the timer.
 
-Closes the SPI connection.
+After `delay` milliseconds, your callback function will be called *one time*.
+
+### timers.clearInterval(intervalID)
+* `intervalID` *long* This value was returned from a call to `setInterval`.
+
+That interval timer will be cleared and its callback function
+no longer called.
+
+### timers.clearTimeout(timeoutID)
+* `timeoutID` *long* This value was returned from a call to `setTimeout`.
+
+The `timeoutID` timer will be cleared and its callback function will not be
+called.
 
 Sample Apps
 -----------
-* [SPI sample](../samples/SPI.js)
+* [Timers sample](../samples/Timers.js)
+* [Spaceship2 sample](../samples/arduino/starterkit/Spaceship2.js)
