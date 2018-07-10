@@ -1,28 +1,21 @@
-ZJS API for Grove LCD
-=====================
+ZJS API for I2C
+===============
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [GroveLCD API](#grovelcd-api)
-  * [grove_lcd.init()](#grove_lcdinit)
-* [GroveLCDDevice API](#grovelcddevice-api)
-  * [groveLCDDevice.print(string text)](#grovelcddeviceprinttext)
-  * [groveLCDDevice.clear()](#grovelcddeviceclear)
-  * [groveLCDDevice.setCursorPos(col, row)](#grovelcddevicesetcursorposcol-row)
-  * [groveLCDDevice.selectColor(index)](#grovelcddeviceselectcolorindex)
-  * [groveLCDDevice.setColor(r, g, b)](#grovelcddevicesetcolorr-g-b)
-  * [groveLCDDevice.setFunction(config)](#grovelcddevicesetfunctionconfig)
-  * [groveLCDDevice.getFunction()](#grovelcddevicegetfunction)
-  * [groveLCDDevice.setDisplayState(config)](#grovelcddevicesetdisplaystateconfig)
-  * [GroveLCDDevice.getDisplayState()](#grovelcddevicegetdisplaystate)
-
+* [I2C API](#i2c-api)
+  * [i2c.open(init)](#i2copeninit)
+* [I2CBus API](#i2cbus-api)
+  * [i2cBus.write(device, data)](#i2cbuswritedevice-data)
+  * [i2cBus.read(device, size, registerAddress)](#i2cbusreaddevice-size-registeraddress)
+  * [I2CBus.burstRead(device, size, registerAddress)](#i2cbusburstreaddevice-size-registeraddress)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The Grove LCD API is the JavaScript version of the Zephyr API that supports the
-Grove LCD.  It works over I2C to allow user to send text to the LCD screen
-and also configure the LCD to different RGB backlight colors.
+The I2C API supports the I2C protocol, which allows multiple slave chips to
+communicate with one or more master chips.  Each I2C bus has two signals - SDA
+and SCL. SDA is the data signal and SCL is the clock signal.
 
 Web IDL
 -------
@@ -32,146 +25,60 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 <details>
 <summary>Click to show WebIDL</summary>
-<pre>// require returns a GroveLCD object
-// var grove_lcd = require('grove_lcd');
+<pre>// require returns a I2C object
+// var i2c = require('i2c');
 [ReturnFromRequire]
-interface GroveLCD {
-    GroveLCDDevice init();
-    attribute unsigned long GLCD_FS_8BIT_MODE;
-    attribute unsigned long GLCD_FS_ROWS_2;
-    attribute unsigned long GLCD_FS_ROWS_1;
-    attribute unsigned long GLCD_FS_DOT_SIZE_BIG;
-    attribute unsigned long GLCD_FS_DOT_SIZE_LITTLE;<p>
-    attribute unsigned long GLCD_DS_DISPLAY_ON;
-    attribute unsigned long GLCD_DS_DISPLAY_OFF;
-    attribute unsigned long GLCD_DS_CURSOR_ON;
-    attribute unsigned long GLCD_DS_CURSOR_OFF;
-    attribute unsigned long GLCD_DS_BLINK_ON;
-    attribute unsigned long GLCD_DS_BLINK_OFF;<p>    attribute unsigned long GLCD_IS_SHIFT_INCREMENT;
-    attribute unsigned long GLCD_IS_SHIFT_DECREMENT;
-    attribute unsigned long GLCD_IS_ENTRY_LEFT;
-    attribute unsigned long GLCD_IS_ENTRY_RIGHT; <p>    attribute unsigned long GROVE_RGB_WHITE;
-    attribute unsigned long GROVE_RGB_RED;
-    attribute unsigned long GROVE_RGB_GREEN;
-    attribute unsigned long GROVE_RGB_BLUE;
-};<p>interface GroveLCDDevice {
-    void print(string text);
-    void clear();
-    void setCursorPos(unsigned long col, unsigned long row);
-    void selectColor(unsigned long index);
-    void setColor(unsigned long r, unsigned long g, unsigned long b);
-    void setFunction(unsigned long config);
-    unsigned long getFunction();
-    void setDisplayState(unsigned long config);
-    unsigned long getDisplayState();
-};</pre>
+interface I2C {
+    I2CBus open(I2CInit init);
+};<p>dictionary I2CInit {
+    octet bus;
+    I2CBusSpeed speed;
+};<p>[ExternalInterface=(Buffer)]
+interface I2CBus {
+    // has all the properties of I2CInit as read-only attributes
+    void write(octet device, Buffer data);
+    void read(octet device, unsigned long size, octet registerAddress);
+    void burstRead(octet device, unsigned long size, octet registerAddress);
+};
+<p>
+typedef long I2CBusSpeed;</pre>
 </details>
 
-GroveLCD API
-------------
-### grove_lcd.init()
-* Returns: a GroveLCDDevice object that can be used to
-talk to the Grove LCD panel.
+I2C API
+-------
+### i2c.open(init)
+* `init` *I2CInit* Lets you set the I2C bus you wish to use and the speed you
+want to operate at. Speed options are 10, 100, 400, 1000, and 34000. Speed is
+measured in kbs.
+* Returns: an I2CBus object.
 
-Initializes the Grove LCD panel.
+I2CBus API
+----------
+### i2cBus.write(device, data)
+* `device` *octet* The device address.
+* `data` *Buffer* The data to be written.
 
-*NOTE: Zephyr's Grove LCD API is on top of the I2C, which is only accessible
-from the ARC side on the Arduino 101, so all the APIs in here will use the
-IPM to send commands over to the API, and all this API will be synchronous.*
+Writes the data to the given device address. The first byte of data typically
+contains the register you want to write the data to.  This will vary from device
+to device.
 
-GroveLCDDevice API
-------------------
-### groveLCDDevice.print(text)
-* `text` *string* The text to be printed.
+### i2cBus.read(device, size, registerAddress)
+* `device` *octet* The device address.
+* `size` *unsigned long* The number of bytes of data to read.
+* `registerAddress` *octet* The register on the device from which to read.
 
-Send text to the screen on the current line cursor is set to,
-if the text is longer than number of characters it can fit on that line,
-any additional characters will not wrap around and be dropped,
-so a 16x2 LCD will have a maximum of 16 characters.
+Reads 'size' bytes of data from the device at the registerAddress. The default
+value of registerAdress is 0x00;
 
-### groveLCDDevice.clear()
+### I2CBus.burstRead(device, size, registerAddress)
+* `device` *octet* The device address.
+* `size` *long* The number of bytes of data to read.
+* `registerAddress` *octet* The number of the starting address from which to read.
 
-Clear the current display.
-
-### groveLCDDevice.setCursorPos(col, row)
-* `col` *unsigned long* The column for the cursor to be moved to (0-15).
-* `row` *unsigned long* The row the column should be moved to (0 or 1).
-
-Set text cursor position for the next print.
-
-### groveLCDDevice.selectColor(index)
-* `index` *unsigned long* The color selection, as defined, below.
-
-Set LCD background to a predfined color.
-
-The `index` should be a one of the following color selections:
-
-GroveLCD.GROVE_RGB_WHITE
-
-GroveLCD.GROVE_RGB_RED
-
-GroveLCD.GROVE_RGB_GREEN
-
-GroveLCD.GROVE_RGB_BLUE
-
-### groveLCDDevice.setColor(r, g, b)
-* `r` *unsigned long* The numeric value for the red color (max is 255).
-* `g` *unsigned long* The numeric value for the green color (max is 255).
-* `b` *unsigned long* The numeric value for the blue color (max is 255).
-
-Set LCD background to custom RGB color value.
-
-### groveLCDDevice.setFunction(config)
-* `config` *unsigned long* The bit mask to change the display state, as described, below.
-
-This function provides the user the ability to change the state
-of the display, controlling things like the number of rows,
-dot size, and text display quality.
-
-The `config` bit mask can take the following configurations:
-
-GroveLCD.GLCD_FS_8BIT_MODE
-
-GroveLCD.GLCD_FS_ROWS_2
-
-GroveLCD.GLCD_FS_ROWS_1
-
-GroveLCD.GLCD_FS_DOT_SIZE_BIG
-
-GroveLCD.GLCD_FS_DOT_SIZE_LITTLE
-
-### groveLCDDevice.getFunction()
-*Returns: the function-features set associated with the device.
-
-### groveLCDDevice.setDisplayState(config)
-* `config` *unsigned long* The bit mask to change the display state, as described, below.
-
-This function provides the user the ability to change the state
-of the display, controlling things like powering on or off
-the screen, the option to display the cursor or not, and the ability to
-blink the cursor.
-
-The `config` is bit mask of the following configurations:
-
-GroveLCD.GLCD_DS_DISPLAY_ON
-
-GroveLCD.GLCD_DS_DISPLAY_OFF
-
-GroveLCD.GLCD_DS_CURSOR_ON
-
-GroveLCD.GLCD_DS_CURSOR_OFF
-
-GroveLCD.GLCD_DS_BLINK_ON
-
-GroveLCD.GLCD_DS_BLINK_OFF
-
-### GroveLCDDevice.getDisplayState()
-* Returns: the display-feature set associated with the device.
+Reads 'size' bytes of data from the device across multiple addresses starting
+at the registerAddress. The default value of registerAdress is 0x00;
 
 Sample Apps
 -----------
-* Grove LCD only
-  * [Grove LCD sample](../samples/GroveLCD.js)
-* Demos
-  * [WebBluetooth Grove LCD Demo](../samples/WebBluetoothGroveLcdDemo.js)
-  * [Heart Rate Demo](../samples/HeartRateDemo.js)
+* [I2C sample](../samples/I2C.js)
+* [BMP280 temp](../samples/I2CBMP280.js)
