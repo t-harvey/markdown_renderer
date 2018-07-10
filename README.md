@@ -36,7 +36,8 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 interface GFX {
     GFXContext init(long screen_width, long screen_height, InitCallback init_screen,
                     DrawingCallback draw, optional this this_object);
-};<p>interface GFXContext {
+};<p>
+interface GFXContext {
     void fillRect(long x_coord, long y_coord, long width, long height,
                   sequence < byte > color);
     void drawPixel(long x_coord, long y_coord, sequence < byte > color);
@@ -52,7 +53,7 @@ interface GFX {
                   optional long size);
     void drawString(long x_coord, long y_coord, string str, sequence < byte > color,
                     optional long size);
-};
+};<p>
 callback InitCallback = void (any... params);
 callback DrawingCallback = void (any... params);
 </pre>
