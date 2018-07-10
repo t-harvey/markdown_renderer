@@ -1,246 +1,237 @@
-ZJS API for Net
+ZJS API for OCF
 ===============
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [Class: Net](#net-api)
-  * [net.createServer([onconnection])](#netcreateserveronconnection)
-  * [net.Socket()](#netsocket)
-  * [net.isIP(input)](#netisipinput)
-  * [Net.isIPv4(input)](#netisipv4input)
-  * [Net.isIPv6(input)](#netisipv6input)
-* [Class: Socket](#socket-api)
-  * [Event: 'close'](#event-close)
-  * [Event: 'connect'](#event-connect)
-  * [Event: 'data'](#event-data)
-  * [Event: 'error'](#event-error)
-  * [Event: 'timeout'](#event-timeout)
-  * [Socket.connect(options, [onconnect])](#socketconnectoptions-onconnect)
-  * [Socket.pause()](#socketpause)
-  * [Socket.resume()](#socketresume)
-  * [Socket.setTimeout(time, ontimeout)](#socketsettimeouttime-ontimeout)
-  * [Socket.write(buf, [writeDone])](#socketwritebuf-writedone)
-* [Class: Server](#server-api)
-  * [Event: 'close'](#event-close)
-  * [Event: 'connection'](#event-connection)
-  * [Event: 'error'](#event-error)
-  * [Event: 'listening'](#event-listening)
-  * [Server.address](#serveraddress)
-  * [Server.close()](#serverclose)
-  * [Server.getConnections(onconnection)](#servergetconnectionsonconnection)
-  * [Server.listen(options, [onlistening])](#serverlistenoptions-onlistening)
-* [Sample Apps](#sample-apps)
+* [Class: OCF](#ocf-api)
+  * [ocf.start()](#ocfstart)
+* [OCFServer-supported Events](#ocfserver-supported-events)
+* [Class: OCFServer](#ocfserver-api)
+  * [server.register(init)](#serverregisterinit)
+* [Class: Request](#request-api)
+  * [request.respond(data)](#requestresponddata)
+* [OCFClient-supported Events](#ocfclient-supported-events)
+* [Class: OCFClient](#ocfclient-api)
+  * [client.findResources(options, [listener])](#clientfindresourcesoptions-listener)
+  * [client.retrieve(deviceId, options)](#clientretrievedeviceid-options)
+  * [client.update(resource)](#clientupdateresource)
+  * [client.getPlatformInfo(deviceId)](#clientgetplatforminfodeviceid)
+  * [client.getDeviceInfo(deviceId)](#clientgetdeviceinfodeviceid)
+* [OCFServer Samples](#ocfserver-samples)
+* [OCFClient Samples](#ocfclient-samples)
 
 Introduction
 ------------
-ZJS provides net (TCP) APIs that closely mimic the Node.js 'net'
-module, which allows you to create a TCP/IP server or client.
+ZJS provides OCF Server API's which allow communication using the OCF networking
+protocol.
+
+The OCF object is the top level object containing either OCF Server,
+OCF Client, or both, as well as device and platform information.
+
+The OCF device and platform objects can be set up after requiring 'ocf'. An
+example of this can be found in [OCF Server sample](../samples/OcfServer.js).
 
 Web IDL
 -------
-This IDL provides an overview of the interface; see below for documentation of
-specific API functions.  We also have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+This IDL provides an overview of the interface; see below for
+documentation of specific API functions.  We have a short document
+explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+
 <details>
-<summary> Click to show/hide WebIDL</summary>
+<summary>Click to show WebIDL</summary>
 <pre>
-// require returns a Net object
-// var net = require('net');
-[ReturnFromRequire,ExternalCallback=(ListenerCallback)]
-interface Net {
-    Server createServer(optional ListenerCallback onconnection);
-    Socket Socket();
-    long isIP(string input);
-    boolean isIPv4(string input);
-    boolean isIPv6(string input);
+// require returns an OCFObject
+// var ocf = require('ocf');
+<p>[ReturnFromRequire]
+interface OCFObject {
+    attribute OCFServer server;         // OCF server object
+    attribute OCFClient client;         // OCF client object
+    attribute Platform platform;        // OCF platform info
+    attribute Device device;            // OCF device info
+    void start();
+};<p>dictionary Platform {
+    string id;
+    string osVersion;
+    string model;
+    string manufacturerName;
+    string manufacturerURL;
+    string manufacturerDate;
+    string platformVersion;
+    string firmwareVersion;
+    string supportURL;
+};<p>dictionary Device {
+    string uuid;
+    string name;
+    string dataModels;
+    string coreSpecVersion;
+};<p>///////////////////////////////////////////
+// OCF Server
+///////////////////////////////////////////<p>[ExternalInterface=(EventEmitter)]
+interface OCFServer: EventEmitter {
+    Promise<OCFResource> register(ResourceInit init);
+};<p>dictionary ResourceInit {
+    string resourcePath;      // OCF resource path
+    string[] resourceTypes;   // List of resource types
+    string[] interfaces;      // List of interfaces for resource types
+    boolean discoverable;     // Is resource discoverable
+    boolean observable;       // Is resource observable
+    boolean secure;           // Is resource security enabled
+    boolean slow;             // Is resource a slow reader
+    object properties;        // Dictionary of resource properties
+};<p>dictionary Resource {
+    string resourcePath;      // Path for this resource
+    object properties;        // Application specific resource properties
+};<p>interface Request {
+    attribute OCFResource target;       // Target/destination resource
+    attribute OCFResource source;       // Source/origin resource
+    attribute object data;              // resource representation
+    Promise<void> respond(object data);
+};<p>///////////////////////////////////////////
+// OCF Client
+///////////////////////////////////////////<p>[ExternalInterface=(EventEmitter)]
+interface OCFClient: EventEmitter {
+    Promise<Resource> findResources(ClientOptions options, optional FoundListener listener);
+    Promise<Resource> retrieve(string deviceId, object options);
+    Promise<Resource> update(Resource resource);
+    Promise<Platform> getPlatformInfo(string deviceId);
+    Promise<Device> getDeviceInfo(string deviceId);
+};<p>dictionary ClientOptions {
+    string deviceId;
+    string resourceType;
+    string resourcePath;
+};<p>callback FoundListener = void (ClientResource resource);
+dictionary ClientResource {
+    string deviceId;
+    string resourceType;
+    string resourcePath;
 };<p>
-[ExternalInterface=(EventEmitter),ExternalInterface=(Buffer),ExternalCallback=(ListenerCallback)]
-interface Socket: EventEmitter {
-    // Socket methods
-    void connect(object options, optional ListenerCallback onconnect);
-    void pause();
-    void resume();
-    void setTimeout(long timeout, ListenerCallback ontimeout);
-    void write(Buffer buf, optional ListenerCallback writeDone);
-    // Socket properties
-    attribute long bufferSize;    // Size of read buffer
-    attribute long bytesRead;     // Total bytes read for the socket
-    attribute long bytesWritten;  // Total bytes written for the socket
-    attribute string localAddress;  // Sockets local IP
-    attribute long localPort;     // Sockets local port
-    attribute string remoteAddress; // Remote IP address
-    attribute string remoteFamily;  // Remote IP family
-    attribute long remotePort;    // Remote port
-};<p>[ExternalInterface=(EventEmitter),ExternalCallback=(ListenerCallback)]
-interface Server: EventEmitter {
-    // Server methods
-    AddressInfo address();
-    void close();
-    void getConnections(ListenerCallback onconnection);
-    void listen(object options, optional ListenerCallback onlistening);
-    // Server properties
-    attribute boolean listening;      // true if the server is listening
-    attribute long maxConnections;  // maximum number of connections
-};<p>dictionary AddressOptions {
-    long port;          // Port the client should connect to (required)
-    string host;          // Host the client should connect to
-    string localAddress;  // Local address to bind to
-    long localPort;     // local port to bind to
-    long family;        // Version of IP stack, deafults to 4
-};<p>dictionary AddressInfo {
-    long port;    // Server port
-    string family;  // IPv4 or IPv6
-    string address; // IP address for the server
-};
+typedef long OCFResource; /* THIS WAS ADD JUST TO GET THIS FILE
+                             TO COMPILE!!! 7/6/18 */
 </pre>
 </details>
 
-Net API
+OCF API
 -------
+The properties are registered to the system (and available during discovery)
+once either `OCFServer.registerResource()` or `OCFClient.findResources()`
+is called.
 
-### net.createServer([onconnection])
-* `onconnection` *callback* The (optional) callback function registered as the the event listener for the `connection` event.
-* Returns: a `Server` object.
+### ocf.start()
 
-Create a TCP server that can accept client connections.
+Start the OCF stack (iotivity-constrained). This should be called after all
+resources have been registered. Any calls to `registerResource` after `start`
+will have no effect.
 
-### net.Socket()
-* Returns: a new Socket object that can be used to connect to a remote TCP server.
+OCFServer-supported Events
+--------------------------
+An OCFServer is an [EventEmitter](./events.md) with the following events:
 
-Socket constructor.
+### Event: 'retrieve'
 
-### net.isIP(input)
-* `input` *string*
-* Returns: 4 if the input is an IPv4 address, 6 if the input is an IPv6 address,
-or 0 if the input is not an IP address.
+* `Request` `request`
+* `boolean` `observe`
 
-Checks if the input is a valid IP address.
+Emitted when a remote client retrieves this server's resource(s).
 
-### Net.isIPv4(input)
-* `input` *string*
-* Returns: true if input is IPv4, false otherwise.
+### Event: 'update'
 
-Checks if input is an IPv4 address.
+* `Request` `request`
 
-### Net.isIPv6(input)
-* `input` *string*
-* Returns: true if input is IPv6, false otherwise.
+Emitted when a remote client updates this server's resource(s).
 
-Checks if input is an IPv6 address.
+OCFServer API
+--------------
+### server.register(init)
+* `init` *ResourceInit* Contains the resource initialization information.
+* Returns: a promise which resolves to an `OCFResource`.
 
-Socket API
-----------
+Register a new resource with the server.
 
-Socket is an [EventEmitter](./events.md) with the following events:
-
-### Event: 'close'
-
-Emitted when the socket is closed, either by you or the remote end.
-
-### Event: 'connect'
-
-Emitted when the socket has made a successful connection to a remote TCP server.
-
-### Event: 'data'
-
-* `Buffer` `buf`
-
-Emitted when the socket has received data. `buf` is a Buffer containg the data
-received.
-
-### Event: 'error'
-
-Emitted when there was an error on the socket during read, write, or connect.
-
-### Event: 'timeout'
-
-Emitted only when a timeout set with `setTimeout` expires.
-
-### Socket.connect(options, [onconnect])
-* `options` *AddressOptions* Describes the remote server being connected to.
-* `onconnect` *ListenerCallback* Optional callback added as the listener for the
-`connect` event.
-
-Connect to a remote TCP server.
-
-### Socket.pause()
-
-Pause a socket from receiving data. `data` event will not be emitted until
-`Socket.resume` is called.
-
-### Socket.resume()
-
-Allow a socket to resume receiving data after a call to `Socket.pause`.
-
-### Socket.setTimeout(time, ontimeout)
-* `time` *long*
-* `ontimeout` *ListenerCallback* Optional callback registered as a listener for the `timeout` event.
-
-Set a socket timeout. This will start a timer on the socket that will expire
-in `time` milliseconds if there has been no activity on the socket.
-
-### Socket.write(buf, [writeDone])
-* `buf` *Buffer* `buf` Contains the data to be written.
-* `writeDone` *ListenerCallback* Optional function called once the data is written.
-
-Send data on the socket.
-
-Server API
-----------
-
-Server is an [EventEmitter](./events.md) with the following events:
-
-### Event: 'close'
-
-Emitted when the server has closed. This will only happen after a server has
-called `close()` and all its connections have been closed. Calling `close()`
-does not close all opened connections; that must be done manually.
-
-### Event: 'connection'
-
-* `Socket` `sock`
-
-Emitted when when a client has connected to the server. `sock` is the Socket
-representing the new connection.
-
-### Event: 'error'
-
-Emitted when the server has had an error.
-
-### Event: 'listening'
-
-Emitted when the server has been bound, after calling `server.listen()`.
-
-### Server.address
-`AddressInfo address(void)`
-
-Returns an AddressInfo object for the server:
-
-### Server.close()
-
-Signals the server to close. This will stop the server from accepting any new
-connections but will keep any existing connections alive. Once all existing
-connections have been closed the server will emit the `close` event.
-
-### Server.getConnections(onconnection)
-* `onconnection` *ListenerCallback* Should be a function with `err` and `count` parameters.
-
-Get the number of connections to the server.
-
-### Server.listen(options, [onlistening])
-* `options` *object*
-* `onlistening` *ListenerCallback* Optional function added to the `listening` event.
-
-Start listening for connections. The `options` object supports the following
-properties:
-```
-{
-    port : Port to bind to
-    host : IP to bind to
-    backlog : Max number of concurrent connections
-}
-```
-
-Sample Apps
+Request API
 -----------
-* [IPv6 Server sample](../samples/TCPEchoServ6.js)
-* [IPv6 Client sample](../samples/TCPClient6.js)
+### request.respond(data)
+* `data` *object* Should contain object property data for the resource. In
+the case of an `onretrieve` event, `data` will be sent back to the client as
+the retrieved property data.
+* Returns: a promise which resolves successfully if there was no network error
+from sending out the data.
+
+Respond to an OCF `retrieve` or `update` event.
+
+OCFClient-supported Events
+--------------------------
+An OCFClient is an [EventEmitter](./events.md) with the following events:
+
+### Event: 'devicefound'
+
+* `Device` `device`
+
+Emitted when a device is found during `getDeviceInfo()`.
+
+### Event: 'platformfound'
+
+* `Platform` `platform`
+
+Emitted when a platform is found during `getPlatformInfo()`.
+
+### Event: 'resourcefound'
+
+* `Resource` `resource`
+
+Emitted when a resource is found during `findResources()`.
+
+### Event: 'update'
+
+* `Resource` `update`
+
+Emitted when a resource is updated.
+
+OCFClient API
+-------------
+### client.findResources(options, [listener])
+* `options` *ClientOptions* Should contain a filter of resource options. Only
+resources matching these options will be found.
+* `listener` *FoundListener* An optional event-listener callback. This
+callback will be called if a resource is found (`onfound` event).
+* Returns: a promise which resolves to a `ClientResource` containing the resource properties if a resource is found.
+
+Find remote resources matching `options` filter.
+
+### client.retrieve(deviceId, options)
+* `deviceId` *string* The device ID of the resource you are retrieving.
+This ID must match a resource which has been found with `findResources()`.
+* `options` *object * Contains flag information for this GET request (e.g., `observable=true`).
+
+Retrieve (GET) a remote resource.
+
+### client.update(resource)
+* `resource` *Resource* Should contain a `deviceId` for the resource to
+update. The `properties` parameter will be sent to the resource and updated.
+* Returns: a promise which resolves to a resource `Resource` containing the
+updated properties.
+
+Update remote resource properties.
+
+### client.getPlatformInfo(deviceId)
+* `deviceId` *string* The `deviceId` parameter should be the ID for a resource found with `findResources()`.
+* Returns: a promise which resolves to a `Platform` containing the platform
+information for the resource.
+
+Get `Platform` information for a resource.
+
+### client.getDeviceInfo(deviceId)
+* `deviceId` *string* The ID for a resource found with `findResources()`.
+* Returns: a promise which resolves to a `Device` containing the device
+information for the resource.
+
+Get `Device` information for a resource.
+
+OCFServer Samples
+--------------
+* [OCF Server sample](../samples/OcfServer.js)
+* [OCF Sensor Server](../samples/OcfSensorServer.js)
+
+OCFClient Samples
+--------------
+* [OCF Client sample](../samples/OcfClient.js)
+* [OCF Sensor Client](../samples/OcfSensorClient.js)
