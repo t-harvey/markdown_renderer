@@ -41,7 +41,8 @@ interface GroveLCD {
     attribute unsigned long GLCD_FS_ROWS_2;
     attribute unsigned long GLCD_FS_ROWS_1;
     attribute unsigned long GLCD_FS_DOT_SIZE_BIG;
-    attribute unsigned long GLCD_FS_DOT_SIZE_LITTLE;<p>    attribute unsigned long GLCD_DS_DISPLAY_ON;
+    attribute unsigned long GLCD_FS_DOT_SIZE_LITTLE;<p>
+    attribute unsigned long GLCD_DS_DISPLAY_ON;
     attribute unsigned long GLCD_DS_DISPLAY_OFF;
     attribute unsigned long GLCD_DS_CURSOR_ON;
     attribute unsigned long GLCD_DS_CURSOR_OFF;
