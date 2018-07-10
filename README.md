@@ -52,8 +52,7 @@ interface Sensor {
     attribute Error error;
 };<p>callback ChangeCallback = void();
 callback ActivateCallback = void();
-callback ErrorCallback = void(SensorErrorEvent error);<p>[Constructor(optional AccelerometerOptions accelerometerOptions)]
-interface Accelerometer : Sensor {
+callback ErrorCallback = void(SensorErrorEvent error);<p>[Constructor(optional AccelerometerOptions accelerometerOptions)]<p>interface Accelerometer : Sensor {
     readonly attribute double x;
     readonly attribute double y;
     readonly attribute double z;
@@ -64,11 +63,9 @@ interface GyroscopeSensor : Sensor {
     readonly attribute double x;
     readonly attribute double y;
     readonly attribute double z;
-};<p>
-dictionary GyroscopeOptions : SensorOptions  {
+};<p>dictionary GyroscopeOptions : SensorOptions  {
     string controller;  // controller name, default to "bmi160"
-};<p>
-[Constructor(optional SensorOptions sensorOptions)]
+};<p>[Constructor(optional SensorOptions sensorOptions)]
 interface AmbientLightSensor : Sensor {
     readonly attribute unsigned long pin;
     readonly attribute double illuminance;
