@@ -33,8 +33,7 @@ interface Timers {
     void clearInterval(long intervalID);
     void clearTimeout(long timeoutID);
 };<p>callback TimerCallback = void (any... callback_args);
-<p>
-typedef long timeoutID;
+<p>typedef long timeoutID;
 typedef long intervalID;</pre>
 </details>
 
