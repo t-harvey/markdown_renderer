@@ -44,9 +44,8 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 <summary> Click to show/hide WebIDL</summary>
 <pre>
 // require returns a BLE object
-// var ble = require('ble');
-<p><p>
-[ReturnFromRequire,ExternalInterface=(eventemitter, EventEmitter)]
+// var ble = require('ble');<p>
+[ReturnFromRequire,ExternalInterface=(EventEmitter)]
 interface BLE: EventEmitter {
     void disconnect(string address);
     void startAdvertising(string name, sequence < string > uuids, optional string url);
@@ -56,7 +55,7 @@ interface BLE: EventEmitter {
     Characteristic newCharacteristic(CharacteristicInit init);
     DescriptorInit newDescriptor(DescriptorInit init);
 };
-<p><p>
+<p>
 dictionary PrimaryServiceInit {
     string uuid;
     sequence < Characteristic > characteristics;
@@ -65,7 +64,7 @@ dictionary PrimaryService {
     string uuid;
     sequence < Characteristic > characteristics;
 };
-<p><p>
+<p>
 dictionary CharacteristicInit {
     string uuid;
     sequence < string > properties;                // 'read', 'write', 'notify'
@@ -76,7 +75,7 @@ dictionary CharacteristicInit {
     UnsubscribeCallback onUnsubscribe;  // optional
     NotifyCallback onNotify;            // optional
 };
-<p><p>
+<p>
 interface Characteristic {
     attribute ReadCallback onReadRequest;
     attribute WriteCallback onWriteRequest;
@@ -85,10 +84,10 @@ interface Characteristic {
     attribute NotifyCallback onNotify;
     attribute CharacteristicResult response;
 };
-<p><p>
+<p>
 callback ReadCallback = void (unsigned long offset,
                               FulfillReadCallback fulfillReadCallback);
-[ExternalInterface=(buffer,Buffer)]
+[ExternalInterface=(Buffer)]
 callback WriteCallback = void (Buffer data, unsigned long offset,
                                boolean withoutResponse,
                                FulfillWriteCallback fulfillWriteCallback);
@@ -99,10 +98,10 @@ callback FulfillWriteCallback = void (CharacteristicResult result);
 callback FulfillSubscribeCallback = void (Buffer data);
 callback NotifyCallback = void (any... params);
 callback UnsubscribeCallback = void (any... params);
-<p><p>
+<p>
 enum CharacteristicResult { "RESULT_SUCCESS", "RESULT_INVALID_OFFSET",
                             "RESULT_INVALID_ATTRIBUTE_LENGTH", "RESULT_UNLIKELY_ERROR" } ;
-<p><p>
+<p>
 dictionary DescriptorInit {
     string uuid;
     string value;
