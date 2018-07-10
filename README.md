@@ -35,8 +35,9 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <pre>// require returns a WebSocket object
 // var ws = require('ws');<p><p>[ReturnFromRequire]
 interface WebSocket {
-    WebSocketServer Server(Object options);
-};<p>interface WebSocketServer: EventEmitter;<p>[ExternalInterface=(buffer,Buffer)]
+    WebSocketServer Server(object options);
+};<p>[ExternalInterface=(EventEmitter)]
+interface WebSocketServer: EventEmitter{};<p>[ExternalInterface=(Buffer),]
 interface WebSocketConnection: EventEmitter {
     void send(Buffer data, boolean mask);
     void ping(Buffer data, boolean mask);
