@@ -50,7 +50,8 @@ specific API functions.  We also have a short document explaining [ZJS WebIDL co
 <summary> Click to show/hide WebIDL</summary>
 <pre>
 // require returns a PME object
-// var pme = require('pme');<p><p>[ReturnFromRequire]
+// var pme = require('pme');
+[ReturnFromRequire]
 interface PME {
     void begin();
     void forget();
@@ -59,10 +60,10 @@ interface PME {
                    unsigned short distanceMode,
                    unsigned short minInfluence,
                    unsigned short maxInfluence);
-    void learn(sequence < number > pattern, unsigned long category);
-    unsigned long classify(sequence < number > pattern);
+    void learn(sequence < long > pattern, unsigned long category);
+    unsigned long classify(sequence < long > pattern);
     Neuron readNeuron(unsigned long id);
-    void writeVector(sequence < number > pattern);
+    void writeVector(sequence < long > pattern);
     unsigned short getCommittedCount();
     unsigned short getGlobalContext();
     unsigned short getClassifierMode();
@@ -70,7 +71,7 @@ interface PME {
     unsigned short getDistanceMode();
     void setDistanceMode(unsigned short mode);
     sequence < Json > saveNeurons();
-    restoreNeurons(sequence < Json > objects);
+    void restoreNeurons(sequence < Json > objects);
 <p>
     attribute unsigned short RBF_MODE;       // RBF classification mode
     attribute unsigned short KNN_MODE;       // KNN classification mode
