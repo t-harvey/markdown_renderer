@@ -46,13 +46,15 @@ interface Sensor {
     attribute ChangeCallback onreading;     // callback handler for change events
     attribute ActivateCallback onactivate;  // callback handler for activate events
     attribute ErrorCallback onerror;        // callback handler for error events
-};<p>dictionary SensorOptions {
+};<p>
+dictionary SensorOptions {
     double frequency;  // desired frequency, default is 20 if unset
 };<p>interface SensorErrorEvent {
     attribute Error error;
 };<p>callback ChangeCallback = void();
 callback ActivateCallback = void();
-callback ErrorCallback = void(SensorErrorEvent error);<p>[Constructor(optional AccelerometerOptions accelerometerOptions)]<p>interface Accelerometer : Sensor {
+callback ErrorCallback = void(SensorErrorEvent error);<p>[Constructor(optional AccelerometerOptions accelerometerOptions)]
+interface Accelerometer : Sensor {
     readonly attribute double x;
     readonly attribute double y;
     readonly attribute double z;
