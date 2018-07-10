@@ -81,7 +81,8 @@ interface FS {
     sequence < string > readdirSync(string path);
     Stat statSync(string path);
     void writeFileSync(string file, (string or Buffer) data);
-};<p>// file descriptors are inherently platform specific, so we leave this
+};<p>
+// file descriptors are inherently platform specific, so we leave this
 // as a placeholder
 dictionary FileDescriptor {
     //string name;
