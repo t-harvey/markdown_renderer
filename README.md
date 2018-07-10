@@ -31,12 +31,11 @@ explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 [ReturnFromRequire]
 interface I2C {
     I2CBus open(I2CInit init);
-};<p>dictionary I2CInit {
+};<p>
+dictionary I2CInit {
     octet bus;
     I2CBusSpeed speed;
-};
-
-[ExternalInterface=(Buffer)]
+};<p>[ExternalInterface=(Buffer)]
 interface I2CBus {
     // has all the properties of I2CInit as read-only attributes
     void write(octet device, Buffer data);
