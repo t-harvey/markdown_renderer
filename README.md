@@ -53,8 +53,7 @@ interface GFXContext {
                   optional long size);
     void drawString(long x_coord, long y_coord, string str, sequence < byte > color,
                     optional long size);
-};<p>
-callback InitCallback = void (any... params);
+};<p>callback InitCallback = void (any... params);
 callback DrawingCallback = void (any... params);
 </pre>
 </details>
