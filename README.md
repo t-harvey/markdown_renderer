@@ -23,27 +23,15 @@ This IDL provides an overview of the interface; see below for
 documentation of specific API functions.  We have a short document
 explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
-<pre>
 <details>
 <summary>Click to show WebIDL</summary>
-<<<<<<< HEAD
-<pre>// require returns a I2C object
-// var i2c = require('i2c');
-[ReturnFromRequire]
-interface I2C {
-    I2CBus open(I2CInit init);
-};<p>
-=======
+<pre>
 // require returns a I2C object
 // var i2c = require('i2c');
-
 [ReturnFromRequire]
 interface I2C {
     I2CBus open(I2CInit init);
-};
-
->>>>>>> 620b41acf983c00dd5cf4f49bd00584e68203026
-dictionary I2CInit {
+};<p>dictionary I2CInit {
     octet bus;
     I2CBusSpeed speed;
 };
