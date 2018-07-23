@@ -1,85 +1,60 @@
-ZJS API for I2C
-===============
+Zephyr.js API for WebUSB
+========================
 
 * [Introduction](#introduction)
-* [Web IDL](#web-idl)
-* [I2C API](#i2c-api)
-  * [i2c.open(init)](#i2copeninit)
-* [I2CBus API](#i2cbus-api)
-  * [i2cBus.write(device, data)](#i2cbuswritedevice-data)
-  * [i2cBus.read(device, size, registerAddress)](#i2cbusreaddevice-size-registeraddress)
-  * [I2CBus.burstRead(device, size, registerAddress)](#i2cbusburstreaddevice-size-registeraddress)
+* [Class: WebUSB](#webusb-api)
+  * [webusb.setURL(url)](#webusbseturlurl)
+  * [webusb.write(buffer)](#webusbwritebuffer)
+  * [Event: 'read'](#event-read)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The I2C API supports the I2C protocol, which allows multiple slave chips to
-communicate with one or more master chips.  Each I2C bus has two signals - SDA
-and SCL. SDA is the data signal and SCL is the clock signal.
+The WebUSB module supports advertising the device as a WebUSB device when the
+USB port is connected to a PC. Currently, this only works on Arduino 101 as it
+is the only board with a USB driver in the Zephyr tree.
+
+The API allows you to set the URL that will be suggested to the browser for
+connecting to your device.
+
+When you connect your device to a Linux PC or Mac with Chrome >= 60 running, it
+will give a notification that the device would like you to visit the URL you've
+set. (Windows currently prevents this from working, I believe.)
 
 Web IDL
 -------
-This IDL provides an overview of the interface; see below for
-documentation of specific API functions.  We have a short document
-explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
-
+This IDL provides an overview of the interface; see below for documentation of
+specific API functions.  We also have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 <details>
-<summary>Click to show WebIDL</summary>
+<summary> Click to show/hide WebIDL</summary>
 <pre>
-// require returns a I2C object
-// var i2c = require('i2c');
-[ReturnFromRequire]
-interface I2C {
-    I2CBus open(I2CInit init);
-};<p>
-dictionary I2CInit {
-    octet bus;
-    I2CBusSpeed speed;
-};<p>[ExternalInterface=(Buffer)]
-interface I2CBus {
-    // has all the properties of I2CInit as read-only attributes
-    void write(octet device, Buffer data);
-    void read(octet device, unsigned long size, octet registerAddress);
-    void burstRead(octet device, unsigned long size, octet registerAddress);
-};<p>typedef long I2CBusSpeed;
+// require returns a webusb object
+// var webusb = require('webusb');<p>[ReturnFromRequire, ExternalInterface=(Buffer)]
+interface webusb {
+    void setURL(string url);
+    void write(Buffer buf);
+};
 </pre>
 </details>
 
-I2C API
--------
-### i2c.open(init)
-* `init` *I2CInit* Lets you set the I2C bus you wish to use and the speed you
-want to operate at. Speed options are 10, 100, 400, 1000, and 34000. Speed is
-measured in kbs.
-* Returns: an I2CBus object.
-
-I2CBus API
+webusb API
 ----------
-### i2cBus.write(device, data)
-* `device` *octet* The device address.
-* `data` *Buffer* The data to be written.
 
-Writes the data to the given device address. The first byte of data typically
-contains the register you want to write the data to.  This will vary from device
-to device.
+### webusb.setURL(url)
+* `url` *string* Should begin with "https://" for Chrome to accept it
+and display a notification. Other URLs are valid in terms of the protocol but
+will have no user-visible effect in Chrome.
 
-### i2cBus.read(device, size, registerAddress)
-* `device` *octet* The device address.
-* `size` *unsigned long* The number of bytes of data to read.
-* `registerAddress` *octet* The register on the device from which to read.
+### webusb.write(buffer)
+* `write` *Buffer*  Writes the data in `buffer` to the WebUSB TX line. By default, at most 511 bytes can be pending at one time, so that is the maximum write size, assuming all previous data has already been flushed out. An error will be thrown on overflow.
 
-Reads 'size' bytes of data from the device at the registerAddress. The default
-value of registerAdress is 0x00;
+### Event: 'read'
 
-### I2CBus.burstRead(device, size, registerAddress)
-* `device` *octet* The device address.
-* `size` *long* The number of bytes of data to read.
-* `registerAddress` *octet* The number of the starting address from which to read.
+* `Buffer` `data`
 
-Reads 'size' bytes of data from the device across multiple addresses starting
-at the registerAddress. The default value of registerAdress is 0x00;
+Emitted when data is received on the WebUSB RX line. The `data` parameter is a
+`Buffer` with the received data.
 
 Sample Apps
 -----------
-* [I2C sample](../samples/I2C.js)
-* [BMP280 temp](../samples/I2CBMP280.js)
+* [WebUSB sample](../samples/WebUSB.js)
