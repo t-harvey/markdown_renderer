@@ -1,176 +1,165 @@
-ZJS API for Grove LCD
-=====================
+ZJS API for Buffer
+==================
 
 * [Introduction](#introduction)
 * [Web IDL](#web-idl)
-* [GroveLCD API](#grovelcd-api)
-  * [grove_lcd.init()](#grove_lcdinit)
-* [GroveLCDDevice API](#grovelcddevice-api)
-  * [groveLCDDevice.print(string text)](#grovelcddeviceprinttext)
-  * [groveLCDDevice.clear()](#grovelcddeviceclear)
-  * [groveLCDDevice.setCursorPos(col, row)](#grovelcddevicesetcursorposcol-row)
-  * [groveLCDDevice.selectColor(index)](#grovelcddeviceselectcolorindex)
-  * [groveLCDDevice.setColor(r, g, b)](#grovelcddevicesetcolorr-g-b)
-  * [groveLCDDevice.setFunction(config)](#grovelcddevicesetfunctionconfig)
-  * [groveLCDDevice.getFunction()](#grovelcddevicegetfunction)
-  * [groveLCDDevice.setDisplayState(config)](#grovelcddevicesetdisplaystateconfig)
-  * [GroveLCDDevice.getDisplayState()](#grovelcddevicegetdisplaystate)
+* [Class: Buffer](#buffer-api)
+  * [new Buffer(initialValues)](#new-bufferinitialvalues)
+  * [new Buffer(size)](#new-buffersize)
+  * [new Buffer(initialString)](#new-bufferinitialstring)
+  * [buf.copy(target[, targetStart, [sourceStart[, sourceEnd]]])](#bufcopytarget-targetstart-sourcestart-sourceend)
+  * [buf.fill(value[, offset[, end[, encoding]]])](#buffillvalue-offset-end-encoding)
+  * [buf.readUInt*(offset)](#bufreaduint-family)
+  * [buf.to_string([encoding])](#bufto_stringencoding)
+  * [buf.write(string[, offset[, length[, encoding]]])](#bufwritestring-offset-length-encoding)
+  * [buf.writeUInt*(value, offset)](#bufwriteuint-family)
 * [Sample Apps](#sample-apps)
 
 Introduction
 ------------
-The Grove LCD API is the JavaScript version of the Zephyr API that supports the
-Grove LCD.  It works over I2C to allow user to send text to the LCD screen
-and also configure the LCD to different RGB backlight colors.
+Buffer is a [Node.js API](https://nodejs.org/dist/latest-v8.x/docs/api/buffer.html)
+to read and write binary data accurately from JavaScript. ZJS supports a minimal
+subset of this API that will be expanded as the need arises.
 
 Web IDL
 -------
-This IDL provides an overview of the interface; see below for
-documentation of specific API functions.  We have a short document
-explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+This IDL provides an overview of the interface; see below for documentation of
+specific API functions.  We have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
 
 <details>
-<summary>Click to show WebIDL</summary>
-<pre>// require returns a GroveLCD object
-// var grove_lcd = require('grove_lcd');
-[ReturnFromRequire]
-interface GroveLCD {
-    GroveLCDDevice init();
-    attribute unsigned long GLCD_FS_8BIT_MODE;
-    attribute unsigned long GLCD_FS_ROWS_2;
-    attribute unsigned long GLCD_FS_ROWS_1;
-    attribute unsigned long GLCD_FS_DOT_SIZE_BIG;
-    attribute unsigned long GLCD_FS_DOT_SIZE_LITTLE;<p>
-    attribute unsigned long GLCD_DS_DISPLAY_ON;
-    attribute unsigned long GLCD_DS_DISPLAY_OFF;
-    attribute unsigned long GLCD_DS_CURSOR_ON;
-    attribute unsigned long GLCD_DS_CURSOR_OFF;
-    attribute unsigned long GLCD_DS_BLINK_ON;
-    attribute unsigned long GLCD_DS_BLINK_OFF;<p>    attribute unsigned long GLCD_IS_SHIFT_INCREMENT;
-    attribute unsigned long GLCD_IS_SHIFT_DECREMENT;
-    attribute unsigned long GLCD_IS_ENTRY_LEFT;
-    attribute unsigned long GLCD_IS_ENTRY_RIGHT; <p>    attribute unsigned long GROVE_RGB_WHITE;
-    attribute unsigned long GROVE_RGB_RED;
-    attribute unsigned long GROVE_RGB_GREEN;
-    attribute unsigned long GROVE_RGB_BLUE;
-};<p>interface GroveLCDDevice {
-    void print(string text);
-    void clear();
-    void setCursorPos(unsigned long col, unsigned long row);
-    void selectColor(unsigned long index);
-    void setColor(unsigned long r, unsigned long g, unsigned long b);
-    void setFunction(unsigned long config);
-    unsigned long getFunction();
-    void setDisplayState(unsigned long config);
-    unsigned long getDisplayState();
+<summary> Click to show/hide WebIDL</summary>
+<pre>
+[ Constructor(sequence < Uint8 > initialValues),
+  Constructor(unsigned long size),
+  Constructor(ByteString initialString), ]
+interface Buffer {
+    readonly attribute unsigned long length;
+    attribute ArrayBuffer buffer;
+    unsigned long copy(Buffer target, optional unsigned long targetStart = 0,
+                                      optional unsigned long sourceStart = 0,
+                                      optional unsigned long sourceEnd);
+    this fill((string or Buffer or long) value, optional long offset = 0,
+                                                optional long end,
+                                                optional string encoding = "utf8");
+    octet readUInt8(optional unsigned long offset = 0);
+    short readUInt16BE(optional unsigned long offset = 0);
+    short readUInt16LE(optional unsigned long offset = 0);
+    long readUInt32BE(optional unsigned long offset = 0);
+    long readUInt32LE(optional unsigned long offset = 0);
+    string to_string(string encoding = "utf8");
+    long write(string value, optional long offset = 0,
+                             optional long length = 0,
+                             optional string encoding = "utf8");
+    long writeUInt8(octet value, unsigned long offset);
+    long writeUInt16BE(unsigned short value, unsigned long offset);
+    long writeUInt16LE(unsigned short value, unsigned long offset);
+    long writeUInt32BE(unsigned long value, unsigned long offset);
+    long writeUInt32LE(unsigned long value, unsigned long offset);
 };</pre>
 </details>
 
-GroveLCD API
-------------
-### grove_lcd.init()
-* Returns: a GroveLCDDevice object that can be used to
-talk to the Grove LCD panel.
+Buffer API
+----------
+### new Buffer(initialValues)
+* `initialValues` *integer-array* of octets to use as initial data.
 
-Initializes the Grove LCD panel.
+A new Buffer object will be returned with the same size as the array
+and initialized with the array's contents. If there is not enough
+available memory, an error will be thrown.
 
-*NOTE: Zephyr's Grove LCD API is on top of the I2C, which is only accessible
-from the ARC side on the Arduino 101, so all the APIs in here will use the
-IPM to send commands over to the API, and all this API will be synchronous.*
+### new Buffer(size)
+* `size` *integer* Length in bytes of the new buffer.
 
-GroveLCDDevice API
-------------------
-### groveLCDDevice.print(text)
-* `text` *string* The text to be printed.
+The `size` argument specifies the length in bytes of the array that the Buffer
+represents. If a negative length is passed, a 0-length Buffer will be returned.
+If there is not enough available memory to allocate the Buffer, an error will
+be thrown.
 
-Send text to the screen on the current line cursor is set to,
-if the text is longer than number of characters it can fit on that line,
-any additional characters will not wrap around and be dropped,
-so a 16x2 LCD will have a maximum of 16 characters.
+### new Buffer(initialString)
+* `initialString` *string* String to use as initial data.
 
-### groveLCDDevice.clear()
+The `string` argument will be treated as an array of UTF8 values and
+will be used to initialize the new buffer. If there is not enough
+available memory, an error will be thrown.
 
-Clear the current display.
+### buf.copy(target[, targetStart, [sourceStart[, sourceEnd]]])
+* `target` *Buffer* Buffer to receive the copied data.
+* `targetStart` *integer* Offset to start writing at in the target buffer.
+* `sourceStart` *integer* Offset to start reading from in the source buffer.
+* `sourceEnd` *integer* Offset at which to stop reading from the source (not
+inclusive).
+* Returns: *integer* Number of bytes copied.
 
-### groveLCDDevice.setCursorPos(col, row)
-* `col` *unsigned long* The column for the cursor to be moved to (0-15).
-* `row` *unsigned long* The row the column should be moved to (0 or 1).
+Copies data from this `buf` to `target`. Start offsets default to 0 and
+`sourceEnd` defaults to the end of the source buffer. If there is not enough
+room in the target, throws an error.
 
-Set text cursor position for the next print.
+### buf.fill(value[, offset[, end[, encoding]]])
+* `value` *string* | *Buffer* | *integer* Value to fill buffer with.
+* `offset` *integer* Offset to start writing at in the buffer.
+* `end` *integer* Offset at which to stop writing (not inclusive).
+* `encoding` *string* Encoding type.
+* Returns: *Buffer* A reference to `buf`.
 
-### groveLCDDevice.selectColor(index)
-* `index` *unsigned long* The color selection, as defined, below.
+Repeatedly copies bytes from the source number, buffer, or string, until the
+buffer is filled from `offset` to `end` (which default to the beginning and end
+of the buffer. Only default "utf8" encoding is accepted currently. Treats
+numbers as four byte integers.
 
-Set LCD background to a predfined color.
+### buf.readUInt family
 
-The `index` should be a one of the following color selections:
+#### buf.readUInt8(offset)
+#### buf.readUInt16BE(offset)
+#### buf.readUInt16LE(offset)
+#### buf.readUInt32BE(offset)
+#### buf.readUInt32LE(offset)
+* `offset` *integer* Number of bytes to skip before reading integer.
+* Returns: *integer*
 
-GroveLCD.GROVE_RGB_WHITE
+Reads 1, 2, or 4 bytes at `offset` as a big-endian (highest byte first) or
+little-endian (lowest byte first) integer depending on the function version.
+The `offset` should be provided but will be treated as 0 if not given. Returns
+an error if the buffer is not big enough.
 
-GroveLCD.GROVE_RGB_RED
+### buf.to_string([encoding])
+* `encoding` *string* Encoding to use.
+* Returns: *string*
 
-GroveLCD.GROVE_RGB_GREEN
+Currently, the supported encodings are 'utf8' (default), 'ascii', and 'hex'.
+If 'ascii' is given, drops the high bit from every character and terminates at
+'\0' byte if found. If 'hex' is given, returns the contents of the buffer
+encoded in hexadecimal digits (two characters per byte). Otherwise, returns an
+error.
 
-GroveLCD.GROVE_RGB_BLUE
+### buf.write(string[, offset[, length[, encoding]]])
+* `string` *string* String to write to buf.
+* `offset` *integer* Offset to start writing at in the buffer.
+* `length` *integer* Number of bytes to write.
+* `encoding` *string* Encoding to use.
+* Returns: *integer* Number of bytes written.
 
-### groveLCDDevice.setColor(r, g, b)
-* `r` *unsigned long* The numeric value for the red color (max is 255).
-* `g` *unsigned long* The numeric value for the green color (max is 255).
-* `b` *unsigned long* The numeric value for the blue color (max is 255).
+Writes bytes from `string` to buffer at `offset`, stopping after `length` bytes.
+The default `offset` is 0 and default `length` is buffer length - `offset`. Only
+'utf8' encoding is supported currently.
 
-Set LCD background to custom RGB color value.
+### buf.writeUInt family
 
-### groveLCDDevice.setFunction(config)
-* `config` *unsigned long* The bit mask to change the display state, as described, below.
+#### writeUInt8(value, offset)
+#### writeUInt16BE(value, offset)
+#### writeUInt16LE(value, offset)
+#### writeUInt32BE(value, offset)
+#### writeUInt32LE(value, offset)
+* `value` *integer* Number to write.
+* `offset` *integer* Number of bytes to skip before writing value.
+* Returns: *integer* `offset` plus the bytes written.
 
-This function provides the user the ability to change the state
-of the display, controlling things like the number of rows,
-dot size, and text display quality.
-
-The `config` bit mask can take the following configurations:
-
-GroveLCD.GLCD_FS_8BIT_MODE
-
-GroveLCD.GLCD_FS_ROWS_2
-
-GroveLCD.GLCD_FS_ROWS_1
-
-GroveLCD.GLCD_FS_DOT_SIZE_BIG
-
-GroveLCD.GLCD_FS_DOT_SIZE_LITTLE
-
-### groveLCDDevice.getFunction()
-*Returns: the function-features set associated with the device.
-
-### groveLCDDevice.setDisplayState(config)
-* `config` *unsigned long* The bit mask to change the display state, as described, below.
-
-This function provides the user the ability to change the state
-of the display, controlling things like powering on or off
-the screen, the option to display the cursor or not, and the ability to
-blink the cursor.
-
-The `config` is bit mask of the following configurations:
-
-GroveLCD.GLCD_DS_DISPLAY_ON
-
-GroveLCD.GLCD_DS_DISPLAY_OFF
-
-GroveLCD.GLCD_DS_CURSOR_ON
-
-GroveLCD.GLCD_DS_CURSOR_OFF
-
-GroveLCD.GLCD_DS_BLINK_ON
-
-GroveLCD.GLCD_DS_BLINK_OFF
-
-### GroveLCDDevice.getDisplayState()
-* Returns: the display-feature set associated with the device.
+The `value` will be treated as 1, 2, or 4 byte big-endian (highest byte first)
+or little-endian (lowest byte first) integer depending on the function version.
+The `offset` should be provided but will be treated as 0 if not given. Returns
+the new offset just beyond what was written to the buffer. If the target area
+goes outside the bounds of the Buffer, returns an error.
 
 Sample Apps
 -----------
-* Grove LCD only
-  * [Grove LCD sample](../samples/GroveLCD.js)
-* Demos
-  * [WebBluetooth Grove LCD Demo](../samples/WebBluetoothGroveLcdDemo.js)
-  * [Heart Rate Demo](../samples/HeartRateDemo.js)
+* [Buffer sample](../samples/Buffer.js)
+* [WebBluetooth Demo](../samples/WebBluetoothDemo.js)
