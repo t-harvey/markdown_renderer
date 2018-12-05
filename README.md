@@ -1,165 +1,854 @@
-ZJS API for Buffer
-==================
+# jerryx_arg types
 
-* [Introduction](#introduction)
-* [Web IDL](#web-idl)
-* [Class: Buffer](#buffer-api)
-  * [new Buffer(initialValues)](#new-bufferinitialvalues)
-  * [new Buffer(size)](#new-buffersize)
-  * [new Buffer(initialString)](#new-bufferinitialstring)
-  * [buf.copy(target[, targetStart, [sourceStart[, sourceEnd]]])](#bufcopytarget-targetstart-sourcestart-sourceend)
-  * [buf.fill(value[, offset[, end[, encoding]]])](#buffillvalue-offset-end-encoding)
-  * [buf.readUInt*(offset)](#bufreaduint-family)
-  * [buf.to_string([encoding])](#bufto_stringencoding)
-  * [buf.write(string[, offset[, length[, encoding]]])](#bufwritestring-offset-length-encoding)
-  * [buf.writeUInt*(value, offset)](#bufwriteuint-family)
-* [Sample Apps](#sample-apps)
+## jerryx_arg_t
 
-Introduction
-------------
-Buffer is a [Node.js API](https://nodejs.org/dist/latest-v8.x/docs/api/buffer.html)
-to read and write binary data accurately from JavaScript. ZJS supports a minimal
-subset of this API that will be expanded as the need arises.
+**Summary**
 
-Web IDL
--------
-This IDL provides an overview of the interface; see below for documentation of
-specific API functions.  We have a short document explaining [ZJS WebIDL conventions](Notes_on_WebIDL.md).
+The structure defining a single validation/transformation step.
 
-<details>
-<summary> Click to show/hide WebIDL</summary>
-<pre>
-[ Constructor(sequence < Uint8 > initialValues),
-  Constructor(unsigned long size),
-  Constructor(ByteString initialString), ]
-interface Buffer {
-    readonly attribute unsigned long length;
-    attribute ArrayBuffer buffer;
-    unsigned long copy(Buffer target, optional unsigned long targetStart = 0,
-                                      optional unsigned long sourceStart = 0,
-                                      optional unsigned long sourceEnd);
-    this fill((string or Buffer or long) value, optional long offset = 0,
-                                                optional long end,
-                                                optional string encoding = "utf8");
-    octet readUInt8(optional unsigned long offset = 0);
-    short readUInt16BE(optional unsigned long offset = 0);
-    short readUInt16LE(optional unsigned long offset = 0);
-    long readUInt32BE(optional unsigned long offset = 0);
-    long readUInt32LE(optional unsigned long offset = 0);
-    string to_string(string encoding = "utf8");
-    long write(string value, optional long offset = 0,
-                             optional long length = 0,
-                             optional string encoding = "utf8");
-    long writeUInt8(octet value, unsigned long offset);
-    long writeUInt16BE(unsigned short value, unsigned long offset);
-    long writeUInt16LE(unsigned short value, unsigned long offset);
-    long writeUInt32BE(unsigned long value, unsigned long offset);
-    long writeUInt32LE(unsigned long value, unsigned long offset);
-};</pre>
-</details>
+*Note*: For commonly used validators, `arg.h` provides helpers to create the `jerryx_arg_t`s.
+For example, `jerryx_arg_number ()`, `jerryx_arg_boolean ()`, etc.
 
-Buffer API
-----------
-### new Buffer(initialValues)
-* `initialValues` *integer-array* of octets to use as initial data.
+**Prototype**
 
-A new Buffer object will be returned with the same size as the array
-and initialized with the array's contents. If there is not enough
-available memory, an error will be thrown.
+```c
+typedef struct
+{
+  /** the transform function */
+  jerryx_arg_transform_func_t func;
+  /** pointer to destination where func should store the result */
+  void *dest;
+  /** extra information, specific to func */
+  uintptr_t extra_info;
+} jerryx_arg_t;
+```
 
-### new Buffer(size)
-* `size` *integer* Length in bytes of the new buffer.
+**See also**
 
-The `size` argument specifies the length in bytes of the array that the Buffer
-represents. If a negative length is passed, a 0-length Buffer will be returned.
-If there is not enough available memory to allocate the Buffer, an error will
-be thrown.
+- [jerryx_arg_number](#jerryx_arg_number)
+- [jerryx_arg_boolean](#jerryx_arg_boolean)
+- [jerryx_arg_string](#jerryx_arg_string)
+- [jerryx_arg_utf8_string](#jerryx_arg_utf8_string)
+- [jerryx_arg_function](#jerryx_arg_function)
+- [jerryx_arg_native_pointer](#jerryx_arg_native_pointer)
+- [jerryx_arg_ignore](#jerryx_arg_ignore)
+- [jerryx_arg_object_properties](#jerryx_arg_object_properties)
 
-### new Buffer(initialString)
-* `initialString` *string* String to use as initial data.
+## jerryx_arg_object_props_t
 
-The `string` argument will be treated as an array of UTF8 values and
-will be used to initialize the new buffer. If there is not enough
-available memory, an error will be thrown.
+**Summary**
 
-### buf.copy(target[, targetStart, [sourceStart[, sourceEnd]]])
-* `target` *Buffer* Buffer to receive the copied data.
-* `targetStart` *integer* Offset to start writing at in the target buffer.
-* `sourceStart` *integer* Offset to start reading from in the source buffer.
-* `sourceEnd` *integer* Offset at which to stop reading from the source (not
-inclusive).
-* Returns: *integer* Number of bytes copied.
+The structure is used in `jerryx_arg_object_properties`. It provides the properties' names,
+its corresponding JS-to-C mapping and other related information.
 
-Copies data from this `buf` to `target`. Start offsets default to 0 and
-`sourceEnd` defaults to the end of the source buffer. If there is not enough
-room in the target, throws an error.
+**Prototype**
 
-### buf.fill(value[, offset[, end[, encoding]]])
-* `value` *string* | *Buffer* | *integer* Value to fill buffer with.
-* `offset` *integer* Offset to start writing at in the buffer.
-* `end` *integer* Offset at which to stop writing (not inclusive).
-* `encoding` *string* Encoding type.
-* Returns: *Buffer* A reference to `buf`.
+```c
+typedef struct
+{
+  const jerry_char_t **name_p; /**< property name list of the JS object */
+  jerry_length_t name_cnt; /**< count of the name list */
+  const jerryx_arg_t *c_arg_p; /**< points to the array of transformation steps */
+  jerry_length_t c_arg_cnt; /**< the count of the `c_arg_p` array */
+} jerryx_arg_object_props_t;
+```
 
-Repeatedly copies bytes from the source number, buffer, or string, until the
-buffer is filled from `offset` to `end` (which default to the beginning and end
-of the buffer. Only default "utf8" encoding is accepted currently. Treats
-numbers as four byte integers.
+**See also**
 
-### buf.readUInt family
+- [jerryx_arg_object_properties](#jerryx_arg_object_properties)
 
-#### buf.readUInt8(offset)
-#### buf.readUInt16BE(offset)
-#### buf.readUInt16LE(offset)
-#### buf.readUInt32BE(offset)
-#### buf.readUInt32LE(offset)
-* `offset` *integer* Number of bytes to skip before reading integer.
-* Returns: *integer*
+## jerryx_arg_array_items_t
 
-Reads 1, 2, or 4 bytes at `offset` as a big-endian (highest byte first) or
-little-endian (lowest byte first) integer depending on the function version.
-The `offset` should be provided but will be treated as 0 if not given. Returns
-an error if the buffer is not big enough.
+**Summary**
 
-### buf.to_string([encoding])
-* `encoding` *string* Encoding to use.
-* Returns: *string*
+The structure is used in `jerryx_arg_array`. It provides the array items' corresponding
+JS-to-C mappings and count.
 
-Currently, the supported encodings are 'utf8' (default), 'ascii', and 'hex'.
-If 'ascii' is given, drops the high bit from every character and terminates at
-'\0' byte if found. If 'hex' is given, returns the contents of the buffer
-encoded in hexadecimal digits (two characters per byte). Otherwise, returns an
-error.
+**Prototype**
 
-### buf.write(string[, offset[, length[, encoding]]])
-* `string` *string* String to write to buf.
-* `offset` *integer* Offset to start writing at in the buffer.
-* `length` *integer* Number of bytes to write.
-* `encoding` *string* Encoding to use.
-* Returns: *integer* Number of bytes written.
+```c
+typedef struct
+{
+  const jerryx_arg_t *c_arg_p; /**< points to the array of transformation steps */
+  jerry_length_t c_arg_cnt; /**< the count of the `c_arg_p` array */
+} jerryx_arg_array_items_t;
+```
 
-Writes bytes from `string` to buffer at `offset`, stopping after `length` bytes.
-The default `offset` is 0 and default `length` is buffer length - `offset`. Only
-'utf8' encoding is supported currently.
+**See also**
 
-### buf.writeUInt family
+- [jerryx_arg_array](#jerryx_arg_array)
 
-#### writeUInt8(value, offset)
-#### writeUInt16BE(value, offset)
-#### writeUInt16LE(value, offset)
-#### writeUInt32BE(value, offset)
-#### writeUInt32LE(value, offset)
-* `value` *integer* Number to write.
-* `offset` *integer* Number of bytes to skip before writing value.
-* Returns: *integer* `offset` plus the bytes written.
+## jerryx_arg_transform_func_t
 
-The `value` will be treated as 1, 2, or 4 byte big-endian (highest byte first)
-or little-endian (lowest byte first) integer depending on the function version.
-The `offset` should be provided but will be treated as 0 if not given. Returns
-the new offset just beyond what was written to the buffer. If the target area
-goes outside the bounds of the Buffer, returns an error.
+**Summary**
 
-Sample Apps
------------
-* [Buffer sample](../samples/Buffer.js)
-* [WebBluetooth Demo](../samples/WebBluetoothDemo.js)
+Signature of the transform function.
+
+Users can create custom transformations by implementing a transform function
+and using `jerryx_arg_custom ()`.
+
+The function is expected to return `undefined` if it ran successfully or
+return an `Error` in case it failed. The function can use the iterator and the
+helpers `jerryx_arg_js_iterator_pop ()` and `jerryx_arg_js_iterator_peek ()` to
+get the next input value.
+
+*Note*: A transform function is allowed to consume any number of input values!
+This enables complex validation like handling different JS function signatures,
+mapping multiple input arguments to a C struct, etc.
+
+The function is expected to store the result of
+a successful transformation into `c_arg_p->dest`. In case the validation did
+not pass, the transform should not modify `c_arg_p->dest`.
+
+Additional parameters can be provided to the function through `c_arg_p->extra_info`.
+
+**Prototype**
+
+```c
+typedef jerry_value_t (*jerryx_arg_transform_func_t) (jerryx_arg_js_iterator_t *js_arg_iter_p,
+                                                      const jerryx_arg_t *c_arg_p);
+```
+
+**See also**
+
+- [jerryx_arg_custom](#jerryx_arg_custom)
+- [jerryx_arg_js_iterator_pop](#jerryx_arg_js_iterator_pop)
+- [jerryx_arg_js_iterator_peek](#jerryx_arg_js_iterator_peek)
+
+
+## jerryx_arg_coerce_t
+
+Enum that indicates whether an argument is allowed to be coerced into the expected JS type.
+
+ - JERRYX_ARG_COERCE - the transform will invoke toNumber, toBoolean, toString, etc.
+ - JERRYX_ARG_NO_COERCE - the type coercion is not allowed. The transform will fail if the type does not match the expectation.
+
+**See also**
+
+- [jerryx_arg_number](#jerryx_arg_number)
+- [jerryx_arg_boolean](#jerryx_arg_boolean)
+- [jerryx_arg_string](#jerryx_arg_string)
+
+## jerryx_arg_optional_t
+
+Enum that indicates whether an argument is optional or required.
+
+ - JERRYX_ARG_OPTIONAL - The argument is optional. If the argument is `undefined` the transform is successful and `c_arg_p->dest` remains untouched.
+ - JERRYX_ARG_REQUIRED - The argument is required. If the argument is `undefined` the transform will fail and `c_arg_p->dest` remains untouched.
+
+**See also**
+
+- [jerryx_arg_number](#jerryx_arg_number)
+- [jerryx_arg_boolean](#jerryx_arg_boolean)
+- [jerryx_arg_string](#jerryx_arg_string)
+- [jerryx_arg_function](#jerryx_arg_function)
+- [jerryx_arg_native_pointer](#jerryx_arg_native_pointer)
+
+## jerryx_arg_round_t
+
+Enum that indicates the rounding policy which will be chosen to transform an integer.
+
+ - JERRYX_ARG_ROUND - use round() method.
+ - JERRYX_ARG_FLOOR - use floor() method.
+ - JERRYX_ARG_CEIL - use ceil() method.
+
+**See also**
+
+- [jerryx_arg_uint8](#jerryx_arg_uint8)
+- [jerryx_arg_uint16](#jerryx_arg_uint16)
+- [jerryx_arg_uint32](#jerryx_arg_uint32)
+- [jerryx_arg_int8](#jerryx_arg_int8)
+- [jerryx_arg_int16](#jerryx_arg_int16)
+- [jerryx_arg_int32](#jerryx_arg_int32)
+
+
+## jerryx_arg_clamp_t
+
+ Indicates the clamping policy which will be chosen to transform an integer.
+ If the policy is NO_CLAMP, and the number is out of range,
+ then the transformer will throw a range error.
+
+ - JERRYX_ARG_CLAMP - clamp the number when it is out of range
+ - JERRYX_ARG_NO_CLAMP - throw a range error
+
+**See also**
+
+- [jerryx_arg_uint8](#jerryx_arg_uint8)
+- [jerryx_arg_uint16](#jerryx_arg_uint16)
+- [jerryx_arg_uint32](#jerryx_arg_uint32)
+- [jerryx_arg_int8](#jerryx_arg_int8)
+- [jerryx_arg_int16](#jerryx_arg_int16)
+- [jerryx_arg_int32](#jerryx_arg_int32)
+
+# Main functions
+
+## jerryx_arg_transform_this_and_args
+
+**Summary**
+
+Validate the this value and the JS arguments, and assign them to the native arguments.
+This function is useful to perform input validation inside external function handlers (see `jerry_external_handler_t`).
+
+**Prototype**
+
+```c
+jerry_value_t
+jerryx_arg_transform_this_and_args (const jerry_value_t this_val,
+                                    const jerry_value_t *js_arg_p,
+                                    const jerry_length_t js_arg_cnt,
+                                    const jerryx_arg_t *c_arg_p,
+                                    jerry_length_t c_arg_cnt)
+```
+
+ - `this_val` - `this` value. Note this is processed as the first value, before the array of arguments.
+ - `js_arg_p` - points to the array with JS arguments.
+ - `js_arg_cnt` - the count of the `js_arg_p` array.
+ - `c_arg_p` - points to the array of validation/transformation steps
+ - `c_arg_cnt` - the count of the `c_arg_p` array.
+ - return value - a `jerry_value_t` representing `undefined` if all validators passed or an `Error` if a validator failed.
+
+**Example**
+
+[doctest]: # (test="compile")
+
+```c
+#include "jerryscript.h"
+#include "jerryscript-ext/arg.h"
+
+/* JS signature: function (requiredBool, requiredString, optionalNumber) */
+static jerry_value_t
+my_external_handler (const jerry_value_t function_obj,
+                     const jerry_value_t this_val,
+                     const jerry_value_t args_p[],
+                     const jerry_length_t args_count)
+{
+  bool required_bool;
+  char required_str[16];
+  double optional_num = 1234.567;  // default value
+
+  /* "mapping" defines the steps to transform input arguments to C variables. */
+  const jerryx_arg_t mapping[] =
+  {
+    /* `this` is the first value. No checking needed on `this` for this function. */
+    jerryx_arg_ignore (),
+
+    jerryx_arg_boolean (&required_bool, JERRYX_ARG_NO_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_string (required_str, sizeof (required_str), JERRYX_ARG_NO_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_number (&optional_num, JERRYX_ARG_NO_COERCE, JERRYX_ARG_OPTIONAL),
+  };
+
+  /* Validate and transform. */
+  const jerry_value_t rv = jerryx_arg_transform_this_and_args (this_val,
+                                                               args_p,
+                                                               args_count,
+                                                               mapping,
+                                                               4);
+
+  if (jerry_value_is_error (rv))
+  {
+    /* Handle error. */
+    return rv;
+  }
+
+  /*
+   * Validated and transformed successfully!
+   * required_bool, required_str and optional_num can now be used.
+   */
+
+  return jerry_create_undefined (); /* Or return something more meaningful. */
+}
+```
+
+**See also**
+
+- [jerryx_arg_ignore](#jerryx_arg_ignore)
+- [jerryx_arg_number](#jerryx_arg_number)
+- [jerryx_arg_boolean](#jerryx_arg_boolean)
+- [jerryx_arg_string](#jerryx_arg_string)
+- [jerryx_arg_function](#jerryx_arg_function)
+- [jerryx_arg_native_pointer](#jerryx_arg_native_pointer)
+- [jerryx_arg_custom](#jerryx_arg_custom)
+- [jerryx_arg_object_properties](#jerryx_arg_object_properties)
+
+
+## jerryx_arg_transform_args
+
+**Summary**
+
+Validate an array of `jerry_value_t` and assign them to the native arguments.
+
+**Prototype**
+
+```c
+jerry_value_t
+jerryx_arg_transform_args (const jerry_value_t *js_arg_p,
+                           const jerry_length_t js_arg_cnt,
+                           const jerryx_arg_t *c_arg_p,
+                           jerry_length_t c_arg_cnt)
+```
+
+ - `js_arg_p` - points to the array with JS arguments.
+ - `js_arg_cnt` - the count of the `js_arg_p` array.
+ - `c_arg_p` - points to the array of validation/transformation steps
+ - `c_arg_cnt` - the count of the `c_arg_p` array.
+ - return value - a `jerry_value_t` representing `undefined` if all validators passed or an `Error` if a validator failed.
+
+**See also**
+
+- [jerryx_arg_transform_this_and_args](#jerryx_arg_transform_this_and_args)
+
+
+## jerryx_arg_transform_object_properties
+
+**Summary**
+
+Validate the properties of a JS object and assign them to the native arguments.
+
+*Note*: This function transforms properties of a single JS object into native C values.
+To transform multiple objects in one pass (for example when converting multiple arguments
+to an external handler), please use `jerryx_arg_object_properties` together with
+`jerryx_arg_transform_this_and_args` or `jerryx_arg_transform_args`.
+
+**Prototype**
+
+```c
+jerry_value_t
+jerryx_arg_transform_object_properties (const jerry_value_t obj_val,
+                                        const jerry_char_t **name_p,
+                                        const jerry_length_t name_cnt,
+                                        const jerryx_arg_t *c_arg_p,
+                                        jerry_length_t c_arg_cnt);
+
+```
+
+ - `obj_val` - the JS object.
+ - `name_p` - points to the array of property names.
+ - `name_cnt` - the count of the `name_p` array.
+ - `c_arg_p` - points to the array of validation/transformation steps
+ - `c_arg_cnt` - the count of the `c_arg_p` array.
+ - return value - a `jerry_value_t` representing `undefined` if all validators passed or an `Error` if a validator failed.
+
+**See also**
+
+- [jerryx_arg_object_properties](#jerryx_arg_object_properties)
+
+## jerryx_arg_transform_array
+
+**Summary**
+
+Validate the JS array and assign its items to the native arguments.
+
+*Note*: This function transforms items of a single JS array into native C values.
+To transform multiple JS arguments in one pass, please use `jerryx_arg_array` together with
+`jerryx_arg_transform_this_and_args` or `jerryx_arg_transform_args`.
+
+**Prototype**
+
+```c
+jerry_value_t
+jerryx_arg_transform_array (const jerry_value_t array_val,
+                            const jerryx_arg_t *c_arg_p,
+                            jerry_length_t c_arg_cnt);
+
+```
+
+ - `array_val` - the JS array.
+ - `c_arg_p` - points to the array of validation/transformation steps
+ - `c_arg_cnt` - the count of the `c_arg_p` array.
+ - return value - a `jerry_value_t` representing `undefined` if all validators passed or an `Error` if a validator failed.
+
+**See also**
+
+- [jerryx_arg_array](#jerryx_arg_array)
+
+
+# Helpers for commonly used validations
+
+## jerryx_arg_uint8
+
+## jerryx_arg_uint16
+
+## jerryx_arg_uint32
+
+## jerryx_arg_int8
+
+## jerryx_arg_int16
+
+## jerryx_arg_int32
+
+**Summary**
+
+All above jerryx_arg_[u]intX functions are used to create a validation/transformation step
+(`jerryx_arg_t`) that expects to consume one `number` JS argument
+and stores it into a C integer (uint8, int8, uint16, ...)
+
+**Prototype**
+
+Take jerryx_arg_int32 as an example
+
+```c
+static inline jerryx_arg_t
+jerryx_arg_int32 (int32_t *dest,
+                  jerryx_arg_round_t round_flag,
+                  jerryx_arg_clamp_t clamp_flag,
+                  jerryx_arg_coerce_t coerce_flag,
+                  jerryx_arg_optional_t opt_flag);
+```
+
+ - return value - the created `jerryx_arg_t` instance.
+ - `dest` - pointer to the `int32_t` where the result should be stored.
+ - `round_flag` - the rounding policy.
+ - `clamp_flag` - the clamping policy.
+ - `coerce_flag` - whether type coercion is allowed.
+ - `opt_flag` - whether the argument is optional.
+
+**See also**
+
+- [jerryx_arg_transform_this_and_args](#jerryx_arg_transform_this_and_args)
+
+
+## jerryx_arg_number
+
+**Summary**
+
+Create a validation/transformation step (`jerryx_arg_t`) that expects to consume
+one `number` JS argument and stores it into a C `double`.
+
+**Prototype**
+
+```c
+static inline jerryx_arg_t
+jerryx_arg_number (double *dest,
+                   jerryx_arg_coerce_t coerce_flag,
+                   jerryx_arg_optional_t opt_flag)
+```
+
+ - return value - the created `jerryx_arg_t` instance.
+ - `dest` - pointer to the `double` where the result should be stored.
+ - `coerce_flag` - whether type coercion is allowed.
+ - `opt_flag` - whether the argument is optional.
+
+**See also**
+
+- [jerryx_arg_transform_this_and_args](#jerryx_arg_transform_this_and_args)
+
+## jerryx_arg_boolean
+
+**Summary**
+
+Create a validation/transformation step (`jerryx_arg_t`) that expects to
+consume one `boolean` JS argument and stores it into a C `bool`.
+
+**Prototype**
+
+```c
+static inline jerryx_arg_t
+jerryx_arg_boolean (bool *dest,
+                    jerryx_arg_coerce_t coerce_flag,
+                    jerryx_arg_optional_t opt_flag)
+```
+ - return value - the created `jerryx_arg_t` instance.
+ - `dest` - pointer to the `bool` where the result should be stored.
+ - `coerce_flag` - whether type coercion is allowed.
+ - `opt_flag` - whether the argument is optional.
+
+**See also**
+
+- [jerryx_arg_transform_this_and_args](#jerryx_arg_transform_this_and_args)
+
+
+## jerryx_arg_string
+
+**Summary**
+
+Create a validation/transformation step (`jerryx_arg_t`) that expects to
+consume one `string` JS argument and stores it into a CESU-8 C `char` array.
+
+**Prototype**
+
+```c
+static inline jerryx_arg_t
+jerryx_arg_string (char *dest,
+                   uint32_t size,
+                   jerryx_arg_coerce_t coerce_flag,
+                   jerryx_arg_optional_t opt_flag)
+```
+
+ - return value - the created `jerryx_arg_t` instance.
+ - `dest` - pointer to the native char array where the result should be stored.
+ - `size` - the size of native char array.
+ - `coerce_flag` - whether type coercion is allowed.
+ - `opt_flag` - whether the argument is optional.
+
+**See also**
+
+- [jerryx_arg_transform_this_and_args](#jerryx_arg_transform_this_and_args)
+- [jerry_arg_utf8_string](#jerry_arg_utf8_string)
+
+
+## jerryx_arg_utf8_string
+
+**Summary**
+
+Create a validation/transformation step (`jerryx_arg_t`) that expects to
+consume one `string` JS argument and stores it into a UTF-8 C `char` array.
+
+**Prototype**
+
+```c
+static inline jerryx_arg_t
+jerryx_arg_utf8_string (char *dest,
+                        uint32_t size,
+                        jerryx_arg_coerce_t coerce_flag,
+                        jerryx_arg_optional_t opt_flag)
+```
+
+ - return value - the created `jerryx_arg_t` instance.
+ - `dest` - pointer to the native char array where the result should be stored.
+ - `size` - the size of native char array.
+ - `coerce_flag` - whether type coercion is allowed.
+ - `opt_flag` - whether the argument is optional.
+
+**See also**
+
+- [jerryx_arg_transform_this_and_args](#jerryx_arg_transform_this_and_args)
+- [jerry_arg_string](#jerry_arg_string)
+
+
+## jerryx_arg_function
+
+**Summary**
+
+Create a validation/transformation step (`jerryx_arg_t`) that expects to
+consume one `function` JS argument and stores it into a C `jerry_value_t`.
+
+**Prototype**
+
+```c
+static inline jerryx_arg_t
+jerryx_arg_function (jerry_value_t *dest,
+                     jerryx_arg_optional_t opt_flag)
+
+```
+ - return value - the created `jerryx_arg_t` instance.
+ - `dest` - pointer to the `jerry_value_t` where the result should be stored.
+ - `opt_flag` - whether the argument is optional.
+
+**See also**
+
+- [jerryx_arg_transform_this_and_args](#jerryx_arg_transform_this_and_args)
+
+## jerryx_arg_native_pointer
+
+**Summary**
+
+Create a validation/transformation step (`jerryx_arg_t`) that expects to
+consume one `object` JS argument that is 'backed' with a native pointer with
+a given type info. In case the native pointer info matches, the transform
+will succeed and the object's native pointer will be assigned to `*dest`.
+
+**Prototype**
+
+```c
+static inline jerryx_arg_t
+jerryx_arg_native_pointer (void **dest,
+                           const jerry_object_native_info_t *info_p,
+                           jerryx_arg_optional_t opt_flag)
+```
+ - return value - the created `jerryx_arg_t` instance.
+ - `dest` - pointer to where the resulting native pointer should be stored.
+ - `info_p` - expected the type info.
+ - `opt_flag` - whether the argument is optional.
+
+**See also**
+
+- [jerryx_arg_transform_this_and_args](#jerryx_arg_transform_this_and_args)
+
+## jerryx_arg_object_properties
+
+**Summary**
+
+Create a validation/transformation step (`jerryx_arg_t`) that expects to
+consume one `object` JS argument and call `jerryx_arg_transform_object_properties` inside
+to transform its properties to native arguments.
+User should prepare the `jerryx_arg_object_props_t` instance, and pass it to this function.
+
+**Prototype**
+
+```c
+static inline jerryx_arg_t
+jerryx_arg_object_properties (const jerryx_arg_object_props_t *object_props_p,
+                              jerryx_arg_optional_t opt_flag);
+```
+ - return value - the created `jerryx_arg_t` instance.
+ - `object_props_p` - provides information for properties transform.
+ - `opt_flag` - whether the argument is optional.
+
+**Example**
+
+[doctest]: # (test="compile")
+
+```c
+#include "jerryscript.h"
+#include "jerryscript-ext/arg.h"
+
+/**
+ * The binding function expects args_p[0] is an object, which has 3 properties:
+ *     "enable": boolean
+ *     "data": number
+ *     "extra_data": number, optional
+ */
+static jerry_value_t
+my_external_handler (const jerry_value_t function_obj,
+                     const jerry_value_t this_val,
+                     const jerry_value_t args_p[],
+                     const jerry_length_t args_count)
+{
+  bool required_bool;
+  double required_num;
+  double optional_num = 1234.567;  // default value
+
+  /* "prop_name_p" defines the name list of the expected properties' names. */
+  const char *prop_name_p[] = { "enable", "data", "extra_data" };
+
+  /* "prop_mapping" defines the steps to transform properties to C variables. */
+  const jerryx_arg_t prop_mapping[] =
+  {
+    jerryx_arg_boolean (&required_bool, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_number (&required_num, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_number (&optional_num, JERRYX_ARG_COERCE, JERRYX_ARG_OPTIONAL)
+  };
+
+  /* Prepare the jerryx_arg_object_props_t instance. */
+  const jerryx_arg_object_props_t prop_info =
+  {
+    .name_p = (const jerry_char_t **) prop_name_p,
+    .name_cnt = 3,
+    .c_arg_p = prop_mapping,
+    .c_arg_cnt = 3
+  };
+
+  /* It is the mapping used in the jerryx_arg_transform_args. */
+  const jerryx_arg_t mapping[] =
+  {
+    jerryx_arg_object_properties (&prop_info, JERRYX_ARG_REQUIRED)
+  };
+
+  /* Validate and transform. */
+  const jerry_value_t rv = jerryx_arg_transform_args (args_p,
+                                                      args_count,
+                                                      mapping,
+                                                      1);
+
+  if (jerry_value_is_error (rv))
+  {
+    /* Handle error. */
+    return rv;
+  }
+
+  /*
+   * Validated and transformed successfully!
+   * required_bool, required_num and optional_num can now be used.
+   */
+
+   return jerry_create_undefined (); /* Or return something more meaningful. */
+}
+
+```
+
+ **See also**
+
+- [jerryx_arg_transform_this_and_args](#jerryx_arg_transform_this_and_args)
+- [jerryx_arg_transform_object_properties](#jerryx_arg_transform_object_properties)
+
+## jerryx_arg_array
+
+**Summary**
+
+Create a validation/transformation step (`jerryx_arg_t`) that expects to
+consume one `array` JS argument and call `jerryx_arg_transform_array_items` inside
+to transform its items to native arguments.
+User should prepare the `jerryx_arg_array_items_t` instance, and pass it to this function.
+
+**Prototype**
+
+```c
+static inline jerryx_arg_t
+jerryx_arg_array (const jerryx_arg_array_items_t *array_items_p, jerryx_arg_optional_t opt_flag);
+```
+ - return value - the created `jerryx_arg_t` instance.
+ - `array_items_p` - provides items information for transform.
+ - `opt_flag` - whether the argument is optional.
+
+**Example**
+
+[doctest]: # (test="compile")
+
+```c
+#include "jerryscript.h"
+#include "jerryscript-ext/arg.h"
+
+/**
+ * The binding function expects args_p[0] is an array, which has 3 items:
+ *     first: boolean
+ *     second: number
+ *     third: number, optional
+ */
+static jerry_value_t
+my_external_handler (const jerry_value_t function_obj,
+                     const jerry_value_t this_val,
+                     const jerry_value_t args_p[],
+                     const jerry_length_t args_count)
+{
+  bool required_bool;
+  double required_num;
+  double optional_num = 1234.567;  // default value
+
+  /* "item_mapping" defines the steps to transform array items to C variables. */
+  const jerryx_arg_t item_mapping[] =
+  {
+    jerryx_arg_boolean (&required_bool, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_number (&required_num, JERRYX_ARG_COERCE, JERRYX_ARG_REQUIRED),
+    jerryx_arg_number (&optional_num, JERRYX_ARG_COERCE, JERRYX_ARG_OPTIONAL)
+  };
+
+  /* Prepare the jerryx_arg_array_items_t instance. */
+  const jerryx_arg_array_items_t array_info =
+  {
+    .c_arg_p = item_mapping,
+    .c_arg_cnt = 3
+  };
+
+  /* It is the mapping used in the jerryx_arg_transform_args. */
+  const jerryx_arg_t mapping[] =
+  {
+    jerryx_arg_array (&array_info, JERRYX_ARG_REQUIRED)
+  };
+
+  /* Validate and transform. */
+  const jerry_value_t rv = jerryx_arg_transform_args (args_p,
+                                                      args_count,
+                                                      mapping,
+                                                      1);
+
+  if (jerry_value_is_error (rv))
+  {
+    /* Handle error. */
+    return rv;
+  }
+
+  /*
+   * Validated and transformed successfully!
+   * required_bool, required_num and optional_num can now be used.
+   */
+
+   return jerry_create_undefined (); /* Or return something more meaningful. */
+}
+
+```
+
+ **See also**
+
+- [jerryx_arg_transform_this_and_args](#jerryx_arg_transform_this_and_args)
+- [jerryx_arg_transform_object_properties](#jerryx_arg_transform_object_properties)
+
+# Functions to create custom validations
+
+## jerryx_arg_custom
+
+**Summary**
+
+Create a jerryx_arg_t instance with custom transform.
+
+**Prototype**
+
+```c
+static inline jerryx_arg_t
+jerryx_arg_custom (void *dest,
+                   uintptr_t extra_info,
+                   jerryx_arg_transform_func_t func)
+
+```
+ - return value - the created `jerryx_arg_t` instance.
+ - `dest` - pointer to the native argument where the result should be stored.
+ - `extra_info` - the extra parameter data, specific to the transform function.
+ - `func` - the custom transform function.
+
+**See also**
+
+- [jerryx_arg_transform_this_and_args](#jerryx_arg_transform_this_and_args)
+
+
+
+## jerryx_arg_js_iterator_pop
+
+**Summary**
+
+Pop the current `jerry_value_t` argument from the iterator.
+It will change the `js_arg_idx` and `js_arg_p` value in the iterator.
+
+**Prototype**
+
+```c
+jerry_value_t
+jerryx_arg_js_iterator_pop (jerryx_arg_js_iterator_t *js_arg_iter_p)
+```
+ - return value - the `jerry_value_t` argument that was popped.
+ - `js_arg_iter_p` - the JS arg iterator from which to pop.
+
+## jerryx_arg_js_iterator_peek
+
+**Summary**
+
+Get the current JS argument from the iterator, without moving the iterator forward.
+*Note:* Unlike `jerryx_arg_js_iterator_pop ()`, it will not change `js_arg_idx` and
+`js_arg_p` value in the iterator.
+
+**Prototype**
+
+```c
+jerry_value_t
+jerryx_arg_js_iterator_peek (jerryx_arg_js_iterator_t *js_arg_iter_p)
+```
+ - return value - the current `jerry_value_t` argument.
+ - `js_arg_iter_p` - the JS arg iterator from which to peek.
+
+## jerryx_arg_js_iterator_restore
+
+**Summary**
+
+Restore the last item popped from the stack.  This can be called as
+many times as there are arguments on the stack.
+
+*Note:* This function relies on the underlying implementation of the
+arg stack as an array, as its function is to simply back up the "top
+of stack" pointer to point to the previous element of the array.
+
+*Note:* Like `jerryx_arg_js_iterator_pop ()`, this function will
+change the `js_arg_idx` and `js_arg_p` values in the iterator.
+
+**Prototype**
+
+```c
+jerry_value_t
+jerryx_arg_js_iterator_restore (jerryx_arg_js_iterator_t *js_arg_iter_p)
+```
+ - return value - the current (new) `jerry_value_t` argument. (I.e.,
+   the new top of the stack.)
+ - `js_arg_iter_p` - the JS arg iterator to restore.
+
+
+## jerryx_arg_js_iterator_index
+
+**Summary**
+
+Get the index of the current JS argument from the iterator.
+
+**Prototype**
+
+```c
+jerry_length_t
+jerryx_arg_js_iterator_index (jerryx_arg_js_iterator_t *js_arg_iter_p)
+```
+ - return value - the index of current JS argument.
+ - `js_arg_iter_p` - the JS arg iterator from which to peek.
