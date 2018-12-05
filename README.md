@@ -818,7 +818,8 @@ jerryx_arg_js_iterator_peek (jerryx_arg_js_iterator_t *js_arg_iter_p)
 **Summary**
 
 Restore the last item popped from the stack.  This can be called as
-many times as there are arguments on the stack.
+many times as there are arguments on the stack -- if the first element
+in the array is the current top of the stack, this function does nothing.
 
 *Note:* This function relies on the underlying implementation of the
 arg stack as an array, as its function is to simply back up the "top
@@ -833,8 +834,7 @@ change the `js_arg_idx` and `js_arg_p` values in the iterator.
 jerry_value_t
 jerryx_arg_js_iterator_restore (jerryx_arg_js_iterator_t *js_arg_iter_p)
 ```
- - return value - the current (new) `jerry_value_t` argument. (I.e.,
-   the new top of the stack.)
+ - return value - the the new top of the stack.
  - `js_arg_iter_p` - the JS arg iterator to restore.
 
 
