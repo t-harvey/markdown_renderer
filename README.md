@@ -11,16 +11,14 @@ First, if you clone the repo and cd into that directory, you should be able to r
 <code>npm install</code><br>
 ...the individual steps are as follows:
 
-<td style="padding-top: 2px;">
 #### the WebIDL parser:
 <code>sudo npm install -g webidl2</code>
-</td>
 
 #### file i/o:<br>
-<code>sudo npm install -g q-io
+<code>sudo npm install -g q-io<br>
 npm install file-exists</code><br>
 #### ast compiler:
-<code>sudo npm install -g hogan.js</code><br>
+<code>sudo npm install -g hogan.js</code><br><br>
 (NOTE: "hogan.js", not "hogan"!)<br>
 #### boost-y type functions:
 <code>sudo npm install lodash</code><br>
