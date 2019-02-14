@@ -6,7 +6,7 @@ This compiler takes as input a subset of WebIDL and produces C-code that will "g
 
 ### Building the generator
 <details>
-<summary>Click to show installation instructions for node packages</summary>
+<summary>Click to show installation instructions for node packages</summary><br><br>
 First, if you clone the repo and cd into that directory, you should be able to run a single command:<br>
 <code>npm install</code><br>
 ...the individual steps are as follows:
