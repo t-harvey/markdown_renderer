@@ -10,7 +10,6 @@ This compiler takes as input a subset of WebIDL and produces C-code that will "g
 First, if you clone the repo and cd into that directory, you should be able to run a single command:<br>
 <code>npm install</code><br>
 ...the individual steps are as follows:
-<pre>
 
 <td style="padding-top: 2px;">
 #### the WebIDL parser:
@@ -30,7 +29,6 @@ npm install file-exists</code><br>
 
 <code>npm install minimist</code>
 
-</pre>
 ...then set NODE_PATH to /usr/local/lib/node_modules (the "-g" on the npm-install command puts them here; you can alternatively install them locally, and then do the obvious... (in (t)csh, the .cshrc command is:
 </details>
 
