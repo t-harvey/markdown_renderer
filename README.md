@@ -28,6 +28,20 @@ getters/setters on the C side.
 </details>
 
 ### Building the generator
+
+JerryGen is controlled by the generate.js script, found in the
+generator repo.
+
+<details>
+<summary>Click to show installation instructions for the
+generator.</summary>
+Clone the generator repo:
+<code>git clone https://github.com/t-harvey/JerryGen.git</code>
+
+The generator is built on top of Javascript, so no compilation of the
+tool is necessary.
+</details>
+
 <details>
 <summary>Click to show installation instructions for node packages.</summary><br>
 First, if you clone the repo and cd into that directory, you should be
@@ -53,9 +67,24 @@ npm install file-exists</code><br>
 
 <code>npm install minimist</code>
 
-...then set NODE_PATH to /usr/local/lib/node_modules (the "-g" on the npm-install command puts them here; you can alternatively install them locally, and then do the obvious...
+...then set NODE_PATH to /usr/local/lib/node_modules (the "-g" on the
+npm-install command puts them here; you can alternatively install them
+locally, and then do the obvious...
 </details>
+
 
 ### Building Jerryscript
 <details>
+The instructions for building Jerryscript are [here](https://github.com/pando-project/jerryscript/blob/master/docs/01.GETTING-STARTED.md) -- note that building Jerryscript without
+ES2015 features can give results that are difficult to pin down.
+For example, if the config.h file in the jerry-core directory does not
+have the variable CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN commented
+out, then any attempt to use the ArrayBuffer in a script will result
+in a "script error" message from the interpreter, even though the
+script containing the ArrayBuffer declaration may be otherwise error
+free.  Of course, if a user's scripts don't use ArrayBuffer, then it might
+behoove him to compile without that feature and thus minimize the size
+of the interpreter.
+
+Using tools/build.py will produce libraries in the build/lib directory.
 </details>
