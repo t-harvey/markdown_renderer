@@ -102,7 +102,7 @@ into a directory called <code>work</code>, the commands to build a
 barebones parser are as follows:<p>
 
 <code>
-<b>~/work -></b> generator/generate.js --output_utility_files --package=empty  generator/unit_tests/template/empty.idl
+<b>~/work -></b> generator/generate.js --output_utility_files --package=empty  generator/unit_tests/template/empty.idl<p>
 <b>~/work -></b> gcc -g --std=c99 -Djerry_value_has_error_flag=jerry_value_is_error -Ijerryscript/jerry-port/default/include -Ijerryscript/jerry-core/include -Ijerryscript/jerry-ext/include -Ijerryscript/jerry-ext/include/jerryscript-ext/ -I./empty generator/unit_tests/template/main_jerrygen.c empty/webidl*.c jerryscript/build/lib/libjerry-core.a jerryscript/build/lib/libjerry-ext.a jerryscript/build/lib/libjerry-port-default.a -lm
 </code>
 </details>
