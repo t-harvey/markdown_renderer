@@ -49,7 +49,7 @@ able to run a single command:<p>
 
 <code>npm install</code><p>
 
-...the individual steps are as follows:
+...if that doesn't work, the individual steps are as follows:
 
 #### the WebIDL parser:
 <code>sudo npm install -g webidl2</code>
@@ -84,7 +84,20 @@ in a "script error" message from the interpreter, even though the
 script containing the ArrayBuffer declaration may be otherwise error
 free.  Of course, if a user's scripts don't use ArrayBuffer, then it might
 behoove him to compile without that feature and thus minimize the size
-of the interpreter.
+of the interpreter.<p>
 
-Using tools/build.py will produce libraries in the build/lib directory.
+Using <code>tools/build.py</code> will produce libraries in the
+<code>build/lib</code> directory.  To get an executable interpreter,
+these libraries must be linked in to a <code>main.c</code> file.  The
+main.c file provided in the generator directory also requires the
+JerryGen utility files, which are produced by running the generator
+with the <code>--output_utility_files</code> flag.
+
+We provide an empty WebIDL file for just such a minimal build.
+Assuming that the user has cloned both the generator and Jerryscript
+into a directory called <code>work</code>, the commands to build a
+barebones parser are as follows:<p>
+
+<code>
+</code>
 </details>
