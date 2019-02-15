@@ -75,16 +75,19 @@ locally, and then do the obvious...
 
 ### Building Jerryscript
 <details>
-The instructions for building Jerryscript are [here](https://github.com/pando-project/jerryscript/blob/master/docs/01.GETTING-STARTED.md) -- note that building Jerryscript without
-ES2015 features can give results that are difficult to pin down.
-For example, if the config.h file in the jerry-core directory does not
-have the variable CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN commented
-out, then any attempt to use the ArrayBuffer in a script will result
-in a "script error" message from the interpreter, even though the
-script containing the ArrayBuffer declaration may be otherwise error
-free.  Of course, if a user's scripts don't use ArrayBuffer, then it might
-behoove him to compile without that feature and thus minimize the size
-of the interpreter.<p>
+
+The instructions for building Jerryscript are
+[here](https://github.com/pando-project/jerryscript/blob/master/docs/01.GETTING-STARTED.md)
+-- note that building Jerryscript without ES2015 features can give
+results that are difficult to pin down.  For example, if the config.h
+file in the jerry-core directory does not have the variable
+<code>CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN</code> commented out,
+then any attempt to use the ArrayBuffer in a script will result in a
+"script error" message from the interpreter, even though the script
+containing the <code>ArrayBuffer</code> declaration may be otherwise
+error free.  Of course, if a user's scripts don't use
+<code>ArrayBuffer</code>, then it might behoove him to compile without
+that feature and thus minimize the size of the interpreter.<p>
 
 Using <code>tools/build.py</code> will produce libraries in the
 <code>build/lib</code> directory.  To get an executable interpreter,
@@ -99,5 +102,7 @@ into a directory called <code>work</code>, the commands to build a
 barebones parser are as follows:<p>
 
 <code>
+<b>~/work -></b> generator/generate.js --output_utility_files --package=empty  generator/unit_tests/template/empty.idl
+<b>~/work -></b> gcc -g --std=c99 -Djerry_value_has_error_flag=jerry_value_is_error -Ijerryscript/jerry-port/default/include -Ijerryscript/jerry-core/include -Ijerryscript/jerry-ext/include -Ijerryscript/jerry-ext/include/jerryscript-ext/ -I./empty generator/unit_tests/template/main_jerrygen.c empty/webidl*.c jerryscript/build/lib/libjerry-core.a jerryscript/build/lib/libjerry-ext.a jerryscript/build/lib/libjerry-port-default.a -lm
 </code>
 </details>
