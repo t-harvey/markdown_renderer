@@ -35,8 +35,8 @@ generator repo.
 <details>
 <summary>Click to show installation instructions for the
 generator.</summary>
-Clone the generator repo:
-<code>git clone https://github.com/t-harvey/JerryGen.git</code>
+Clone the generator repo:<p>
+<code>git clone https://github.com/t-harvey/JerryGen.git</code><p>
 
 The generator is built on top of Javascript, so no compilation of the
 tool is necessary.
