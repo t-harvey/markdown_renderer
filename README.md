@@ -45,7 +45,7 @@ tool is necessary.
 <details>
 <summary>Click to show installation instructions for node packages.</summary><br>
 First, if you clone the repo and cd into that directory, you should be
-able to run a single command:<p><br>
+able to run a single command:<p>
 
 <code>npm install</code><p>
 
