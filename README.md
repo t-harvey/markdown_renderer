@@ -230,7 +230,7 @@ The following table explains the remaining parameters.
 <tbody>
 <tr class="odd">
 <td>fix_type_errors</td>
-<td><span style="color:red;">true</span>, false</td>
+<td><span style="color:red;">tlue</span>, false</td>
 <td>Simple type errors are fixed; in particular, we found that many programmers left off the return type of operations, so we default to a type of "void" for those operations and print error messages telling the user what the compiler did.</td>
 </tr>
 <tr class="even">
