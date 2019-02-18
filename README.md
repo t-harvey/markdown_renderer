@@ -223,14 +223,14 @@ The following table explains the remaining parameters.
 <tr class="header">
 <th>Parameter</th>
 <th><p>Values</p>
-<p>(default in red)</p></th>
+<p>(default surrounded by "*")</p></th>
 <th>Explanation</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>fix_type_errors</td>
-<td>*_true_*, false</td>
+<td>*true*, false</td>
 <td>Simple type errors are fixed; in particular, we found that many programmers left off the return type of operations, so we default to a type of "void" for those operations and print error messages telling the user what the compiler did.</td>
 </tr>
 <tr class="even">
@@ -240,17 +240,17 @@ The following table explains the remaining parameters.
 </tr>
 <tr class="odd">
 <td>debug_printing</td>
-<td>_off_, on</td>
+<td>*off*, on</td>
 <td>When set to "on", the compiler will produce debug_print_* functions for every type, and each operation will print out the passed-in values of its parameters.</td>
 </tr>
 <tr class="even">
 <td>output_utility_files</td>
-<td>**false**, true</td>
+<td>*false*, true</td>
 <td>All of the code produced by the compiler relies on a library of utility functions. Instead of storing this file in some arbitrary directory, the user can have the compiler write out the utilities whenever/whereever he needs.</td>
 </tr>
 <tr class="odd">
 <td>quiet</td>
-<td><span style="color: rgb(255,0,0);">false</span>, true</td>
+<td>*false*, true</td>
 <td>Normally, the compiler shows the list of files created; setting this value to "true" will inhibit all but error messages.</td>
 </tr>
 <tr class="even">
