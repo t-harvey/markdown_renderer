@@ -230,22 +230,22 @@ The following table explains the remaining parameters.
 <tbody>
 <tr class="odd">
 <td>fix_type_errors</td>
-<td><span style="color:red;">tlue</span>, false</td>
+<td>*_true_*, false</td>
 <td>Simple type errors are fixed; in particular, we found that many programmers left off the return type of operations, so we default to a type of "void" for those operations and print error messages telling the user what the compiler did.</td>
 </tr>
 <tr class="even">
 <td>stubs</td>
-<td><span style="color: rgb(255,0,0);">on</span>, off, overwrite</td>
+<td>*on*, off, overwrite</td>
 <td>Controls the creation of the *_stubs files, explained in the next section. We default to creating stubs files each time the compiler is invoked, but because the stubs contain human-generated code, we don't overwrite existing stubs files. This can be changed with the "overwrite" value, which creates new stubs files on top of any existing stubs files.</td>
 </tr>
 <tr class="odd">
 <td>debug_printing</td>
-<td><span style="color: rgb(255,0,0);">off</span>, on</td>
+<td>_off_, on</td>
 <td>When set to "on", the compiler will produce debug_print_* functions for every type, and each operation will print out the passed-in values of its parameters.</td>
 </tr>
 <tr class="even">
 <td>output_utility_files</td>
-<td><span style="color: rgb(255,0,0);">false</span>, true</td>
+<td>**false**, true</td>
 <td>All of the code produced by the compiler relies on a library of utility functions. Instead of storing this file in some arbitrary directory, the user can have the compiler write out the utilities whenever/whereever he needs.</td>
 </tr>
 <tr class="odd">
