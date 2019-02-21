@@ -12,13 +12,13 @@ that this project produces.
 The first rule is that the code must be readable:
 <ol>
 <li>
-<p>Code should be self-documenting</p>
-</pre>variable names should reflect purpose </pre>
+Code should be self-documenting<br>
+    variable names should reflect purpose
 </li>
 <li>
 <p>Clear, Consise Comments</p>
-    1. self-documenting code cannot capture the richness of detail that the programmer has in his head<br>
-    2. a maintainer should not have to de-code an entire routine to understand an isolated section of that code<br>
-    3. code should be largely understood from the comments, with actual code simply filling in the gaps<br>
+    a. self-documenting code cannot capture the richness of detail that the programmer has in his head<br>
+    b. a maintainer should not have to de-code an entire routine to understand an isolated section of that code<br>
+    c. code should be largely understood from the comments, with actual code simply filling in the gaps<br>
 </li>
 </ol>
