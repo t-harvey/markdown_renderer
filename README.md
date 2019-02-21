@@ -26,7 +26,8 @@ Clear, Concise, Copious Comments<br>
 </li>
 </ol>
 
-99% of rules in other systems are superfluous and usually based on
-aesthetics, rather than readability/maintainability -- if you're
-willing to subjugate yourself to _my_ aesthetics, then we can talk;
-otherwise, clarity seems the minimal that we need to agree on.
+99% of the rest of the rules in other systems are superfluous and
+usually based on aesthetics, rather than readability/maintainability
+-- if you're willing to subjugate yourself to _my_ aesthetics, then we
+can talk; otherwise, clarity seems the minimal that we need to agree
+on.
