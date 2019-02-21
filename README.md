@@ -21,18 +21,18 @@ which was a masters-thesis project by an English student named Mohamed
 Eltuhamy.  The structure of his code has largely continued into the
 current implementation.
 
-### <code>generator.js</code>
+#### <code>generator.js</code>
 
 The main routine of the JerryGen compiler is short/sweet: it
 initializes the main packages, parses the file, compiles it into a
 form that can be fed to Hogan, and then outputs the code (through Hogan).
 
-### <code>parameters.js</code>
+#### <code>parameters.js</code>
 
 This code gathers the parameters from the command line and checks them
 for correctness.
 
-### <code>AugmentedAST.js</code>
+#### <code>AugmentedAST.js</code>
 
 This is the body of the compiler -- it (essentially) builds a symbol
 table and type checks all of the WebIDL.
@@ -47,18 +47,18 @@ last parameters in every argument list, and the Mustache code looks
 something like:<p>
 
 <code>
-{{#arguments}}<br>
+{{#arguments}}<p>
     {{#first_in_list}}({{/first_in_list}}{{{parameter}}}{{^last_in_list}}, {{/last_in_list}}{{#last_in_list}}){{/last_in_list}}<br>
 {{/arguments}}
 </code>
 
-### <code>file_generators.js</code>
+#### <code>file_generators.js</code>
 
 For each type, as many as five C files are created.  This code handles
 building the data structure for each target file before handing the
 data off to the Hogan parser.
 
-### <code>CHoganHelpers.js</code>
+#### <code>CHoganHelpers.js</code>
 
 This provides the <code>getContext</code> function, which packages up
 the Hogan compiler with all of the data structures created by
