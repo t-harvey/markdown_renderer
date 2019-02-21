@@ -46,9 +46,9 @@ surrounding parentheses.  The AugmentedAST code marks the first and
 last parameters in every argument list, and the Mustache code looks
 something like:<p>
 
-<code>{{#arguments}}<br>
-    {{#first_in_list}}({{/first_in_list}}{{{parameter}}}{{^last_in_list}}, {{/last_in_list}}{{#last_in_list}}){{/last_in_list}}<br>
-{{/arguments}}
+<code>{{#arguments}}</code>
+<code>    {{#first_in_list}}({{/first_in_list}}{{{parameter}}}{{^last_in_list}}, {{/last_in_list}}{{#last_in_list}}){{/last_in_list}}</code>
+<code>{{/arguments}}</code>
 </code>
 
 #### <code>file_generators.js</code>
