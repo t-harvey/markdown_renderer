@@ -48,7 +48,7 @@ something like:<p>
 
 <code>
 {{#arguments}}<p>
-    {{#first_in_list}}({{/first_in_list}}{{{parameter}}}{{^last_in_list}}, {{/last_in_list}}{{#last_in_list}}){{/last_in_list}}<br>
+    {{#first_in_list}}({{/first_in_list}}{{{parameter}}}{{^last_in_list}}, {{/last_in_list}}{{#last_in_list}}){{/last_in_list}}<p>
 {{/arguments}}
 </code>
 
