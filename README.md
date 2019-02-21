@@ -9,13 +9,13 @@ Thus, we will specify only a minimal set of mostly philosophical
 standards that make sense to us.  They apply to the code that makes up
 this project and the code that this project produces.
 
-The first rule is that the code must be readable:
+The first and only rule is that the code must be readable:
 <ol>
 <li>
 Code should be simple and self-documenting<br>
     a. use three/four spaces indentation (two spaces can make reading code error prone; five(+) is too many)<br>
     b. general good-coding practices apply (e.g., variable names should reflect purpose; use for-loops when iterating through an array, while-loops for linked lists; etc.)<br>
-    c. try to be neat and use whitespace to separate/join ideas<br>
+    c. try to be neat, and use whitespace to separate/join ideas<br>
     d. strict adherence to every small detail of consistency is not a prerequisite of clarity
 </li>
 <li>
@@ -26,7 +26,7 @@ Clear, Concise, Copious Comments<br>
 </li>
 </ol>
 
-All(99%?) other rules are superfluous and usually based on aesthetics,
-rather than readability/maintainability -- if you're willing to
-subjugate yourself to _my_ aesthetics, then we can talk; otherwise,
-clarity seems the minimal that we need to agree on.
+99% of rules in other systems are superfluous and usually based on
+aesthetics, rather than readability/maintainability -- if you're
+willing to subjugate yourself to _my_ aesthetics, then we can talk;
+otherwise, clarity seems the minimal that we need to agree on.
