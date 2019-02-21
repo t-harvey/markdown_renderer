@@ -13,7 +13,7 @@ The first rule is that the code must be readable:
 <ol>
 <li>
 <p>Code should be self-documenting</p>
-</pre>variable names should reflect purpose</pre>
+</pre>variable names should reflect purpose </pre>
 </li>
 <li>
 <p>Clear, Consise Comments</p>
