@@ -1,6 +1,6 @@
 # Design of the generator
 
-<code>TODO</code>, an aside:<p>
+<code>TODO</code>, an aside:<br>
 The code is sprinkled with comments that start with
 <code>TODO</code> -- these represent places that (may) need further
 development.
