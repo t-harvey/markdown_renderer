@@ -12,11 +12,13 @@ that this project produces.
 The first rule is that the code must be readable:
 <ol>
 <li>
-Code should be self-documenting<br>
-    variable names should reflect purpose
+Code should be simple and self-documenting<br>
+    a. three/four spaces indentation (two spaces can make reading code error prone); five(+) is too many)
+    b. general good-coding practices apply (e.g., variable names should reflect purpose)
+    c. strict adherence to every small detail of consistency is not a prerequisite of clarity
 </li>
 <li>
-<p>Clear, Consise Comments</p>
+Clear, Consise Comments<br>
     a. self-documenting code cannot capture the richness of detail that the programmer has in his head<br>
     b. a maintainer should not have to de-code an entire routine to understand an isolated section of that code<br>
     c. code should be largely understood from the comments, with actual code simply filling in the gaps<br>
