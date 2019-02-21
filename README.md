@@ -17,8 +17,8 @@ The first rule is that the code must be readable:
 </li>
 <li>
 <p>Clear, Consise Comments</p>
-    self-documenting code cannot capture the richness of detail that the programmer has in his head
-    a maintainer should not have to de-code an entire routine to understand an isolated section of that code
-    code should be largely understood from the comments, with actual code simply filling in the gaps</pre>
+    self-documenting code cannot capture the richness of detail that the programmer has in his head<br>
+    a maintainer should not have to de-code an entire routine to understand an isolated section of that code<br>
+    code should be largely understood from the comments, with actual code simply filling in the gaps<br>
 </li>
 </ol>
