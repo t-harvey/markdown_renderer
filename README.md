@@ -13,8 +13,8 @@ The first rule is that the code must be readable:
 <ol>
 <li>
 Code should be simple and self-documenting<br>
-    a. three/four spaces indentation (two spaces can make reading code error prone); five(+) is too many)
-    b. general good-coding practices apply (e.g., variable names should reflect purpose)
+    a. three/four spaces indentation (two spaces can make reading code error prone); five(+) is too many)<br>
+    b. general good-coding practices apply (e.g., variable names should reflect purpose)<br>
     c. strict adherence to every small detail of consistency is not a prerequisite of clarity
 </li>
 <li>
