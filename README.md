@@ -1,75 +1,43 @@
-# Design of the generator
+When we translate WebIDL into C code, we often need to modify the
+names slightly to account for C rules.  This document will explain all
+of the conventions.
 
-<code>TODO</code>, an aside:<br>
-The code is sprinkled with comments that start with
-<code>TODO</code> -- these represent places that (may) need further
-development.
+File Names
 
-The <code>generator</code> directory contains the main driver for the
-code, <code>generator.js</code>, a Javascript script that takes the
-parameters (<code>parameters.js</code>), calls the WebIDL parser on
-the input files, invokes the main compiler
-(<code>AugmentedAST.js</code>), and then calls the Hogan compiler to
-parse the templates in the <code>c-templates</code> directory and
-output the C code.
+Each instance of an enumeration or callback type causes the creation
+of one .c file and one .h file.  The names of the files are the names
+of the types.
 
-Many of the tools (like Hogan and the WebIDL parser) come straight
-from the web-developing community , so the entire organization of
-JerryGen reflects that approach.  Further, the original version of
-this code came from a GitHub project called <code>native-calls</code>,
-which was a masters-thesis project by an English student named Mohamed
-Eltuhamy.  The structure of his code has largely continued into the
-current implementation.
+Interfaces and dictionaries cause the creation of three files, two .h
+files and one .c file.  The names of the files are the names of the
+types, but one of the .h files' names will have "_private" as a
+suffix.  The intent is that the plain .h file will contain the data
+structures and hooks that the C programmer needs, while the _private.h
+file will contain the calls that the glue code needs, that the C
+programmer should never have to touch.
 
-#### <code>generator.js</code>
+| WebIDL Type | Files | Example
+| Enumerations | .h/.c | "enum_name"<br>enum_name.h<br>enum_name.c |
+| Callbacks | .h/.c | "callback_name"<br>callback_name.h<br>callback_name.c |
+| Definitions | .h/.c | "definition_name"<br>definition_name.h<br>definition_name_private.h<br>definition_name.c |
+| Interfaces | .h/.c | "interface_name"<br>interface_name.h<br>interface_name_private.h<br>interface_name.c<br>interface_name_stubs.h<br>interface_name_strubs.c |
 
-The main routine of the JerryGen compiler is short/sweet: it
-initializes the main packages, parses the file, compiles it into a
-form that can be fed to Hogan, and then outputs the code (through Hogan).
+Enumeration Types
 
-#### <code>parameters.js</code>
+In WebIDL and Javascript, enumeration values are strings.  In C, the
+names are simple integers, but their namespaces are shared -- this
+means that if you have two enumeration types, <code>foo1</code> and
+<code>foo2</code>, with the same value, say, <code>bar</code>, the C
+compiler will refuse to compile that code, because it has no way to
+distinguish <code>bar</code> in <code>foo1</code> from
+<code>bar</code> in <code>foo2</code>.
 
-This code gathers the parameters from the command line and checks them
-for correctness.
+To solve this problem, we prefix each enumeration value with its type
+name.  In our example, we would have the values <code>foo1_bar</code> and
+<code>foo2_bar</code>, which would not conflict.
 
-#### <code>AugmentedAST.js</code>
+Callbacks
 
-This is the body of the compiler -- it (essentially) builds a symbol
-table and type checks all of the WebIDL.
+Dictionaries
 
-A perhaps unexpected function of this code is to provide the
-control-flow information that Mustache does not have.  For example, in
-a list of function parameters, the Mustache code puts out a comma
-separator following all parameters except the last, and both the first
-and last parameters need to be marked in order to put out the
-surrounding parentheses.  The AugmentedAST code marks the first and
-last parameters in every argument list, and the Mustache code looks
-something like:<p>
-
-<code>{{#arguments}}</code><br>
-<code>    {{#first_in_list}}({{/first_in_list}}{{{parameter}}}{{^last_in_list}}, {{/last_in_list}}{{#last_in_list}}){{/last_in_list}}</code><br>
-<code>{{/arguments}}</code>
-</code>
-
-#### <code>file_generators.js</code>
-
-For each type, as many as five C files are created.  This code handles
-building the data structure for each target file before handing the
-data off to the Hogan parser.
-
-#### <code>CHoganHelpers.js</code>
-
-This provides the <code>getContext</code> function, which packages up
-the Hogan compiler with all of the data structures created by
-<code>AugmentedAST</code>.
-
-# Testing
-
-The original milestone for the JerryGen project was to correctly parse
-and build code for the WebIDL in the <code>zephyr.js</code> project,
-which is a Linaro-based project with goals similar to our own: to
-support scripting on embedded processors.
-
-During development, we also defined a set of "unit tests" that were
-designed specifically to test individual new features as we progressed
-towards compiling the <code>zephyr.js</code> code.
+Interfaces
