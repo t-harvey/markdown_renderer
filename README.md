@@ -16,7 +16,7 @@ structures and hooks that the C programmer needs, while the _private.h
 file will contain the calls that the glue code needs, that the C
 programmer should never have to touch.
 
-| WebIDL Type | Files | Example |
+| WebIDL Type | Files | Example WebIDL Construct | Example Files Created |
 | --- | --- | --- | --- |
 | Enumerations | .h/.c | "enum_name" | enum_name.h<br>enum_name.c |
 | Callbacks | .h/.c | "callback_name"| callback_name.h<br>callback_name.c |
