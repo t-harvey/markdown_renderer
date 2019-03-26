@@ -17,11 +17,11 @@ file will contain the calls that the glue code needs, that the C
 programmer should never have to touch.
 
 | WebIDL Type | Files | Example |
-| --- | --- | --- |
-| Enumerations | .h/.c | "enum_name"<br>enum_name.h<br>enum_name.c |
-| Callbacks | .h/.c | "callback_name"<br>          callback_name.h<br>callback_name.c |
-| Definitions | .h/.c | "definition_name"<br>definition_name.h<br>definition_name_private.h<br>definition_name.c |
-| Interfaces | .h/.c | "interface_name"<br>interface_name.h<br>interface_name_private.h<br>interface_name.c<br>interface_name_stubs.h<br>interface_name_strubs.c |
+| --- | --- | --- | --- |
+| Enumerations | .h/.c | "enum_name" | enum_name.h<br>enum_name.c |
+| Callbacks | .h/.c | "callback_name"| callback_name.h<br>callback_name.c |
+| Definitions | .h/.c | "definition_name" | definition_name.h<br>definition_name_private.h<br>definition_name.c |
+| Interfaces | .h/.c | "interface_name" | interface_name.h<br>interface_name_private.h<br>interface_name.c<br>interface_name_stubs.h<br>interface_name_strubs.c |
 
 Enumeration Types
 
