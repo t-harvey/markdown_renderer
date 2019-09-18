@@ -367,7 +367,7 @@ There is only one operation for the `Calculator` interface.  The name
 of the operation's stub is derived from the interface name and
 operation name, so the function that we'll edit is named
 `Calculator_calculate`.  Notice that the call signature for the stub
-functions match exactly the types specified by the WebIDL file; the
+functions matches exactly the types specified by the WebIDL file; the
 underlying mechanics of hooking into the interpreter (e.g.,
 marshaling/unmarsharling parameters) is handled by all of the
 underlying C code (that we encourage the user to ignore).
